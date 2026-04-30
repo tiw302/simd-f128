@@ -1,0 +1,46 @@
+name: macos
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  test-macos-arm:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile and run (NEON — Apple Silicon)
+        run: |
+          clang tests/test_arithmetic.c -O3 -lm -o test_neon
+          ./test_neon
+      - name: Generate Summary
+        if: always()
+        run: |
+          echo "### macOS ARM (NEON)" >> $GITHUB_STEP_SUMMARY
+          echo "| Feature | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| SIMD Backend | NEON (Native) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Runtime Tests | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+
+  test-macos-intel:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile and run (Scalar)
+        run: |
+          clang tests/test_arithmetic.c -O3 -lm -o test_scalar
+          ./test_scalar
+      - name: Compile and run (AVX2)
+        run: |
+          clang tests/test_arithmetic.c -mavx2 -mfma -O3 -lm -o test_avx2
+          ./test_avx2
+      - name: Generate Summary
+        if: always()
+        run: |
+          echo "### macOS Intel (AVX2)" >> $GITHUB_STEP_SUMMARY
+          echo "| Feature | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| SIMD Backend | AVX2 + FMA (Native) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Runtime Tests | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
