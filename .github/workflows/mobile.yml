@@ -1,0 +1,45 @@
+name: mobile
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  test-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up NDK
+        run: |
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV
+      - name: Compile for Android (AArch64)
+        run: |
+          $ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang \
+            tests/test_arithmetic.c -O3 -lm -o test_android
+      - name: Generate Summary
+        if: always()
+        run: |
+          echo "### Android (AArch64)" >> $GITHUB_STEP_SUMMARY
+          echo "| Feature | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Compiler | Android NDK Clang |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Status | ${{ job.status == 'success' && 'Success' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+
+  test-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile for iOS (ARM64)
+        run: |
+          xcrun --sdk iphoneos clang -arch arm64 \
+            tests/test_arithmetic.c -O3 -lm -o test_ios
+      - name: Generate Summary
+        if: always()
+        run: |
+          echo "### iOS (ARM64)" >> $GITHUB_STEP_SUMMARY
+          echo "| Feature | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| SDK | iPhoneOS SDK |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Status | ${{ job.status == 'success' && 'Success' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
