@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(simd-fp VERSION 1.0.0 LANGUAGES C)
+project(simd-f128 VERSION 1.0.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -35,20 +35,20 @@ else()
 endif()
 
 # Library target (header-only)
-add_library(simd_fp INTERFACE)
-target_include_directories(simd_fp INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(simd_f128 INTERFACE)
+target_include_directories(simd_f128 INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Examples
 add_executable(example_basic      examples/basic_arithmetic.c)
 add_executable(example_precision  examples/precision_demo.c)
 add_executable(example_mandelbrot examples/mandelbrot_core.c)
 
-target_link_libraries(example_basic      PRIVATE simd_fp)
-target_link_libraries(example_precision  PRIVATE simd_fp)
-target_link_libraries(example_mandelbrot PRIVATE simd_fp)
+target_link_libraries(example_basic      PRIVATE simd_f128)
+target_link_libraries(example_precision  PRIVATE simd_f128)
+target_link_libraries(example_mandelbrot PRIVATE simd_f128)
 
 # Tests
 enable_testing()
 add_executable(test_arithmetic tests/test_arithmetic.c)
-target_link_libraries(test_arithmetic PRIVATE simd_fp)
+target_link_libraries(test_arithmetic PRIVATE simd_f128)
 add_test(NAME arithmetic_test COMMAND test_arithmetic)

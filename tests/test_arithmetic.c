@@ -35,7 +35,7 @@ int tests_failed = 0;
     } while (0)
 
 int main() {
-    printf("running simd-fp tests...\n\n");
+    printf("running simd-f128 tests...\n\n");
 
     double hi, lo;
 

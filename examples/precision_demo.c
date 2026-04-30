@@ -4,7 +4,7 @@
 #include "../simd_f128_io.h"
 
 int main() {
-    printf("--- precision comparison: double vs simd-fp ---\n\n");
+    printf("--- precision comparison: double vs simd-f128 ---\n\n");
 
     /*
      * Adding 1e-17 to 1.0 exceeds the resolution of a 64-bit double.
@@ -18,7 +18,7 @@ int main() {
     printf("          precision lost: %s\n\n", result_d == 1.0 ? "yes" : "no");
 
     /*
-     * simd-fp stores the residual in the lo component.
+     * simd-f128 stores the residual in the lo component.
      * The small value is preserved and participates in subsequent operations.
      */
     simd_f128 big_f   = simd_f128_from_double(1.0);
@@ -27,7 +27,7 @@ int main() {
 
     char buf[128];
     simd_f128_to_string(buf, sizeof(buf), result_f);
-    printf("[simd-fp] 1.0 + 1e-17 = %s\n", buf);
+    printf("[simd-f128] 1.0 + 1e-17 = %s\n", buf);
     printf("          precision lost: no\n");
 
     return 0;

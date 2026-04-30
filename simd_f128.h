@@ -4,7 +4,7 @@
 /*
     simd_f128.h -- high-performance 128-bit (double-double) arithmetic for SIMD.
 
-    Project URL: https://github.com/tiw302/simd-fp (proposed)
+    Project URL: https://github.com/tiw302/simd-f128 (proposed)
 
     Do this:
         #define SIMD_F128_IMPLEMENTATION
