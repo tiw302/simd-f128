@@ -1,16 +1,16 @@
 <p align="center">
-  <img src="assets/images/logo.webp" width="400" alt="SIMD-FP Logo">
+  <img src="assets/images/logo.webp" width="400" alt="SIMD-F128 Logo">
   <br>
   <b>High-performance cross-platform 128-bit arithmetic for SIMD applications.</b>
 </p>
 
-# SIMD-FP
+# SIMD-F128
 
-[![Linux](https://github.com/tiw302/simd-fp/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-fp/actions)
-[![macOS](https://github.com/tiw302/simd-fp/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-fp/actions)
-[![Windows](https://github.com/tiw302/simd-fp/actions/workflows/windows.yml/badge.svg)](https://github.com/tiw302/simd-fp/actions)
-[![WASM](https://github.com/tiw302/simd-fp/actions/workflows/wasm.yml/badge.svg)](https://github.com/tiw302/simd-fp/actions)
-[![Mobile](https://github.com/tiw302/simd-fp/actions/workflows/mobile.yml/badge.svg)](https://github.com/tiw302/simd-fp/actions)
+[![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
+[![macOS](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
+[![Windows](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
+[![WASM](https://github.com/tiw302/simd-f128/actions/workflows/wasm.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
+[![Mobile](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Language](https://img.shields.io/badge/Language-C11-00599C.svg)](https://en.wikipedia.org/wiki/C11_(C_standard_revision))
 
@@ -39,7 +39,7 @@
 
 ## Introduction
 
-**SIMD-FP** is a professional-grade, header-only C library for **128-bit (Double-Double)** floating-point arithmetic. It targets the precision gap between standard 64-bit IEEE 754 doubles and heavyweight arbitrary-precision libraries, providing approximately 31–32 decimal digits of accuracy with zero heap allocation overhead.
+**SIMD-F128** is a professional-grade, header-only C library for **128-bit (Double-Double)** floating-point arithmetic. It targets the precision gap between standard 64-bit IEEE 754 doubles and heavyweight arbitrary-precision libraries, providing approximately 31–32 decimal digits of accuracy with zero heap allocation overhead.
 
 Designed for demanding workloads such as fractal rendering, physical simulations, and orbital mechanics — where double precision falls short but `libquadmath` or GMP would be excessive.
 
