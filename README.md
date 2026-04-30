@@ -19,22 +19,11 @@
 
 ## Table of Contents
 
-- [Introduction](#introduction)
-- [Requirements](#requirements)
-- [Getting Started](#getting-started)
-- [Quick Example](#quick-example)
-- [Library Components](#library-components)
-  - [simd_f128.h](#simd_f128h-core)
-  - [simd_f128_consts.h](#simd_f128_constsh)
-  - [simd_f128_io.h](#simd_f128_ioh)
-- [API Reference](#api-reference)
-- [Double-Double Arithmetic](#double-double-arithmetic)
-- [Known Limitations](#known-limitations)
-- [Examples](#examples)
-- [Project Structure](#project-structure)
-- [Build and Installation](#build-and-installation)
-- [Contributing](#contributing)
-- [License](#license)
+| Introduction | Setup & Build | Components | Resources | Community |
+|---|---|---|---|---|
+| [Overview](#introduction) | [Requirements](#requirements) | [Core Engine](#simd_f128h-core) | [API Docs](#api-reference) | [CI Status](#platform-support--ci-status) |
+| [Why?](#why-simd-f128) | [Toolchains](#verified-toolchains) | [Constants](#simd_f128_constsh) | [Math Theory](#double-double-arithmetic) | [Contributing](#contributing) |
+| [Philosophy](#design-philosophy) | [Installation](#build-and-installation) | [I/O Utilities](#simd_f128_ioh) | [Examples](#examples) | [License](#license) |
 
 ---
 
