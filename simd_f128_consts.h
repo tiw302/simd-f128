@@ -18,7 +18,7 @@
 
 #if defined(SIMD_F128_USE_AVX2) || defined(SIMD_F128_USE_WASM) || defined(SIMD_F128_USE_NEON)
     /* vectors: lane 0 = lo, lane 1 = hi — load lo first in memory */
-    #define SIMD_F128_MAKE_CONST(h, l) { (l), (h) }
+    #define SIMD_F128_MAKE_CONST(h, l) { .d = { (l), (h) } }
 #else
     /* scalar struct is defined as { hi, lo } */
     #define SIMD_F128_MAKE_CONST(h, l) { (h), (l) }
