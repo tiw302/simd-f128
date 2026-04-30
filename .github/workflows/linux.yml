@@ -1,0 +1,110 @@
+name: linux
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  test-linux-scalar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile and run (Scalar)
+        run: |
+          gcc tests/test_arithmetic.c -O3 -lm -o test_scalar
+          ./test_scalar
+      - name: Generate Summary
+        if: always()
+        run: |
+          echo "### Linux x86_64 (Scalar)" >> $GITHUB_STEP_SUMMARY
+          echo "| Feature | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Compilation | Success |" >> $GITHUB_STEP_SUMMARY
+          echo "| Runtime Tests | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+
+  test-linux-avx2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile and run (AVX2)
+        run: |
+          gcc tests/test_arithmetic.c -mavx2 -mfma -O3 -lm -o test_avx2
+          ./test_avx2
+      - name: Generate Summary
+        if: always()
+        run: |
+          echo "### Linux x86_64 (AVX2)" >> $GITHUB_STEP_SUMMARY
+          echo "| Feature | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| SIMD Backend | AVX2 + FMA |" >> $GITHUB_STEP_SUMMARY
+          echo "| Runtime Tests | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+
+  test-linux-aarch64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install AArch64 toolchain and QEMU
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y gcc-aarch64-linux-gnu qemu-user
+      - name: Compile and run (AArch64 NEON via QEMU)
+        run: |
+          aarch64-linux-gnu-gcc tests/test_arithmetic.c \
+            -O3 -lm -static -o test_aarch64
+          qemu-aarch64 ./test_aarch64
+      - name: Generate Summary
+        if: always()
+        run: |
+          echo "### Linux AArch64 (NEON)" >> $GITHUB_STEP_SUMMARY
+          echo "| Feature | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| SIMD Backend | NEON (via QEMU) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Runtime Tests | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+
+  test-linux-armv7:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install ARMv7 toolchain and QEMU
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y gcc-arm-linux-gnueabihf qemu-user
+      - name: Compile and run (ARMv7 Scalar + VFPv4 via QEMU)
+        run: |
+          arm-linux-gnueabihf-gcc tests/test_arithmetic.c \
+            -O3 -lm -static \
+            -mfpu=neon-vfpv4 -mfloat-abi=hard \
+            -o test_armv7
+          qemu-arm ./test_armv7
+      - name: Generate Summary
+        if: always()
+        run: |
+          echo "### Linux ARMv7 (VFPv4)" >> $GITHUB_STEP_SUMMARY
+          echo "| Feature | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| SIMD Backend | Scalar + VFPv4 (via QEMU) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Runtime Tests | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+
+  test-linux-riscv64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install RISC-V toolchain and QEMU
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y gcc-riscv64-linux-gnu qemu-user
+      - name: Compile and run (RISC-V64 Scalar via QEMU)
+        run: |
+          riscv64-linux-gnu-gcc tests/test_arithmetic.c \
+            -O3 -lm -static -o test_riscv64
+          qemu-riscv64 ./test_riscv64
+      - name: Generate Summary
+        if: always()
+        run: |
+          echo "### Linux RISC-V64 (Scalar)" >> $GITHUB_STEP_SUMMARY
+          echo "| Feature | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| SIMD Backend | Scalar (via QEMU) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Runtime Tests | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
