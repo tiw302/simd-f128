@@ -30,12 +30,8 @@ int main() {
         simd_f128 mag2 = simd_f128_add(zx2, zy2);
 
         double mag2_hi;
-#if defined(SIMD_F128_USE_AVX2)
-        mag2_hi = _mm_cvtsd_f64(_mm_unpackhi_pd(mag2, mag2));
-#elif defined(SIMD_F128_USE_WASM)
-        mag2_hi = wasm_f64x2_extract_lane(mag2, 1);
-#elif defined(SIMD_F128_USE_NEON)
-        mag2_hi = vgetq_lane_f64(mag2, 1);
+#if defined(SIMD_F128_USE_AVX2) || defined(SIMD_F128_USE_WASM) || defined(SIMD_F128_USE_NEON)
+        mag2_hi = mag2.d[1];
 #else
         mag2_hi = mag2.hi;
 #endif
