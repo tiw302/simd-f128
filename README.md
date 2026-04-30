@@ -71,23 +71,31 @@ In many scientific and engineering applications, standard 64-bit `double` precis
 | C Standard | C11 or later (C99 compatible for scalar path) |
 | Compiler | GCC 4.9+, Clang 3.5+, MSVC 2019+, Emscripten 3.0+ |
 | Math library | `-lm` required on Linux/UNIX (for `fma()`) |
+ 
+ ### Verified Toolchains
+ 
+- **Linux**: GCC 4.9..13, Clang 6..18 (x86_64, aarch64, armv7, riscv64)
+- **macOS**: Apple Clang (Xcode 14, 15), Intel LLVM
+- **Windows**: MSVC 2019/2022, Clang-cl, MinGW-w64 (GCC 12+)
+- **Web**: Emscripten 3.1.x (SIMD128 enabled)
+- **Mobile**: Android NDK r26b, iOS SDK 17+
 
-**Platform support:**
+---
 
-| Platform | Backend | Notes |
-|---|---|---|
-| Intel / AMD x86_64 (Haswell 2013+, Ryzen+) | AVX2 | Compile with `-mavx2 -mfma` or `-DSIMD_F128_AVX2=ON` |
-| Apple Silicon (M1 / M2 / M3) | NEON | Auto-detected, no flag needed |
-| ARM64 Linux (AWS Graviton, RPi 4/5 64-bit, Android NDK arm64) | NEON | Auto-detected, no flag needed |
-| iOS (iPhone 5s+, all modern iPads) | NEON | Auto-detected, no flag needed |
-| Windows on ARM (`_M_ARM64`) | NEON | Auto-detected, no flag needed |
-| ARMv7 / AArch32 (RPi 2/3 32-bit, older Android, embedded) | Scalar | Add `-mfpu=neon-vfpv4 -mfloat-abi=hard` for hardware FMA |
-| WebAssembly + SIMD128 (Chrome 91+, Firefox 89+, Safari 16.4+) | WASM-SIMD | Compile with `-msimd128` |
-| WebAssembly Scalar (all browsers, Node.js, Deno) | Scalar | No flag needed, detected via `__EMSCRIPTEN__` |
-| RISC-V (rv32/rv64, SiFive, VisionFive, SpacemiT) | Scalar | Auto-detected |
-| PowerPC / POWER (ppc64le, AIX) | Scalar | Auto-detected |
-| MIPS (32/64-bit) | Scalar | Auto-detected |
-| All other targets (LoongArch, s390x, SPARC, etc.) | Scalar | Auto-detected |
+## Platform Support & CI Status
+
+**SIMD-F128** is rigorously tested across a wide matrix of operating systems and hardware architectures. The status below reflects real-time build and test results from our GitHub Actions CI pipeline.
+
+| Operating System | Target Architecture | Primary Backend | Build Status |
+|---|---|---|---|
+| **Linux** | x86_64 (AVX2), AArch64, ARMv7, RISC-V | AVX2 / Scalar | [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions) |
+| **macOS** | Apple Silicon (M1/M2/M3), Intel x64 | NEON / AVX2 | [![macOS](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions) |
+| **Windows** | x64 (MSVC / Clang-cl) | AVX2 / Scalar | [![Windows](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions) |
+| **WebAssembly** | SIMD128, Standard (Scalar) | WASM-SIMD | [![WASM](https://github.com/tiw302/simd-f128/actions/workflows/wasm.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions) |
+| **Mobile** | Android (NDK arm64-v8a), iOS (arm64) | NEON | [![Mobile](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions) |
+
+> [!TIP]
+> On platforms without specific SIMD backends (like RISC-V or PowerPC), the library automatically falls back to a high-performance **Scalar** implementation without any manual configuration required.
 
 The library auto-detects the backend at compile time via preprocessor macros. No manual configuration is needed; pass the appropriate flag and the correct path is selected automatically.
 
