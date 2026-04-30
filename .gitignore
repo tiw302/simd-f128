@@ -17,12 +17,12 @@ obj/
 *.exe
 *.out
 *.app
-test_scalar
-test_avx2
-test_local
-test_*
-example_*
-test_arithmetic
+/test_scalar
+/test_avx2
+/test_local
+/test_*
+/example_*
+/test_arithmetic
 
 # CMake specific
 CMakeCache.txt
