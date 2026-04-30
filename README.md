@@ -46,6 +46,24 @@ Designed for demanding workloads such as fractal rendering, physical simulations
 
 ---
 
+## Why SIMD-F128?
+
+In many scientific and engineering applications, standard 64-bit `double` precision (IEEE 754) is insufficient, yet arbitrary-precision libraries like GMP or MPFR are too slow and heavy for high-performance inner loops. **SIMD-F128** fills this critical gap.
+
+- **Double-Double Precision**: Leverages the error-free transformation (EFT) of two floating-point numbers to provide ~31 decimal digits of precision.
+- **Zero Heap Allocation**:conceptually a pair of doubles. No `malloc`, no garbage collection, no overhead.
+- **Native CPU Speed**: Unlike software-emulated 128-bit types, this library maps arithmetic directly to native SIMD instructions (AVX2, NEON, WASM-SIMD).
+- **Header-Only Integration**: No build system complexity. Drop the header into your project, define the implementation macro in one file, and you're done.
+
+### Design Philosophy
+
+1.  **Simplicity over Complexity**: The API is minimal and predictable.
+2.  **No Hidden Costs**: What you see is what you get. Every operation is documented with its computational cost.
+3.  **Strictly Portable**: While optimized for SIMD, the library is written in compliant C11 with a robust scalar fallback for any architecture.
+4.  **Zero Dependency**: Requires nothing but a standard C compiler and the platform's math library (`-lm`).
+
+---
+
 ## Requirements
 
 | Component | Requirement |
