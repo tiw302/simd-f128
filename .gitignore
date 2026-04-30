@@ -1,0 +1,73 @@
+# Build artifacts & Cache
+build/
+bin/
+out/
+obj/
+
+# Libraries & Objects
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+
+# Executables
+*.exe
+*.out
+*.app
+test_scalar
+test_avx2
+test_local
+test_*
+example_*
+test_arithmetic
+
+# CMake specific
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+
+# WebAssembly & Emscripten
+*.wasm
+*.data
+*.worker.js
+*.js
+!assets/**/*.js
+
+# IDEs & Editors
+.vscode/
+.idea/
+.vs/
+
+# Vim & Neovim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]uv[a-z]
+[._]sw?
+[._]*.un~
+undo/
+.netrwhist
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Screenshots & Assets
+*.png
+!assets/**/*.png
+*.webp
+!assets/**/*.webp
+screenshot_*.tga
+*.tga
+
+# Temporary Scripts
+fix_*.py
