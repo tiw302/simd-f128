@@ -1,4 +1,4 @@
-name: windows
+name: Windows
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ master, main ]
 
 jobs:
-  test-windows:
+  msvc:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
@@ -17,11 +17,3 @@ jobs:
         run: cmake --build build --config Release
       - name: Run tests
         run: ctest --test-dir build -C Release --output-on-failure
-      - name: Generate Summary
-        if: always()
-        run: |
-          echo "### Windows (MSVC)" >> $GITHUB_STEP_SUMMARY
-          echo "| Feature | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| SIMD Backend | Scalar (MSVC) |" >> $GITHUB_STEP_SUMMARY
-          echo "| Runtime Tests | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY

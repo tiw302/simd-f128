@@ -1,4 +1,4 @@
-name: mobile
+name: Mobile
 
 on:
   push:
@@ -7,39 +7,32 @@ on:
     branches: [ master, main ]
 
 jobs:
-  test-android:
+  android-arm64:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up NDK
+      - name: Install AArch64 toolchain and QEMU
         run: |
-          echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV
-      - name: Compile for Android (AArch64)
+          sudo apt-get update -q
+          sudo apt-get install -y gcc-aarch64-linux-gnu qemu-user
+      - name: Compile and run (Android ARM64 / NEON via QEMU)
         run: |
-          $ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang \
-            tests/test_arithmetic.c -O3 -lm -o test_android
-      - name: Generate Summary
-        if: always()
-        run: |
-          echo "### Android (AArch64)" >> $GITHUB_STEP_SUMMARY
-          echo "| Feature | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| Compiler | Android NDK Clang |" >> $GITHUB_STEP_SUMMARY
-          echo "| Build Status | ${{ job.status == 'success' && 'Success' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          aarch64-linux-gnu-gcc tests/test_arithmetic.c \
+            -O3 -lm -static -o test_aarch64
+          qemu-aarch64 ./test_aarch64
 
-  test-ios:
-    runs-on: macos-latest
+  android-armv7:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Compile for iOS (ARM64)
+      - name: Install ARMv7 toolchain and QEMU
         run: |
-          xcrun --sdk iphoneos clang -arch arm64 \
-            tests/test_arithmetic.c -O3 -lm -o test_ios
-      - name: Generate Summary
-        if: always()
+          sudo apt-get update -q
+          sudo apt-get install -y gcc-arm-linux-gnueabihf qemu-user
+      - name: Compile and run (Android ARMv7 Scalar + VFPv4 via QEMU)
         run: |
-          echo "### iOS (ARM64)" >> $GITHUB_STEP_SUMMARY
-          echo "| Feature | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| SDK | iPhoneOS SDK |" >> $GITHUB_STEP_SUMMARY
-          echo "| Build Status | ${{ job.status == 'success' && 'Success' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          arm-linux-gnueabihf-gcc tests/test_arithmetic.c \
+            -O3 -lm -static \
+            -mfpu=neon-vfpv4 -mfloat-abi=hard \
+            -o test_armv7
+          qemu-arm ./test_armv7

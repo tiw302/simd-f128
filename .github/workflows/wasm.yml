@@ -1,4 +1,4 @@
-name: wasm
+name: WASM
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ master, main ]
 
 jobs:
-  test-wasm-simd:
+  simd128:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -18,19 +18,10 @@ jobs:
       - name: Compile and run (WASM + SIMD128, Node.js)
         run: |
           source emsdk/emsdk_env.sh
-          emcc tests/test_arithmetic.c -O3 -msimd128 \
-            -o test_wasm_simd.js
+          emcc tests/test_arithmetic.c -O3 -msimd128 -o test_wasm_simd.js
           node test_wasm_simd.js
-      - name: Generate Summary
-        if: always()
-        run: |
-          echo "### WebAssembly (SIMD128)" >> $GITHUB_STEP_SUMMARY
-          echo "| Feature | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| SIMD Backend | WASM-SIMD128 (Node.js) |" >> $GITHUB_STEP_SUMMARY
-          echo "| Runtime Tests | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
 
-  test-wasm-scalar:
+  scalar:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -41,14 +32,5 @@ jobs:
       - name: Compile and run (WASM Scalar fallback, Node.js)
         run: |
           source emsdk/emsdk_env.sh
-          emcc tests/test_arithmetic.c -O3 \
-            -o test_wasm_scalar.js
+          emcc tests/test_arithmetic.c -O3 -o test_wasm_scalar.js
           node test_wasm_scalar.js
-      - name: Generate Summary
-        if: always()
-        run: |
-          echo "### WebAssembly (Scalar)" >> $GITHUB_STEP_SUMMARY
-          echo "| Feature | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| SIMD Backend | Scalar (Node.js) |" >> $GITHUB_STEP_SUMMARY
-          echo "| Runtime Tests | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
