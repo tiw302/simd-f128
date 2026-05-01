@@ -7,6 +7,8 @@
 #include "../simd_f128.h"
 #include "../simd_f128_consts.h"
 #include "../simd_f128_io.h"
+#include "../simd_f128_utils.h"
+#include "../simd_f128_math.h"
 
 static void extract(simd_f128 x, double *hi, double *lo) {
     simd_f128_extract(x, hi, lo);
@@ -310,6 +312,36 @@ printf("\n[1.7] sqrt\n");
     simd_f128 sqrt_vs = simd_f128_sqrt(very_small);
     extract(sqrt_vs, &hi, &lo);
     CHECK("sqrt(1e-200) > 0", hi > 0.0);
+
+    printf("\n=== section 6: advanced math ===\n\n");
+
+    printf("[6.1] exp(x)\n");
+    simd_f128 exp1 = simd_f128_exp(simd_f128_from_double(1.0));
+    extract(exp1, &hi, &lo);
+    CHECK("exp(1.0) ~ e", fabs(hi - 2.7182818284590451) < 1e-15);
+
+    simd_f128 exp0 = simd_f128_exp(simd_f128_from_double(0.0));
+    extract(exp0, &hi, &lo);
+    CHECK("exp(0.0) == 1.0", hi == 1.0);
+
+    printf("\n[6.2] log(x)\n");
+    simd_f128 log_e = simd_f128_log(SIMD_F128_E);
+    extract(log_e, &hi, &lo);
+    CHECK("log(e) ~ 1.0", fabs(hi - 1.0) < 1e-15);
+
+    printf("\n[6.3] pow(base, exp)\n");
+    simd_f128 pow1 = simd_f128_pow(simd_f128_from_double(2.0), simd_f128_from_double(10.0));
+    extract(pow1, &hi, &lo);
+    CHECK("2^10 == 1024", hi == 1024.0);
+
+    printf("\n[6.4] sin(x) / cos(x)\n");
+    simd_f128 sin_pi2 = simd_f128_sin(simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(0.5)));
+    extract(sin_pi2, &hi, &lo);
+    CHECK("sin(pi/2) ~ 1.0", fabs(hi - 1.0) < 1e-15);
+
+    simd_f128 cos_pi = simd_f128_cos(SIMD_F128_PI);
+    extract(cos_pi, &hi, &lo);
+    CHECK("cos(pi) ~ -1.0", fabs(hi - (-1.0)) < 1e-15);
 
     printf("\n=== SUMMARY ===\n\n");
     printf("Total tests:  %d\n", tests_run);
