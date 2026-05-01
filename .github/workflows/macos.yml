@@ -11,20 +11,26 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Compile and run (NEON — Apple Silicon)
-        run: |
-          clang tests/test_arithmetic.c -O3 -lm -o test_neon
-          ./test_neon
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Run tests
+        run: ctest --test-dir build -C Release --output-on-failure -V
 
   intel:
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v3
-      - name: Compile and run (Scalar)
-        run: |
-          clang tests/test_arithmetic.c -O3 -lm -o test_scalar
-          ./test_scalar
-      - name: Compile and run (AVX2)
-        run: |
-          clang tests/test_arithmetic.c -mavx2 -mfma -O3 -lm -o test_avx2
-          ./test_avx2
+      - name: Configure CMake (Scalar)
+        run: cmake -S . -B build_scalar -DCMAKE_BUILD_TYPE=Release
+      - name: Build (Scalar)
+        run: cmake --build build_scalar --config Release
+      - name: Run tests (Scalar)
+        run: ctest --test-dir build_scalar -C Release --output-on-failure -V
+      - name: Configure CMake (AVX2)
+        run: cmake -S . -B build_avx2 -DCMAKE_BUILD_TYPE=Release -DSIMD_F128_AVX2=ON
+      - name: Build (AVX2)
+        run: cmake --build build_avx2 --config Release
+      - name: Run tests (AVX2)
+        run: ctest --test-dir build_avx2 -C Release --output-on-failure -V
