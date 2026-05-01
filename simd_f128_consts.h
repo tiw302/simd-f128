@@ -16,9 +16,12 @@
  * calculated as hi (64-bit ieee) + lo (64-bit ieee residual error).
  */
 
-#if defined(SIMD_F128_USE_AVX2) || defined(SIMD_F128_USE_WASM) || defined(SIMD_F128_USE_NEON)
+#if defined(SIMD_F128_USE_AVX2) || defined(SIMD_F128_USE_NEON)
     /* vectors: lane 0 = lo, lane 1 = hi — load lo first in memory */
     #define SIMD_F128_MAKE_CONST(h, l) { (l), (h) }
+#elif defined(SIMD_F128_USE_WASM)
+    /* WASM requires specific intrinsic macro for f64x2 constants */
+    #define SIMD_F128_MAKE_CONST(h, l) wasm_f64x2_const((l), (h))
 #else
     /* scalar struct is defined as { hi, lo } */
     #define SIMD_F128_MAKE_CONST(h, l) { (h), (l) }
