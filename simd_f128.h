@@ -185,13 +185,32 @@
 extern "C" {
 #endif
 
+#define SIMD_F128_INLINE static inline __attribute__((always_inline))
+
 // Initialization
-static inline simd_f128 simd_f128_from_double(double d);
+SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d);
 
 // Arithmetic
-static inline simd_f128 simd_f128_add(simd_f128 a, simd_f128 b);
-static inline simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b);
-static inline simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b);
+SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b);
+SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b);
+SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b);
+
+// Extraction
+SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
+#if defined(SIMD_F128_USE_AVX2)
+    *hi = _mm_cvtsd_f64(_mm_unpackhi_pd(x, x));
+    *lo = _mm_cvtsd_f64(x);
+#elif defined(SIMD_F128_USE_WASM)
+    *hi = wasm_f64x2_extract_lane(x, 1);
+    *lo = wasm_f64x2_extract_lane(x, 0);
+#elif defined(SIMD_F128_USE_NEON)
+    *hi = vgetq_lane_f64(x, 1);
+    *lo = vgetq_lane_f64(x, 0);
+#else
+    *hi = x.hi;
+    *lo = x.lo;
+#endif
+}
 
 #ifdef __cplusplus
 }
@@ -217,249 +236,174 @@ static inline simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b);
 
 #if defined(SIMD_F128_USE_AVX2)
 
-    static inline simd_f128 simd_f128_from_double(double d) {
-        return _mm_set_pd(d, 0.0); /* Lane 1 = high, Lane 0 = low */
+    SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
+        return _mm_set_pd(d, 0.0);
     }
 
-    /* FastTwoSum: requires |a| >= |b|. a+b = s+e */
-    static inline void _simd_fast_two_sum(double a, double b, double* s, double* e) {
-        *s = a + b;
-        *e = b - (*s - a);
+    SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
+        /* XMM Pure Scalar Pipeline Operations */
+        __m128d ahi = _mm_unpackhi_pd(a, a);
+        __m128d bhi = _mm_unpackhi_pd(b, b);
+        
+        __m128d s = _mm_add_sd(ahi, bhi);
+        __m128d v = _mm_sub_sd(s, ahi);
+        __m128d e = _mm_add_sd(_mm_sub_sd(ahi, _mm_sub_sd(s, v)), _mm_sub_sd(bhi, v));
+
+        __m128d t = _mm_add_sd(_mm_add_sd(a, b), e);
+
+        __m128d final_hi = _mm_add_sd(s, t);
+        __m128d final_lo = _mm_sub_sd(t, _mm_sub_sd(final_hi, s));
+
+        return _mm_unpacklo_pd(final_lo, final_hi);
     }
 
-    static inline void _simd_two_sum(double a, double b, double* s, double* e) {
-        /*
-          Knuth's TwoSum: Computes s = a + b exactly.
-          The floating point result 's' carries the main sum.
-          The error 'e' is computed by subtracting the components of 's' from 'a' and 'b'.
-          Because this is an Error-Free Transformation (EFT), a + b == s + e exactly.
-        */
-        *s = a + b;
-        double v = *s - a;
-        *e = (a - (*s - v)) + (b - v);
+    SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
+        return simd_f128_add(a, _mm_xor_pd(b, _mm_set1_pd(-0.0)));
     }
 
-    static inline void _simd_two_prod(double a, double b, double* p, double* e) {
-        /*
-          Dekker's TwoProd (via FMA): Computes p = a * b exactly.
-          The error 'e' is calculated by (a * b) - p in infinite precision.
-          Standard hardware FMA (Fused Multiply-Add) makes this extremely fast.
-        */
-        *p = a * b;
-        *e = fma(a, b, -(*p));
-    }
+    SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
+        __m128d ahi = _mm_unpackhi_pd(a, a);
+        __m128d bhi = _mm_unpackhi_pd(b, b);
+        
+        __m128d p = _mm_mul_sd(ahi, bhi);
+        /* Hardware FMA3 bypasses math.h completely */
+        __m128d e = _mm_fmsub_sd(ahi, bhi, p);
+        
+        __m128d c1 = _mm_mul_sd(ahi, b);
+        __m128d c2 = _mm_mul_sd(a, bhi);
+        e = _mm_add_sd(e, _mm_add_sd(c1, c2));
 
-    static inline simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
-        /* extract hi/lo components */
-        double ahi = _mm_cvtsd_f64(_mm_unpackhi_pd(a, a));
-        double alo = _mm_cvtsd_f64(a);
-        double bhi = _mm_cvtsd_f64(_mm_unpackhi_pd(b, b));
-        double blo = _mm_cvtsd_f64(b);
+        __m128d final_hi = _mm_add_sd(p, e);
+        __m128d final_lo = _mm_sub_sd(e, _mm_sub_sd(final_hi, p));
 
-        /*
-           Double-Double Addition (hi + lo):
-           1. Exact sum of high parts: ahi + bhi = s + e
-           2. Sum low parts and error: t = alo + blo + e
-           3. Final normalization: FastTwoSum(s, t) -> ensure |hi| > |lo|
-        */
-        double s, e, t;
-        _simd_two_sum(ahi, bhi, &s, &e);
-        t = alo + blo + e;
-
-        double final_hi, final_lo;
-        _simd_fast_two_sum(s, t, &final_hi, &final_lo);
-        return _mm_set_pd(final_hi, final_lo);
-    }
-
-    static inline simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
-        /* negate b and add */
-        __m128d neg_mask = _mm_set1_pd(-0.0);
-        simd_f128 neg_b = _mm_xor_pd(b, neg_mask);
-        return simd_f128_add(a, neg_b);
-    }
-
-    static inline simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
-        double ahi = _mm_cvtsd_f64(_mm_unpackhi_pd(a, a));
-        double alo = _mm_cvtsd_f64(a);
-        double bhi = _mm_cvtsd_f64(_mm_unpackhi_pd(b, b));
-        double blo = _mm_cvtsd_f64(b);
-
-        /*
-           Double-Double Multiplication:
-           1. Compute exact product (p) and error (e) of (ahi * bhi) using FMA
-           2. Add cross-products (ahi * blo) and (alo * bhi) to the error
-           3. The (alo * blo) term is usually discarded as it's below the 128-bit precision limit
-        */
-        double p, e;
-        _simd_two_prod(ahi, bhi, &p, &e);
-        e += (ahi * blo) + (alo * bhi);
-
-        double final_hi, final_lo;
-        _simd_fast_two_sum(p, e, &final_hi, &final_lo);
-        return _mm_set_pd(final_hi, final_lo);
+        return _mm_unpacklo_pd(final_lo, final_hi);
     }
 
 #elif defined(SIMD_F128_USE_WASM)
 
-    static inline simd_f128 simd_f128_from_double(double d) {
-        return wasm_f64x2_make(0.0, d); /* Lane 0 = low, Lane 1 = high */
+    SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
+        return wasm_f64x2_make(0.0, d);
     }
 
-    /* FastTwoSum: requires |a| >= |b|. a+b = s+e */
-    static inline void _simd_fast_two_sum(double a, double b, double* s, double* e) {
-
-        *s = a + b; *e = b - (*s - a);
-    }
-    /* TwoSum: Knuth algorithm. a+b = s+e */
-    static inline void _simd_two_sum(double a, double b, double* s, double* e) {
-
-        *s = a + b; double v = *s - a; *e = (a - (*s - v)) + (b - v);
-    }
-    /* TwoProd: a*b = p+e, uses FMA if available */
-    static inline void _simd_two_prod(double a, double b, double* p, double* e) {
-
-        *p = a * b; *e = fma(a, b, -(*p));
-    }
-
-    static inline simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
-        double alo = wasm_f64x2_extract_lane(a, 0);
+    SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
         double ahi = wasm_f64x2_extract_lane(a, 1);
-        double blo = wasm_f64x2_extract_lane(b, 0);
+        double alo = wasm_f64x2_extract_lane(a, 0);
         double bhi = wasm_f64x2_extract_lane(b, 1);
+        double blo = wasm_f64x2_extract_lane(b, 0);
 
-        double s, e, t1, t2;
-        _simd_two_sum(ahi, bhi, &s, &e);
-        t1 = alo + blo;
-        t2 = e + t1;
+        double s = ahi + bhi;
+        double v = s - ahi;
+        double e = (ahi - (s - v)) + (bhi - v);
+        
+        double t = alo + blo + e;
+        double final_hi = s + t;
+        double final_lo = t - (final_hi - s);
 
-        double final_hi, final_lo;
-        _simd_fast_two_sum(s, t2, &final_hi, &final_lo);
         return wasm_f64x2_make(final_lo, final_hi);
     }
 
-    static inline simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
+    SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
         v128_t neg_mask = wasm_i64x2_const(0x8000000000000000ULL, 0x8000000000000000ULL);
-        simd_f128 neg_b = wasm_v128_xor(b, neg_mask);
-        return simd_f128_add(a, neg_b);
+        return simd_f128_add(a, wasm_v128_xor(b, neg_mask));
     }
 
-    static inline simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
-        double alo = wasm_f64x2_extract_lane(a, 0);
+    SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
         double ahi = wasm_f64x2_extract_lane(a, 1);
-        double blo = wasm_f64x2_extract_lane(b, 0);
+        double alo = wasm_f64x2_extract_lane(a, 0);
         double bhi = wasm_f64x2_extract_lane(b, 1);
+        double blo = wasm_f64x2_extract_lane(b, 0);
 
-        double p, e;
-        _simd_two_prod(ahi, bhi, &p, &e);
-        e += (ahi * blo) + (alo * bhi);
+        double p = ahi * bhi;
+        double e = fma(ahi, bhi, -p);
+        e += fma(ahi, blo, alo * bhi);
 
-        double final_hi, final_lo;
-        _simd_fast_two_sum(p, e, &final_hi, &final_lo);
+        double final_hi = p + e;
+        double final_lo = e - (final_hi - p);
+        
         return wasm_f64x2_make(final_lo, final_hi);
     }
 
 #elif defined(SIMD_F128_USE_NEON)
 
-    static inline simd_f128 simd_f128_from_double(double d) {
-        /* lane 1 = hi = d, lane 0 = lo = 0.0 */
+    SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
         float64x2_t r = vdupq_n_f64(0.0);
         return vsetq_lane_f64(d, r, 1);
     }
 
-    static inline void _simd_fast_two_sum(double a, double b, double* s, double* e) {
-        *s = a + b; *e = b - (*s - a);
-    }
-    static inline void _simd_two_sum(double a, double b, double* s, double* e) {
-        *s = a + b; double v = *s - a; *e = (a - (*s - v)) + (b - v);
-    }
-    static inline void _simd_two_prod(double a, double b, double* p, double* e) {
-        *p = a * b; *e = fma(a, b, -(*p));
-    }
-
-    static inline simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
+    SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
         double ahi = vgetq_lane_f64(a, 1);
         double alo = vgetq_lane_f64(a, 0);
         double bhi = vgetq_lane_f64(b, 1);
         double blo = vgetq_lane_f64(b, 0);
 
-        double s, e, t;
-        _simd_two_sum(ahi, bhi, &s, &e);
-        t = alo + blo + e;
-
-        double final_hi, final_lo;
-        _simd_fast_two_sum(s, t, &final_hi, &final_lo);
+        double s = ahi + bhi;
+        double v = s - ahi;
+        double e = (ahi - (s - v)) + (bhi - v);
+        
+        double t = alo + blo + e;
+        double final_hi = s + t;
+        double final_lo = t - (final_hi - s);
 
         float64x2_t r = vdupq_n_f64(0.0);
         r = vsetq_lane_f64(final_hi, r, 1);
-        r = vsetq_lane_f64(final_lo, r, 0);
-        return r;
+        return vsetq_lane_f64(final_lo, r, 0);
     }
 
-    static inline simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
-        /* negate both lanes of b */
-        simd_f128 neg_b = vnegq_f64(b);
-        return simd_f128_add(a, neg_b);
+    SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
+        return simd_f128_add(a, vnegq_f64(b));
     }
 
-    static inline simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
+    SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
         double ahi = vgetq_lane_f64(a, 1);
         double alo = vgetq_lane_f64(a, 0);
         double bhi = vgetq_lane_f64(b, 1);
         double blo = vgetq_lane_f64(b, 0);
 
-        double p, e;
-        _simd_two_prod(ahi, bhi, &p, &e);
-        e += (ahi * blo) + (alo * bhi);
+        double p = ahi * bhi;
+        double e = fma(ahi, bhi, -p);
+        e += fma(ahi, blo, alo * bhi);
 
-        double final_hi, final_lo;
-        _simd_fast_two_sum(p, e, &final_hi, &final_lo);
+        double final_hi = p + e;
+        double final_lo = e - (final_hi - p);
 
         float64x2_t r = vdupq_n_f64(0.0);
         r = vsetq_lane_f64(final_hi, r, 1);
-        r = vsetq_lane_f64(final_lo, r, 0);
-        return r;
+        return vsetq_lane_f64(final_lo, r, 0);
     }
 
 #else
-    static inline simd_f128 simd_f128_from_double(double d) {
-        simd_f128 res;
-        res.hi = d; res.lo = 0.0;
+    SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
+        simd_f128 res = {d, 0.0};
         return res;
     }
 
-    static inline void _simd_fast_two_sum(double a, double b, double* s, double* e) {
-        *s = a + b; *e = b - (*s - a);
-    }
-    static inline void _simd_two_sum(double a, double b, double* s, double* e) {
-        *s = a + b; double v = *s - a; *e = (a - (*s - v)) + (b - v);
-    }
-    /* TwoProd: a*b = p+e, uses FMA if available */
-    static inline void _simd_two_prod(double a, double b, double* p, double* e) {
-
-        *p = a * b; *e = fma(a, b, -(*p));
-    }
-
-    static inline simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
-        double s, e, t1, t2;
-        _simd_two_sum(a.hi, b.hi, &s, &e);
-        t1 = a.lo + b.lo;
-        t2 = e + t1;
-        simd_f128 res;
-        _simd_fast_two_sum(s, t2, &res.hi, &res.lo);
+    SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
+        double s = a.hi + b.hi;
+        double v = s - a.hi;
+        double e = (a.hi - (s - v)) + (b.hi - v);
+        
+        double t = a.lo + b.lo + e;
+        double final_hi = s + t;
+        double final_lo = t - (final_hi - s);
+        
+        simd_f128 res = {final_hi, final_lo};
         return res;
     }
 
-    static inline simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
+    SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
         b.hi = -b.hi; b.lo = -b.lo;
         return simd_f128_add(a, b);
     }
 
-    static inline simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
-        double p, e;
-        _simd_two_prod(a.hi, b.hi, &p, &e);
-        e += (a.hi * b.lo) + (a.lo * b.hi);
-        simd_f128 res;
-        _simd_fast_two_sum(p, e, &res.hi, &res.lo);
+    SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
+        double p = a.hi * b.hi;
+        double e = fma(a.hi, b.hi, -p);
+        e += fma(a.hi, b.lo, a.lo * b.hi);
+        
+        double final_hi = p + e;
+        double final_lo = e - (final_hi - p);
+        
+        simd_f128 res = {final_hi, final_lo};
         return res;
     }
 #endif
