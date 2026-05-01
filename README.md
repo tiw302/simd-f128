@@ -242,6 +242,42 @@ int main() {
 | `simd_f128_print` | `void simd_f128_print(simd_f128 x)` | Print the value to `stdout` followed by a newline. |
 | `simd_f128_to_string` | `void simd_f128_to_string(char* buf, size_t buf_size, simd_f128 x)` | Write up to 32 decimal digits into `buf`. `buf` must be at least 64 bytes. Handles `nan`, `inf`, and negative values. |
 
+### Precision Demonstration & Test Results
+
+The core advantage of `simd-f128` is preserving small values that standard 64-bit doubles silently discard. All operations execute strictly within SIMD registers without heap allocation. 
+
+Here is an actual test run and precision comparison from the `Extreme Performance` build:
+```console
+~/Public/simd-f128 master* ⇡
+❯ ctest --test-dir build -C Release
+Test project /simd-f128/build
+    Start 1: arithmetic_test
+1/1 Test #1: arithmetic_test ..................   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 1
+
+~/Public/simd-f128 master* ⇡
+❯ ./build/example_precision
+--- precision comparison: double vs simd-fp ---
+
+[double]  1.0 + 1e-17 = 1.00000000000000000000
+          precision lost: yes
+
+[simd-fp] 1.0 + 1e-17 = 1.00000000000000001000000000000000
+          precision lost: no
+
+
+~/Public/simd-f128 master* ⇡
+❯ ./build/example_mandelbrot
+--- mandelbrot core loop (128-bit precision) ---
+
+did not escape after 500 iterations (point is inside the Mandelbrot set)
+
+final |z| components:
+  zx = -0.78124578860038387003505655582563
+  zy = 0.35443468442007221298624089031401
+```
+
 ---
 
 ## Double-Double Arithmetic
