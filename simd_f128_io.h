@@ -29,12 +29,15 @@ void simd_f128_to_string(char* buf, size_t buf_size, simd_f128 x);
 
 /* helper to extract hi/lo values securely across architectures */
 static inline void _simd_f128_extract(simd_f128 x, double* hi, double* lo) {
-#if defined(SIMD_F128_USE_AVX2) || defined(SIMD_F128_USE_WASM)
-    *hi = x.d[1];
-    *lo = x.d[0];
+#if defined(SIMD_F128_USE_AVX2)
+    *hi = _mm_cvtsd_f64(_mm_unpackhi_pd(x, x));
+    *lo = _mm_cvtsd_f64(x);
+#elif defined(SIMD_F128_USE_WASM)
+    *hi = wasm_f64x2_extract_lane(x, 1);
+    *lo = wasm_f64x2_extract_lane(x, 0);
 #elif defined(SIMD_F128_USE_NEON)
-    *hi = x.d[1];
-    *lo = x.d[0];
+    *hi = vgetq_lane_f64(x, 1);
+    *lo = vgetq_lane_f64(x, 0);
 #else
     *hi = x.hi;
     *lo = x.lo;
