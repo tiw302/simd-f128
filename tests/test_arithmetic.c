@@ -8,9 +8,12 @@
 
 /* extract hi/lo across all backends */
 static void extract(simd_f128 x, double *hi, double *lo) {
-#if defined(SIMD_F128_USE_AVX2) || defined(SIMD_F128_USE_WASM) || defined(SIMD_F128_USE_NEON)
-    *hi = x.d[1];
-    *lo = x.d[0];
+#if defined(SIMD_F128_USE_AVX2)
+    *hi = _mm_cvtsd_f64(_mm_unpackhi_pd(x, x));
+    *lo = _mm_cvtsd_f64(x);
+#elif defined(SIMD_F128_USE_WASM)
+    *hi = wasm_f64x2_extract_lane(x, 1);
+    *lo = wasm_f64x2_extract_lane(x, 0);
 #else
     *hi = x.hi;
     *lo = x.lo;
@@ -24,15 +27,15 @@ int tests_failed = 0;
     do {                                                        \
         tests_run++;                                            \
         if (!(cond)) {                                          \
-            printf("  FAIL: %s\n", label);                      \
+            printf("  FAIL: %s\n", label);                     \
             tests_failed++;                                     \
         } else {                                                \
-            printf("  PASS: %s\n", label);                      \
+            printf("  PASS: %s\n", label);                     \
         }                                                       \
     } while (0)
 
 int main() {
-    printf("running simd-f128 tests...\n\n");
+    printf("running simd-fp tests...\n\n");
 
     double hi, lo;
 
