@@ -1,5 +1,6 @@
 # Build artifacts & Cache
 build/
+build_test/
 bin/
 out/
 obj/
