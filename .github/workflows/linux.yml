@@ -11,19 +11,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Compile and run (Scalar)
-        run: |
-          gcc tests/test_arithmetic.c -O3 -lm -o test_scalar
-          ./test_scalar
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Run tests
+        run: ctest --test-dir build -C Release --output-on-failure -V
 
   avx2:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Compile and run (AVX2)
-        run: |
-          gcc tests/test_arithmetic.c -mavx2 -mfma -O3 -lm -o test_avx2
-          ./test_avx2
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSIMD_F128_AVX2=ON
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Run tests
+        run: ctest --test-dir build -C Release --output-on-failure -V
 
   riscv64:
     runs-on: ubuntu-latest
