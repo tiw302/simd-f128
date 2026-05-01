@@ -117,7 +117,7 @@ void simd_f128_to_string(char* buf, size_t buf_size, simd_f128 x) {
         if (digit < 0.0) digit = 0.0;
         if (digit > 9.0) digit = 9.0;
         
-        frac_buf[frac_len++] = '0' + (int)digit;
+        frac_buf[frac_len++] = (char)('0' + (int)digit);
         frac = simd_f128_sub(frac, simd_f128_from_double(digit));
     }
     frac_buf[frac_len] = '\0';
