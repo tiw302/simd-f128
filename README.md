@@ -17,13 +17,14 @@
 
 ---
 
-## Table of Contents
-
 | Introduction | Setup & Build | Components | Resources | Community |
 |---|---|---|---|---|
 | [Overview](#introduction) | [Requirements](#requirements) | [Core Engine](#simd_f128h-core) | [API Docs](#api-reference) | [CI Status](#platform-support--ci-status) |
 | [Why?](#why-simd-f128) | [Toolchains](#verified-toolchains) | [Constants](#simd_f128_constsh) | [Math Theory](#double-double-arithmetic) | [Contributing](#contributing) |
 | [Philosophy](#design-philosophy) | [Installation](#build-and-installation) | [I/O Utilities](#simd_f128_ioh) | [Examples](#examples) | [License](#license) |
+| [Used By](#used-by) | [Project Structure](#project-structure) | [Math Functions](#simd_f128_mathh) | | |
+| | | [Utilities & Comparisons](#simd_f128_utilsh) | | |
+| | | [C++ Wrapper](#simd_f128hpp) | | |
 
 ---
 
@@ -74,6 +75,7 @@ The library is built around three constraints that were never relaxed during dev
 | Component | Requirement |
 |---|---|
 | C Standard | C11 or later (C99 compatible for scalar path) |
+| C++ Standard | C++11 or later (for `simd_f128.hpp` only) |
 | Compiler | GCC 4.9+, Clang 3.5+, MSVC 2019+, Emscripten 3.0+ |
 | Math library | `-lm` required on Linux/UNIX (for `fma()`) |
 
@@ -107,6 +109,13 @@ simd-f128 is header-only. The simplest integration is copying the `.h` files dir
 ```
 
 All other translation units include the headers without the macro.
+
+For C++ projects, include the convenience wrapper instead:
+
+```cpp
+#define SIMD_F128_IMPLEMENTATION
+#include "simd_f128.hpp"   /* pulls in all headers automatically */
+```
 
 ### CMake
 
@@ -163,6 +172,8 @@ int main() {
     simd_f128 sum  = simd_f128_add(a, b);
     simd_f128 diff = simd_f128_sub(a, b);
     simd_f128 prod = simd_f128_mul(a, b);
+    simd_f128 quot = simd_f128_div(a, b);
+    simd_f128 root = simd_f128_sqrt(a);
 
     return 0;
 }
@@ -215,6 +226,137 @@ int main() {
 
 ---
 
+## simd_f128_math.h
+
+Advanced mathematical functions built on top of the core Double-Double primitives. All functions are `static inline` and require no additional compilation unit.
+
+**Algorithms used:**
+
+- **`exp`** — range reduction to `[-ln2/2, ln2/2]` followed by a 14-term Taylor series, then exact scaling via `ldexp`. Handles overflow (`> 709`) and underflow (`< -745`) explicitly.
+- **`log`** — seeds from the standard `double` `log()`, then refines with 3 iterations of Halley's method (cubic convergence), which is sufficient to recover all 31-32 digits.
+- **`pow`** — computed as `exp(exp * log(base))`. Returns `NaN` for negative bases.
+- **`sin`** — range-reduces to `[-π, π]` then evaluates a 10-term Taylor series.
+- **`cos`** — implemented as `sin(x + π/2)`.
+
+```c
+#define SIMD_F128_IMPLEMENTATION
+#include "simd_f128.h"
+#include "simd_f128_consts.h"
+#include "simd_f128_math.h"
+
+int main() {
+    simd_f128 x = SIMD_F128_PI;
+
+    /* e^π */
+    simd_f128 epi = simd_f128_exp(x);
+
+    /* ln(e) == 1 */
+    simd_f128 one = simd_f128_log(SIMD_F128_E);
+
+    /* 2^10 == 1024 */
+    simd_f128 base = simd_f128_from_double(2.0);
+    simd_f128 exp  = simd_f128_from_double(10.0);
+    simd_f128 pw   = simd_f128_pow(base, exp);
+
+    /* sin(π/6) == 0.5 */
+    simd_f128 half_pi = simd_f128_mul(x, simd_f128_from_double(1.0 / 6.0));
+    simd_f128 s       = simd_f128_sin(half_pi);
+
+    /* cos(0) == 1 */
+    simd_f128 c = simd_f128_cos(simd_f128_from_double(0.0));
+
+    return 0;
+}
+```
+
+> **Note:** `sin` and `cos` use a simplified range reduction suitable for moderate arguments. For very large inputs (|x| > ~10^15), consider applying Payne-Hanek argument reduction externally before calling these functions.
+
+---
+
+## simd_f128_utils.h
+
+Comparison operators and utility functions. All are `static inline` and work with any SIMD backend.
+
+The foundation is `simd_f128_cmp`, which compares the `hi` components first and only falls through to the `lo` components when `hi` values are identical — matching the canonical Double-Double ordering rule.
+
+```c
+#include "simd_f128.h"
+#include "simd_f128_utils.h"
+
+int main() {
+    simd_f128 a = simd_f128_from_double(1.0);
+    simd_f128 b = simd_f128_from_double(2.0);
+
+    /* comparisons */
+    int lt = simd_f128_lt(a, b);  /* 1 */
+    int eq = simd_f128_eq(a, b);  /* 0 */
+    int ge = simd_f128_ge(b, a);  /* 1 */
+
+    /* utility */
+    simd_f128 neg = simd_f128_from_double(-3.14);
+    simd_f128 abs_val = simd_f128_abs(neg);       /* 3.14... */
+    simd_f128 lo      = simd_f128_min(a, b);      /* 1.0 */
+    simd_f128 hi      = simd_f128_max(a, b);      /* 2.0 */
+
+    return 0;
+}
+```
+
+---
+
+## simd_f128.hpp
+
+A modern C++ wrapper that makes `simd_f128` feel like a native arithmetic type. Include this single header in C++ projects — it pulls in all other headers automatically.
+
+**Features:**
+
+- `f128::float128` class with full operator overloading (`+`, `-`, `*`, `/`, `+=`, `-=`, `*=`, `/=`).
+- All six comparison operators (`==`, `!=`, `<`, `>`, `<=`, `>=`).
+- Unary negation (`-x`).
+- `std::ostream` integration (`std::cout << val`).
+- Free functions mirroring `<cmath>`: `f128::exp`, `f128::log`, `f128::pow`, `f128::sin`, `f128::cos`, `f128::sqrt`, `f128::abs`.
+- Predefined constants: `f128::pi`, `f128::e`, `f128::sqrt2`, `f128::ln2`.
+
+```cpp
+#define SIMD_F128_IMPLEMENTATION
+#include "simd_f128.hpp"
+#include <iostream>
+
+int main() {
+    f128::float128 a(1.5);
+    f128::float128 b(2.5);
+
+    /* natural arithmetic */
+    f128::float128 sum  = a + b;
+    f128::float128 prod = a * b;
+
+    /* math functions */
+    f128::float128 root = f128::sqrt(a);
+    f128::float128 s    = f128::sin(f128::pi);
+
+    /* stream output */
+    std::cout << "a + b = " << sum  << "\n";
+    std::cout << "a * b = " << prod << "\n";
+    std::cout << "sqrt(a) = " << root << "\n";
+
+    /* comparisons */
+    if (a < b) {
+        std::cout << "a is smaller\n";
+    }
+
+    return 0;
+}
+```
+
+The `float128` class stores a `simd_f128 data` member publicly, so it can be passed directly to any C API function when needed:
+
+```cpp
+f128::float128 val(3.14);
+simd_f128_print(val.data);  /* call C API directly */
+```
+
+---
+
 ## API Reference
 
 ### simd_f128.h
@@ -222,9 +364,12 @@ int main() {
 | Function | Signature | Description |
 |---|---|---|
 | `simd_f128_from_double` | `simd_f128 simd_f128_from_double(double d)` | Promote a `double` to 128-bit. `lo` is initialised to `0.0`. |
+| `simd_f128_extract` | `void simd_f128_extract(simd_f128 x, double* hi, double* lo)` | Extract the `hi` and `lo` components into separate doubles. |
 | `simd_f128_add` | `simd_f128 simd_f128_add(simd_f128 a, simd_f128 b)` | Double-Double addition via Knuth's TwoSum. |
 | `simd_f128_sub` | `simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b)` | Double-Double subtraction (negates `b`, then adds). |
 | `simd_f128_mul` | `simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b)` | Double-Double multiplication via Dekker's TwoProd + FMA. |
+| `simd_f128_div` | `simd_f128 simd_f128_div(simd_f128 a, simd_f128 b)` | Double-Double division via Newton-Raphson reciprocal refinement. |
+| `simd_f128_sqrt` | `simd_f128 simd_f128_sqrt(simd_f128 x)` | Square root via inverse-sqrt Newton-Raphson + residual correction. |
 
 ### simd_f128_consts.h
 
@@ -242,9 +387,53 @@ int main() {
 | `simd_f128_print` | `void simd_f128_print(simd_f128 x)` | Print the value to `stdout` followed by a newline. |
 | `simd_f128_to_string` | `void simd_f128_to_string(char* buf, size_t buf_size, simd_f128 x)` | Write up to 32 decimal digits into `buf`. `buf` must be at least 64 bytes. Handles `nan`, `inf`, and negative values. |
 
+### simd_f128_math.h
+
+| Function | Signature | Description |
+|---|---|---|
+| `simd_f128_exp` | `simd_f128 simd_f128_exp(simd_f128 x)` | `e^x`. Returns `+Inf` for `x > 709`, `0` for `x < -745`. |
+| `simd_f128_log` | `simd_f128 simd_f128_log(simd_f128 x)` | Natural logarithm. Returns `NaN` for `x ≤ 0`. |
+| `simd_f128_pow` | `simd_f128 simd_f128_pow(simd_f128 base, simd_f128 exp)` | `base^exp`. Returns `0` for `base == 0`, `NaN` for `base < 0`. |
+| `simd_f128_sin` | `simd_f128 simd_f128_sin(simd_f128 x)` | Sine (radians). Best accuracy for moderate arguments. |
+| `simd_f128_cos` | `simd_f128 simd_f128_cos(simd_f128 x)` | Cosine (radians). Implemented as `sin(x + π/2)`. |
+
+### simd_f128_utils.h
+
+| Function | Signature | Description |
+|---|---|---|
+| `simd_f128_cmp` | `int simd_f128_cmp(simd_f128 a, simd_f128 b)` | Returns `-1` if `a < b`, `1` if `a > b`, `0` if equal. |
+| `simd_f128_eq` | `int simd_f128_eq(simd_f128 a, simd_f128 b)` | `1` if `a == b`. |
+| `simd_f128_gt` | `int simd_f128_gt(simd_f128 a, simd_f128 b)` | `1` if `a > b`. |
+| `simd_f128_lt` | `int simd_f128_lt(simd_f128 a, simd_f128 b)` | `1` if `a < b`. |
+| `simd_f128_ge` | `int simd_f128_ge(simd_f128 a, simd_f128 b)` | `1` if `a >= b`. |
+| `simd_f128_le` | `int simd_f128_le(simd_f128 a, simd_f128 b)` | `1` if `a <= b`. |
+| `simd_f128_abs` | `simd_f128 simd_f128_abs(simd_f128 x)` | Absolute value. Correctly handles `-0.0` in the `lo` component. |
+| `simd_f128_min` | `simd_f128 simd_f128_min(simd_f128 a, simd_f128 b)` | Returns the lesser of `a` and `b`. |
+| `simd_f128_max` | `simd_f128 simd_f128_max(simd_f128 a, simd_f128 b)` | Returns the greater of `a` and `b`. |
+
+### simd_f128.hpp (C++ only)
+
+| Symbol | Kind | Description |
+|---|---|---|
+| `f128::float128` | Class | C++ wrapper around `simd_f128`. |
+| `f128::float128(double)` | Constructor | Construct from a `double`. |
+| `f128::float128(simd_f128)` | Constructor | Construct from a raw `simd_f128`. |
+| `float128::extract(hi, lo)` | Method | Extract `hi` and `lo` components. |
+| `+`, `-`, `*`, `/` | Operators | Arithmetic operators. |
+| `+=`, `-=`, `*=`, `/=` | Operators | Compound assignment operators. |
+| `==`, `!=`, `<`, `>`, `<=`, `>=` | Operators | Comparison operators. |
+| `operator-()` | Unary | Negation. |
+| `float128::to_string()` | Method | Returns `std::string` with 32-digit representation. |
+| `operator<<` | Stream | `std::ostream` integration. |
+| `f128::exp`, `f128::log`, `f128::pow` | Free functions | Transcendental math. |
+| `f128::sin`, `f128::cos`, `f128::sqrt`, `f128::abs` | Free functions | Trigonometric and utility math. |
+| `f128::pi`, `f128::e`, `f128::sqrt2`, `f128::ln2` | Constants | High-precision constants as `float128`. |
+
+---
+
 ### Precision Demonstration & Test Results
 
-The core advantage of `simd-f128` is preserving small values that standard 64-bit doubles silently discard. All operations execute strictly within SIMD registers without heap allocation. 
+The core advantage of `simd-f128` is preserving small values that standard 64-bit doubles silently discard. All operations execute strictly within SIMD registers without heap allocation.
 
 Here is an actual test run and precision comparison from the `Extreme Performance` build:
 ```console
@@ -298,9 +487,10 @@ No memory allocation is required. The entire number lives in two registers.
 
 **Known limitations:**
 
-- Operations available: `add`, `sub`, `mul` only. Division, `sqrt`, and transcendental functions are not implemented and must be built on top of the provided primitives.
-- Numerical range is identical to IEEE 754 `double` (~1.8 x 10^308). The library extends mantissa precision only.
+- Numerical range is identical to IEEE 754 `double` (~1.8 × 10^308). The library extends mantissa precision only; exponent range is unchanged.
 - `NaN` and `Infinity` propagate through standard `double` rules.
+- `sin` and `cos` use simplified range reduction. For large arguments (|x| ≫ 2π), apply Payne-Hanek reduction externally before calling.
+- `pow` does not support negative bases; use `simd_f128_mul` + `simd_f128_exp` for integer powers of negative numbers.
 - On ARMv7, FMA requires VFPv4 hardware (Cortex-A7, A15, A17, A53+) and the `-mfpu=neon-vfpv4` flag.
 
 ---
@@ -333,6 +523,24 @@ int main() {
     /* Output: 314.15926535897932384626433832795028 */
     printf("Circle Area: ");
     simd_f128_print(area);
+
+    return 0;
+}
+```
+
+Same example using the C++ wrapper:
+
+```cpp
+#define SIMD_F128_IMPLEMENTATION
+#include "simd_f128.hpp"
+#include <iostream>
+
+int main() {
+    f128::float128 r(10.0);
+    f128::float128 area = f128::pi * r * r;
+
+    /* Output: 314.15926535897932384626433832795028 */
+    std::cout << "Circle Area: " << area << "\n";
 
     return 0;
 }
@@ -371,9 +579,20 @@ Every commit is tested across all backends via GitHub Actions. The table below m
 ├── simd_f128.h           # Core library - Double-Double arithmetic engine
 ├── simd_f128_consts.h    # High-precision mathematical constants
 ├── simd_f128_io.h        # String conversion and console output
+├── simd_f128_math.h      # Advanced mathematical functions (exp, log, sin, cos, pow)
+├── simd_f128_utils.h     # Comparison and utility functions (cmp, abs, min, max)
+├── simd_f128.hpp         # Modern C++ wrapper with operator overloading
 ├── CMakeLists.txt        # Cross-platform build configuration
 └── LICENSE               # MIT License
 ```
+
+---
+
+## Used By
+
+| Project | Description |
+|---|---|
+| [mandelbrot-c](https://github.com/tiw302/mandelbrot-c) | Deep-zoom Mandelbrot renderer in C, using simd-f128 for 128-bit precision coordinates |
 
 ---
 
