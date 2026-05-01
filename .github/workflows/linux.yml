@@ -29,6 +29,17 @@ jobs:
       - name: Run tests
         run: ctest --test-dir build -C Release --output-on-failure -V
 
+  sse2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSIMD_F128_AVX2=OFF
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Run tests
+        run: ctest --test-dir build -C Release --output-on-failure -V
+
   riscv64:
     runs-on: ubuntu-latest
     steps:

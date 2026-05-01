@@ -7,13 +7,24 @@ on:
     branches: [ master, main ]
 
 jobs:
-  msvc:
+  msvc-scalar:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Configure (Scalar)
-        run: cmake -S . -B build
+      - name: Configure
+        run: cmake -S . -B build -DSIMD_F128_AVX2=OFF
       - name: Build
         run: cmake --build build --config Release
       - name: Run tests
         run: ctest --test-dir build -C Release --output-on-failure
+
+  msvc-avx2:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure
+        run: cmake -S . -B build_avx2 -DSIMD_F128_AVX2=ON
+      - name: Build
+        run: cmake --build build_avx2 --config Release
+      - name: Run tests
+        run: ctest --test-dir build_avx2 -C Release --output-on-failure
