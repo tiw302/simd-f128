@@ -14,15 +14,37 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Language](https://img.shields.io/badge/Language-C11-00599C.svg)](https://en.wikipedia.org/wiki/C11_(C_standard_revision))
+[![Language](https://img.shields.io/badge/Language-C%2B%2B11-f34b7d.svg)](https://en.wikipedia.org/wiki/C%2B%2B11)
+[![Header-Only](https://img.shields.io/badge/Library-Header--Only-brightgreen.svg)](#installation)
+[![Zero-Allocation](https://img.shields.io/badge/Memory-Zero--Allocation-orange.svg)](#design-philosophy)
+[![No-Dependencies](https://img.shields.io/badge/Dependencies-None-blueviolet.svg)](#introduction)
+[![Last Commit](https://img.shields.io/github/last-commit/tiw302/simd-f128.svg)](https://github.com/tiw302/simd-f128/commits/master)
+
+> **Verified Compatibility — 11/11 Platforms Passing**
+
+| Architecture | Platform | Verified Backend |
+| :--- | :--- | :--- |
+| **x86_64 (Modern)** | Linux / Windows | **AVX2** (Vectorized) |
+| **x86_64 (Legacy)** | Linux | **SSE2** (Emulated SIMD) |
+| **ARM64 (Apple)** | macOS (M1/M2/M3) | **NEON** (Vectorized) |
+| **ARM64 (Android)** | Mobile | **NEON** (Vectorized) |
+| **ARMv7 (Android)** | Mobile | **Scalar** C11 |
+| **WebAssembly** | Chrome / Node.js | **WASM-SIMD128** |
+| **WebAssembly** | Universal Web | **WASM Scalar** |
+| **RISC-V64** | Linux (QEMU) | **Scalar** C11 |
+| **General Desktop** | Linux / Windows | **Scalar** C11 Fallback |
+
 
 ---
+
+## Table of Contents
 
 | Introduction | Setup & Build | Components | Resources | Community |
 |---|---|---|---|---|
 | [Overview](#introduction) | [Requirements](#requirements) | [Core Engine](#simd_f128h-core) | [API Docs](#api-reference) | [CI Status](#platform-support--ci-status) |
 | [Why?](#why-simd-f128) | [Toolchains](#verified-toolchains) | [Constants](#simd_f128_constsh) | [Math Theory](#double-double-arithmetic) | [Contributing](#contributing) |
 | [Philosophy](#design-philosophy) | [Installation](#build-and-installation) | [I/O Utilities](#simd_f128_ioh) | [Examples](#examples) | [License](#license) |
-| [Used By](#used-by) | [Project Structure](#project-structure) | [Math Functions](#simd_f128_mathh) | | |
+| | | [Math Functions](#simd_f128_mathh) | [Limitations & Technical Notes](#double-double-arithmetic) | |
 | | | [Utilities & Comparisons](#simd_f128_utilsh) | | |
 | | | [C++ Wrapper](#simd_f128hpp) | | |
 
@@ -38,23 +60,21 @@ Designed for demanding workloads such as fractal rendering, physical simulations
 
 ## Why simd-f128?
 
-Standard 64-bit `double` provides approximately 15-16 significant decimal digits. For most applications this is sufficient. However, certain problems expose its limits:
+Ever zoomed into a Mandelbrot set and watched the detail dissolve into grey mush? That's `double` precision dying — at zoom levels beyond ~10^-14, two distinct coordinates become the same value and the image collapses entirely. The same silent failure happens in long-running simulations, ill-conditioned linear algebra, and anywhere small errors compound over time.
 
-- **Deep-zoom fractals** — at zoom levels beyond ~10^-14, coordinates collapse to the same double value and detail disappears entirely.
-- **Long-running simulations** — rounding errors accumulate over millions of iterations, causing physical simulations to diverge from the true trajectory.
-- **Ill-conditioned linear algebra** — problems with large condition numbers lose accuracy rapidly in standard double arithmetic.
-
-The alternatives each have significant trade-offs:
+The usual fixes each carry a significant cost:
 
 | Option | Precision | Allocation | Portability | Complexity |
 |---|---|---|---|---|
 | `double` | ~15 digits | None | Universal | None |
-| **simd-f128** | **~31 digits** | **None** | **Universal** | **Low** |
 | `long double` | 18-19 digits (x87) | None | Compiler-dependent | Low |
-| `__float128` (GCC) | ~33 digits | None | GCC/Clang only | Medium |
-| GMP / MPFR | Arbitrary | Heap | Portable | High |
+| `__float128` (GCC) | ~33 digits | None | **GCC/Clang only** | Medium |
+| GMP / MPFR | Arbitrary | **Heap** | Portable | High |
+| [x] **simd-f128** | **~31 digits** | **None** | **Universal** | **Low** |
 
-simd-f128 occupies the space between `double` and full arbitrary-precision libraries: it roughly doubles usable precision with no additional memory allocation and no external dependencies.
+`__float128` gets close on precision but locks you into GCC/Clang and is noticeably slower in tight loops. GMP/MPFR are powerful but heap-allocating inside a render loop is a non-starter.
+
+simd-f128 occupies the exact gap: **it doubles usable precision with zero allocation, zero dependencies, and no compiler lock-in** — proven in practice by [mandelbrot-c](https://github.com/tiw302/mandelbrot-c), which achieves stable deep-zoom rendering at coordinates down to 10^-28, far beyond what standard `double` can represent.
 
 ---
 
@@ -67,6 +87,15 @@ The library is built around three constraints that were never relaxed during dev
 **No configuration required.** The correct SIMD backend — AVX2, NEON, WASM-SIMD, or scalar — is selected automatically at compile time based on the target architecture. Passing the wrong flag produces a compile error immediately rather than silently degrading precision at runtime.
 
 **Standard C foundation.** The library is built entirely on IEEE 754 `double` arithmetic and C11 standard library functions. It does not rely on compiler extensions, non-standard intrinsics outside of guarded `#ifdef` blocks, or platform-specific ABI assumptions. The scalar fallback compiles and produces correct results on any C99-compliant toolchain.
+
+---
+
+### Limitations & Technical Notes
+
+**Double-Double vs IEEE 754 128-bit:**
+Please note that `simd-f128` uses **Double-Double arithmetic** (an unevaluated sum of two standard 64-bit `double` values) to achieve approximately 31 decimal digits of precision. It is **not** a strictly compliant IEEE 754 `binary128` implementation.
+
+While this approach offers massive performance benefits and is perfect for deeply zooming into fractals (like in [mandelbrot-c](https://github.com/tiw302/mandelbrot-c), it is susceptible to **Catastrophic Cancellation** in specific scenarios (e.g., subtracting two nearly identical values). If you are building highly sensitive physics simulations or rigorous numerical analysis tools where IEEE 754 edge-case compliance is strictly required, a heavier library like GMP/MPFR or compiler-specific `__float128` may be more appropriate.
 
 ---
 
