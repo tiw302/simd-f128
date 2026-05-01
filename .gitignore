@@ -24,6 +24,31 @@ obj/
 /test_*
 /example_*
 /test_arithmetic
+/basic_arithmetic
+/mandelbrot_core
+/precision_demo
+
+# Environment & Secrets (Security)
+.env
+.env.*
+*.local
+credentials.json
+*.pem
+*.key
+
+# Logs & Temporary
+*.log
+*.bak
+*.tmp
+*.temp
+core
+core.*
+
+# Python Cache (for local helper scripts)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
 # CMake specific
 CMakeCache.txt
