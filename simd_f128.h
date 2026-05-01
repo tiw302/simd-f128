@@ -185,7 +185,12 @@
 extern "C" {
 #endif
 
-#define SIMD_F128_INLINE static inline __attribute__((always_inline))
+/* Always inline for max performance. Handle MSVC compatibility. */
+#if defined(_MSC_VER)
+    #define SIMD_F128_INLINE static __forceinline
+#else
+    #define SIMD_F128_INLINE static inline __attribute__((always_inline))
+#endif
 
 // Initialization
 SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d);
