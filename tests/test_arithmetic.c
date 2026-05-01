@@ -130,7 +130,8 @@ int main() {
     CHECK("pi^2 hi ~ 9.8696", fabsl(hi - 9.869604401089358) < 1e-13);
 
     simd_f128 one_check = simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(1.0));
-    CHECK("pi * 1.0 hi correct", fabsl(hi - 9.869604401089358) < 1e-10);
+    extract(one_check, &hi, &lo);
+    CHECK("pi * 1.0 hi correct", fabs(hi - 3.1415926535897931) < 1e-15);
 
     printf("\n[1.6] division\n");
     simd_f128 six = simd_f128_from_double(6.0);
