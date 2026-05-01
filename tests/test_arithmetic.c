@@ -6,18 +6,9 @@
 #include "../simd_f128_consts.h"
 #include "../simd_f128_io.h"
 
-/* extract hi/lo across all backends */
+/* extract hi/lo across all backends using the centralized API */
 static void extract(simd_f128 x, double *hi, double *lo) {
-#if defined(SIMD_F128_USE_AVX2)
-    *hi = _mm_cvtsd_f64(_mm_unpackhi_pd(x, x));
-    *lo = _mm_cvtsd_f64(x);
-#elif defined(SIMD_F128_USE_WASM)
-    *hi = wasm_f64x2_extract_lane(x, 1);
-    *lo = wasm_f64x2_extract_lane(x, 0);
-#else
-    *hi = x.hi;
-    *lo = x.lo;
-#endif
+    simd_f128_extract(x, hi, lo);
 }
 
 int tests_run    = 0;
@@ -27,10 +18,10 @@ int tests_failed = 0;
     do {                                                        \
         tests_run++;                                            \
         if (!(cond)) {                                          \
-            printf("  FAIL: %s\n", label);                     \
+            printf("  FAIL: %s\n", label);                      \
             tests_failed++;                                     \
         } else {                                                \
-            printf("  PASS: %s\n", label);                     \
+            printf("  PASS: %s\n", label);                      \
         }                                                       \
     } while (0)
 
