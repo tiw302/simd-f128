@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="assets/images/logo.webp" width="450" alt="SIMD-F128 Logo">
+  <img src="assets/images/logo.webp" width="400" alt="simd-f128 Logo">
   <br>
   <b>High-performance cross-platform 128-bit arithmetic for SIMD applications.</b>
 </p>
 
-# SIMD-F128
+# simd-f128
 
 [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
 [![macOS](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
@@ -29,27 +29,43 @@
 
 ## Introduction
 
-**SIMD-F128** is a professional-grade, header-only C library for **128-bit (Double-Double)** floating-point arithmetic. It targets the precision gap between standard 64-bit IEEE 754 doubles and heavyweight arbitrary-precision libraries, providing approximately 31–32 decimal digits of accuracy with zero heap allocation overhead.
+**simd-f128** is a professional-grade, header-only C library for **128-bit (Double-Double)** floating-point arithmetic. It targets the precision gap between standard 64-bit IEEE 754 doubles and heavyweight arbitrary-precision libraries, providing approximately 31-32 decimal digits of accuracy with zero heap allocation overhead.
 
 Designed for demanding workloads such as fractal rendering, physical simulations, and orbital mechanics — where double precision falls short but `libquadmath` or GMP would be excessive.
 
 ---
 
-## Why SIMD-F128?
+## Why simd-f128?
 
-In many scientific and engineering applications, standard 64-bit `double` precision (IEEE 754) is insufficient, yet arbitrary-precision libraries like GMP or MPFR are too slow and heavy for high-performance inner loops. **SIMD-F128** fills this critical gap.
+Standard 64-bit `double` provides approximately 15-16 significant decimal digits. For most applications this is sufficient. However, certain problems expose its limits:
 
-- **Double-Double Precision**: Leverages the error-free transformation (EFT) of two floating-point numbers to provide ~31 decimal digits of precision.
-- **Zero Heap Allocation**:conceptually a pair of doubles. No `malloc`, no garbage collection, no overhead.
-- **Native CPU Speed**: Unlike software-emulated 128-bit types, this library maps arithmetic directly to native SIMD instructions (AVX2, NEON, WASM-SIMD).
-- **Header-Only Integration**: No build system complexity. Drop the header into your project, define the implementation macro in one file, and you're done.
+- **Deep-zoom fractals** — at zoom levels beyond ~10^-14, coordinates collapse to the same double value and detail disappears entirely.
+- **Long-running simulations** — rounding errors accumulate over millions of iterations, causing physical simulations to diverge from the true trajectory.
+- **Ill-conditioned linear algebra** — problems with large condition numbers lose accuracy rapidly in standard double arithmetic.
 
-### Design Philosophy
+The alternatives each have significant trade-offs:
 
-1.  **Simplicity over Complexity**: The API is minimal and predictable.
-2.  **No Hidden Costs**: What you see is what you get. Every operation is documented with its computational cost.
-3.  **Strictly Portable**: While optimized for SIMD, the library is written in compliant C11 with a robust scalar fallback for any architecture.
-4.  **Zero Dependency**: Requires nothing but a standard C compiler and the platform's math library (`-lm`).
+| Option | Precision | Allocation | Portability | Complexity |
+|---|---|---|---|---|
+| `double` | ~15 digits | None | Universal | None |
+| **simd-f128** | **~31 digits** | **None** | **Universal** | **Low** |
+| `long double` | 18-19 digits (x87) | None | Compiler-dependent | Low |
+| `__float128` (GCC) | ~33 digits | None | GCC/Clang only | Medium |
+| GMP / MPFR | Arbitrary | Heap | Portable | High |
+
+simd-f128 occupies the space between `double` and full arbitrary-precision libraries: it roughly doubles usable precision with no additional memory allocation and no external dependencies.
+
+---
+
+## Design Philosophy
+
+The library is built around three constraints that were never relaxed during development:
+
+**Zero allocation.** Every operation executes entirely in CPU registers. There are no calls to `malloc`, no temporary buffers, and no GC pressure. This makes simd-f128 suitable for use inside tight render loops, interrupt handlers, and embedded firmware where heap allocation is prohibited.
+
+**No configuration required.** The correct SIMD backend — AVX2, NEON, WASM-SIMD, or scalar — is selected automatically at compile time based on the target architecture. Passing the wrong flag produces a compile error immediately rather than silently degrading precision at runtime.
+
+**Standard C foundation.** The library is built entirely on IEEE 754 `double` arithmetic and C11 standard library functions. It does not rely on compiler extensions, non-standard intrinsics outside of guarded `#ifdef` blocks, or platform-specific ABI assumptions. The scalar fallback compiles and produces correct results on any C99-compliant toolchain.
 
 ---
 
@@ -60,94 +76,81 @@ In many scientific and engineering applications, standard 64-bit `double` precis
 | C Standard | C11 or later (C99 compatible for scalar path) |
 | Compiler | GCC 4.9+, Clang 3.5+, MSVC 2019+, Emscripten 3.0+ |
 | Math library | `-lm` required on Linux/UNIX (for `fma()`) |
- 
- ### Verified Toolchains
- 
-- **Linux**: GCC 4.9..13, Clang 6..18 (x86_64, aarch64, armv7, riscv64)
-- **macOS**: Apple Clang (Xcode 14, 15), Intel LLVM
-- **Windows**: MSVC 2019/2022, Clang-cl, MinGW-w64 (GCC 12+)
-- **Web**: Emscripten 3.1.x (SIMD128 enabled)
-- **Mobile**: Android NDK r26b, iOS SDK 17+
 
 ---
 
-## Platform Support & CI Status
+## Verified Toolchains
 
-**SIMD-F128** is rigorously tested across a wide matrix of operating systems and hardware architectures. The status below reflects real-time build and test results from our GitHub Actions CI pipeline.
+The following toolchains are tested on every commit via CI. All others fall back to the scalar path and are expected to produce correct results.
 
-| Operating System | Target Architecture | Primary Backend | Build Status |
+| Toolchain | Version | Platform | Backend |
 |---|---|---|---|
-| **Linux** | x86_64 (AVX2), AArch64, ARMv7, RISC-V | AVX2 / Scalar | [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions) |
-| **macOS** | Apple Silicon (M1/M2/M3), Intel x64 | NEON / AVX2 | [![macOS](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions) |
-| **Windows** | x64 (MSVC / Clang-cl) | AVX2 / Scalar | [![Windows](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions) |
-| **WebAssembly** | SIMD128, Standard (Scalar) | WASM-SIMD | [![WASM](https://github.com/tiw302/simd-f128/actions/workflows/wasm.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions) |
-| **Mobile** | Android (NDK arm64-v8a), iOS (arm64) | NEON | [![Mobile](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions) |
-
-> [!TIP]
-> On platforms without specific SIMD backends (like RISC-V or PowerPC), the library automatically falls back to a high-performance **Scalar** implementation without any manual configuration required.
-
-The library auto-detects the backend at compile time via preprocessor macros. No manual configuration is needed; pass the appropriate flag and the correct path is selected automatically.
+| GCC | 11+ | Linux x86_64 | Scalar, AVX2 |
+| GCC (aarch64-linux-gnu) | 11+ | Linux ARM64 (QEMU) | NEON |
+| GCC (arm-linux-gnueabihf) | 11+ | Linux ARMv7 (QEMU) | Scalar + VFPv4 |
+| GCC (riscv64-linux-gnu) | 11+ | Linux RISC-V64 (QEMU) | Scalar |
+| Clang | 14+ | macOS Apple Silicon | NEON |
+| Clang | 14+ | macOS Intel | Scalar, AVX2 |
+| MSVC | 2022 | Windows x64 | Scalar |
+| Emscripten | 3.0+ | WASM (Node.js) | WASM-SIMD, Scalar |
 
 ---
 
-## Getting Started
+## Build and Installation
 
-### 1. Integration
-
-Copy the desired `.h` files into your project. No pre-compilation or linking is required.
-
-### 2. Implementation Guard
-
-In **exactly one** source file, define the implementation macro before including the headers:
+simd-f128 is header-only. The simplest integration is copying the `.h` files directly into your project, then defining the implementation macro in exactly one translation unit:
 
 ```c
 #define SIMD_F128_IMPLEMENTATION
 #include "simd_f128.h"
-#include "simd_f128_io.h"
+#include "simd_f128_io.h"   /* optional */
 ```
 
 All other translation units include the headers without the macro.
 
----
+### CMake
 
-## Quick Example
+```bash
+# Scalar backend (default - works everywhere)
+cmake -S . -B build
+cmake --build build
 
-```c
-#include <stdio.h>
+# AVX2 backend (Intel/AMD Haswell+)
+cmake -S . -B build -DSIMD_F128_AVX2=ON
+cmake --build build
 
-#define SIMD_F128_IMPLEMENTATION
-#include "simd_f128.h"
-#include "simd_f128_consts.h"
-#include "simd_f128_io.h"
+# WebAssembly + SIMD128 (Chrome 91+, Firefox 89+, Safari 16.4+, Node.js 16+)
+emcmake cmake -S . -B build -DSIMD_F128_WASM=ON
+cmake --build build
 
-int main() {
-    simd_f128 r    = simd_f128_from_double(10.0);
-    simd_f128 r2   = simd_f128_mul(r, r);
-    simd_f128 area = simd_f128_mul(SIMD_F128_PI, r2);
+# WebAssembly Scalar (maximum browser compatibility)
+emcmake cmake -S . -B build
+cmake --build build
 
-    /* Output: 314.15926535897932384626433832795028 */
-    printf("Circle Area: ");
-    simd_f128_print(area);
+# ARMv7 - optional flag for hardware FMA on VFPv4 cores
+cmake -S . -B build -DCMAKE_C_FLAGS="-mfpu=neon-vfpv4 -mfloat-abi=hard"
+cmake --build build
+```
 
-    return 0;
-}
+AArch64 (Apple Silicon, Graviton, Android ARM64) requires no flags - NEON is auto-detected. Run tests after building:
+
+```bash
+ctest --test-dir build
 ```
 
 ---
 
-## Library Components
+## simd_f128.h (Core)
 
-### simd_f128.h (Core)
-
-The central engine of the library. Implements the Double-Double representation and all fundamental arithmetic operations.
+The central engine of the library. Implements the Double-Double type and all fundamental arithmetic operations. All functions are `static inline` - no separate compilation unit is needed beyond the `SIMD_F128_IMPLEMENTATION` guard.
 
 **Key properties:**
 
-- **~106-bit mantissa** — roughly 31–32 decimal digits of precision.
-- **Zero heap allocation** — all operations execute directly in CPU registers, suitable for tight inner loops.
-- **Automatic SIMD dispatch** — selects AVX2 (`__m128d`) on Intel/AMD, NEON (`float64x2_t`) on ARM64/Apple Silicon, WASM-SIMD (`v128_t`) on the web, or falls back to optimized scalar C99.
-- **Branchless implementation** — consistent execution time, no pipeline stalls.
-- **Strict IEEE 754 foundation** — built on standard `double`, fully compatible with existing floating-point hardware.
+- **~106-bit mantissa** - roughly 31-32 decimal digits of precision.
+- **Zero heap allocation** - all operations execute directly in CPU registers, suitable for tight inner loops.
+- **Automatic SIMD dispatch** - selects AVX2 (`__m128d`) on Intel/AMD, NEON (`float64x2_t`) on ARM64/Apple Silicon, WASM-SIMD (`v128_t`) on the web, or falls back to scalar C99.
+- **Branchless implementation** - consistent execution time, no pipeline stalls.
+- **Strict IEEE 754 foundation** - built on standard `double`, fully compatible with existing hardware.
 
 ```c
 #define SIMD_F128_IMPLEMENTATION
@@ -167,9 +170,9 @@ int main() {
 
 ---
 
-### simd_f128_consts.h
+## simd_f128_consts.h
 
-Provides pre-computed, high-precision mathematical constants stored as Double-Double pairs. Each constant captures the full ~106-bit mantissa, avoiding the precision loss inherent in standard 64-bit initialisers.
+Pre-computed, high-precision mathematical constants stored as Double-Double pairs. Each constant captures the full ~106-bit mantissa, avoiding the precision loss inherent in standard 64-bit initialisers.
 
 ```c
 #include "simd_f128.h"
@@ -179,6 +182,7 @@ int main() {
     simd_f128 pi     = SIMD_F128_PI;    /* 3.14159265358979323846... */
     simd_f128 e      = SIMD_F128_E;     /* 2.71828182845904523536... */
     simd_f128 sqrt_2 = SIMD_F128_SQRT2; /* 1.41421356237309504880... */
+    simd_f128 ln2    = SIMD_F128_LN2;   /* 0.69314718055994530941... */
 
     return 0;
 }
@@ -186,7 +190,7 @@ int main() {
 
 ---
 
-### simd_f128_io.h
+## simd_f128_io.h
 
 Handles conversion between the internal Double-Double representation and human-readable decimal strings. Standard `printf` formatting cannot faithfully render 128-bit values; this header uses an iterative high-precision extraction algorithm to produce up to 32 correct decimal places.
 
@@ -242,7 +246,7 @@ int main() {
 
 ## Double-Double Arithmetic
 
-SIMD-FP represents a value $x$ as the unevaluated sum of two IEEE 754 doubles:
+simd-f128 represents a value $x$ as the unevaluated sum of two IEEE 754 doubles:
 
 $$x = x_{hi} + x_{lo}, \quad |x_{lo}| \leq \frac{1}{2} \, \text{ulp}(x_{hi})$$
 
@@ -256,31 +260,63 @@ This non-overlapping constraint provides ~106 bits of mantissa — approximately
 
 No memory allocation is required. The entire number lives in two registers.
 
----
+**Known limitations:**
 
-## Known Limitations
-
-**Operations available:** `add`, `sub`, `mul` only. Division, `sqrt`, and transcendental functions (`sin`, `cos`, `exp`, `log`) are not implemented. If these are required, they must be built on top of the provided primitives.
-
-**Numerical range:** Identical to IEEE 754 `double` (~±1.8 × 10³⁰⁸). The library extends mantissa precision only; it does not extend the exponent range. Overflow and underflow occur at the same thresholds as standard `double`.
-
-**Special values:** `NaN` and `Infinity` propagate through standard `double` rules. No extended multi-precision handling is applied — once `hi` becomes `NaN` or `Inf`, the result follows standard IEEE 754 behaviour.
-
-**FMA dependency:** `simd_f128_mul` relies on a hardware-fused multiply-add instruction for correct error capture in `TwoProd`. On AArch64 and modern x86_64, FMA is always available in hardware. On ARMv7, FMA is available only with VFPv4 (Cortex-A7, A15, A17, A53 and later); compile with `-mfpu=neon-vfpv4` to ensure the compiler emits `VFMA` instead of a software fallback.
-
-**Fixed precision:** The library is fixed at 128-bit (double-double). It is not a general-purpose arbitrary-precision library and cannot be extended to higher precision without redesign.
+- Operations available: `add`, `sub`, `mul` only. Division, `sqrt`, and transcendental functions are not implemented and must be built on top of the provided primitives.
+- Numerical range is identical to IEEE 754 `double` (~1.8 x 10^308). The library extends mantissa precision only.
+- `NaN` and `Infinity` propagate through standard `double` rules.
+- On ARMv7, FMA requires VFPv4 hardware (Cortex-A7, A15, A17, A53+) and the `-mfpu=neon-vfpv4` flag.
 
 ---
 
 ## Examples
 
-Three runnable examples are provided under `examples/`. Each targets a specific aspect of the library.
+Three runnable examples are provided under `examples/`.
 
-**`basic_arithmetic.c`** — entry point for new users. Loads `SIMD_F128_PI` and `SIMD_F128_E` from `simd_f128_consts.h`, performs addition, subtraction, and multiplication, then prints all three results at full 32-digit precision via `simd_f128_io.h`.
+**`basic_arithmetic.c`** — entry point for new users. Loads `SIMD_F128_PI` and `SIMD_F128_E` from `simd_f128_consts.h`, performs addition, subtraction, and multiplication, then prints all three results at full 32-digit precision.
 
-**`precision_demo.c`** — demonstrates the core motivation for using this library. Adds `1e-17` to `1.0` using both a standard `double` and a `simd_f128`, then prints both results side by side. The `double` result silently loses the small value; the `simd_f128` result preserves it in the `lo` component. Works correctly on all three backends (AVX2, WASM, Scalar).
+**`precision_demo.c`** — demonstrates the core motivation for using this library. Adds `1e-17` to `1.0` using both a standard `double` and a `simd_f128`, then prints both results side by side. The `double` result silently loses the small value; the `simd_f128` result preserves it in the `lo` component.
 
-**`mandelbrot_core.c`** — a realistic use case. Runs the Mandelbrot iteration `z = z² + c` at a deep-zoom coordinate that exceeds 64-bit precision, using the correct escape condition (`|z|² > 4`). Reports whether the point escapes and prints the final `zx`/`zy` values at full precision.
+**`mandelbrot_core.c`** — a realistic use case. Runs the Mandelbrot iteration `z = z^2 + c` at a deep-zoom coordinate that exceeds 64-bit precision, with the correct escape condition (`|z|^2 > 4`). Reports whether the point escapes and prints the final `zx`/`zy` values at full precision.
+
+Quick example — circle area at 32-digit precision:
+
+```c
+#include <stdio.h>
+
+#define SIMD_F128_IMPLEMENTATION
+#include "simd_f128.h"
+#include "simd_f128_consts.h"
+#include "simd_f128_io.h"
+
+int main() {
+    simd_f128 r    = simd_f128_from_double(10.0);
+    simd_f128 r2   = simd_f128_mul(r, r);
+    simd_f128 area = simd_f128_mul(SIMD_F128_PI, r2);
+
+    /* Output: 314.15926535897932384626433832795028 */
+    printf("Circle Area: ");
+    simd_f128_print(area);
+
+    return 0;
+}
+```
+
+---
+
+## Platform Support & CI Status
+
+Every commit is tested across all backends via GitHub Actions. The table below maps each workflow to the platforms and backends it covers.
+
+| Workflow | Platform | Backend | Runner |
+|---|---|---|---|
+| [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml) | Linux x86_64 | Scalar, AVX2 | `ubuntu-latest` |
+| [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml) | Linux ARM64, ARMv7, RISC-V64 | NEON, Scalar | `ubuntu-latest` + QEMU |
+| [![macOS](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml) | Apple Silicon (M1/M2/M3) | NEON | `macos-latest` |
+| [![macOS](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml) | macOS Intel | Scalar, AVX2 | `macos-13` |
+| [![Windows](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml) | Windows x64 (MSVC) | Scalar | `windows-latest` |
+| [![WASM](https://github.com/tiw302/simd-f128/actions/workflows/wasm.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/wasm.yml) | WebAssembly (Node.js) | WASM-SIMD, Scalar | `ubuntu-latest` + Emscripten |
+| [![Mobile](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml) | Android ARM64, Android ARMv7 | NEON, Scalar | `ubuntu-latest` + QEMU |
 
 ---
 
@@ -288,51 +324,19 @@ Three runnable examples are provided under `examples/`. Each targets a specific 
 
 ```text
 .
-├── assets/images/       # Logo and documentation media
-├── examples/            # Runnable usage examples (see Examples above)
-├── tests/               # Arithmetic unit tests (test_arithmetic.c)
-├── .github/workflows/   # CI pipeline (test.yml)
-├── simd_f128.h            # Core library — Double-Double arithmetic engine
-├── simd_f128_consts.h     # High-precision mathematical constants
-├── simd_f128_io.h         # String conversion and console output
-├── CMakeLists.txt       # Cross-platform build configuration
-└── LICENSE              # MIT License
-```
-
----
-
-## Build and Installation
-
-SIMD-FP is header-only. The simplest integration is copying the `.h` files directly into your project.
-
-### CMake
-
-```bash
-# Scalar backend (default — works everywhere)
-cmake -S . -B build
-cmake --build build
-
-# AVX2 backend (Intel/AMD Haswell+)
-cmake -S . -B build -DSIMD_F128_AVX2=ON
-cmake --build build
-
-# WebAssembly + SIMD128 (Chrome 91+, Firefox 89+, Safari 16.4+, Node.js 16+)
-emcmake cmake -S . -B build -DSIMD_F128_WASM=ON
-cmake --build build
-
-# WebAssembly Scalar (maximum browser compatibility)
-emcmake cmake -S . -B build
-cmake --build build
-
-# ARMv7 cross-compilation — optional flag for hardware FMA
-cmake -S . -B build -DCMAKE_C_FLAGS="-mfpu=neon-vfpv4 -mfloat-abi=hard"
-cmake --build build
-```
-
-AArch64 (Apple Silicon, Graviton, Android ARM64) requires no flags — NEON is auto-detected. Run tests after building:
-
-```bash
-ctest --test-dir build
+├── assets/images/        # Logo and documentation media
+├── examples/             # Runnable usage examples
+│   ├── basic_arithmetic.c
+│   ├── precision_demo.c
+│   └── mandelbrot_core.c
+├── tests/                # Arithmetic unit tests
+│   └── test_arithmetic.c
+├── .github/workflows/    # CI pipelines (linux, macos, windows, wasm, mobile)
+├── simd_f128.h           # Core library - Double-Double arithmetic engine
+├── simd_f128_consts.h    # High-precision mathematical constants
+├── simd_f128_io.h        # String conversion and console output
+├── CMakeLists.txt        # Cross-platform build configuration
+└── LICENSE               # MIT License
 ```
 
 ---
@@ -353,5 +357,4 @@ Thank you for taking the time to read this far, and for helping make this projec
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE) - see the [LICENSE](LICENSE) file for details
-.
+This project is licensed under the [MIT License](LICENSE) - see the [LICENSE](LICENSE) file for details.
