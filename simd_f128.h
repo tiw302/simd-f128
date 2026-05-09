@@ -1,3 +1,5 @@
+// updated 2026-05-09
+
 #ifndef SIMD_F128_H
 #define SIMD_F128_H
 
