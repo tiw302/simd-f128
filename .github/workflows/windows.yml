@@ -17,6 +17,11 @@ jobs:
         run: cmake --build build --config Release
       - name: Run tests
         run: ctest --test-dir build -C Release --output-on-failure
+      - name: Discord Notification
+        uses: sarisia/actions-status-discord@v1
+        if: always()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
 
   msvc-avx2:
     runs-on: windows-latest
@@ -28,3 +33,8 @@ jobs:
         run: cmake --build build_avx2 --config Release
       - name: Run tests
         run: ctest --test-dir build_avx2 -C Release --output-on-failure
+      - name: Discord Notification
+        uses: sarisia/actions-status-discord@v1
+        if: always()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}

@@ -17,6 +17,11 @@ jobs:
         run: cmake --build build --config Release
       - name: Run tests
         run: ctest --test-dir build -C Release --output-on-failure -V
+      - name: Discord Notification
+        uses: sarisia/actions-status-discord@v1
+        if: always()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
 
   avx2:
     runs-on: ubuntu-latest
@@ -28,6 +33,11 @@ jobs:
         run: cmake --build build --config Release
       - name: Run tests
         run: ctest --test-dir build -C Release --output-on-failure -V
+      - name: Discord Notification
+        uses: sarisia/actions-status-discord@v1
+        if: always()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
 
   sse2:
     runs-on: ubuntu-latest
@@ -39,6 +49,11 @@ jobs:
         run: cmake --build build --config Release
       - name: Run tests
         run: ctest --test-dir build -C Release --output-on-failure -V
+      - name: Discord Notification
+        uses: sarisia/actions-status-discord@v1
+        if: always()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
 
   riscv64:
     runs-on: ubuntu-latest
@@ -53,3 +68,8 @@ jobs:
           riscv64-linux-gnu-gcc tests/test_arithmetic.c \
             -O3 -lm -static -o test_riscv64
           qemu-riscv64 ./test_riscv64
+      - name: Discord Notification
+        uses: sarisia/actions-status-discord@v1
+        if: always()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
