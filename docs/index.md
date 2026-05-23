@@ -58,7 +58,7 @@ pip install simd-f128
 Install the Emscripten-compiled WebAssembly module via NPM.
 
 ```bash
-npm install simd-f128
+npm install @tiw302/simd-f128
 ```
 
 ## Quick Start Example (C++)

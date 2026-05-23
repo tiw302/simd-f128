@@ -15,7 +15,7 @@
 [![WASM](https://github.com/tiw302/simd-f128/actions/workflows/wasm.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
 [![Mobile](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
 [![PyPI](https://img.shields.io/pypi/v/simd-f128.svg)](https://pypi.org/project/simd-f128/)
-[![NPM](https://img.shields.io/npm/v/simd-f128.svg)](https://www.npmjs.com/package/simd-f128)
+[![NPM](https://img.shields.io/npm/v/@tiw302/simd-f128.svg)](https://www.npmjs.com/package/@tiw302/simd-f128)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Language](https://img.shields.io/badge/Language-C11-00599C.svg)](https://en.wikipedia.org/wiki/C11_(C_standard_revision))
@@ -145,7 +145,7 @@ pip install simd-f128
 ### JavaScript / Node.js (NPM)
 
 ```bash
-npm install simd-f128
+npm install @tiw302/simd-f128
 ```
 
 ### C/C++ (Header Only)
