@@ -12,4 +12,4 @@ theme:
     accent: cyan
 nav:
   - Home: index.md
-  - Live Demo: index.html
+  - Live Demo: demo.html

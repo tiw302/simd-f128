@@ -6,8 +6,8 @@
 
 # simd-f128
 
-[![Documentation](https://img.shields.io/badge/docs-API_Reference-blue.svg?style=for-the-badge)](docs/index.md)
-[![Live Demo](https://img.shields.io/badge/demo-WebAssembly-orange.svg?style=for-the-badge)](https://tiw302.github.io/simd-f128/)
+**[Read the Official Documentation](docs/index.md)**<br>
+**[Try the Live WebAssembly Demo](https://tiw302.github.io/simd-f128/demo.html)**
 
 [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
 [![macOS](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
