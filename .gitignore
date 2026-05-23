@@ -1,11 +1,12 @@
-# Build artifacts & Cache
+# build artifacts & cache
 build/
 build_test/
+build_bench/
 bin/
 out/
 obj/
 
-# Libraries & Objects
+# libraries & objects
 *.o
 *.obj
 *.a
@@ -14,7 +15,7 @@ obj/
 *.dylib
 *.dll
 
-# Executables
+# executables
 *.exe
 *.out
 *.app
@@ -28,7 +29,7 @@ obj/
 /mandelbrot_core
 /precision_demo
 
-# Environment & Secrets (Security)
+# environment & secrets (security)
 .env
 .env.*
 *.local
@@ -36,7 +37,7 @@ credentials.json
 *.pem
 *.key
 
-# Logs & Temporary
+# logs & temporary
 *.log
 *.bak
 *.tmp
@@ -44,33 +45,53 @@ credentials.json
 core
 core.*
 
-# Python Cache (for local helper scripts)
+# python cache & build artifacts
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.egg-info/
+.eggs/
+dist/
+wheelhouse/
+*.whl
+.pytest_cache/
+.python_build/
+venv/
+.venv/
+env/
 
-# CMake specific
+# cmake specific
 CMakeCache.txt
 CMakeFiles/
 Makefile
 cmake_install.cmake
 install_manifest.txt
 compile_commands.json
+_deps/
 
-# WebAssembly & Emscripten
+# mkdocs
+site/
+
+# webassembly & emscripten
 *.wasm
+!docs/*.wasm
 *.data
 *.worker.js
-*.js
-!assets/**/*.js
+# note: we only ignore the generated js in js/ but keep our handwritten wrapper
+js/simd_f128_wasm.js
+!docs/simd_f128_wasm.js
 
-# IDEs & Editors
+# node.js & javascript
+node_modules/
+npm-debug.log*
+
+# vscode
 .vscode/
 .idea/
 .vs/
 
-# Vim & Neovim
+# vim & neovim
 [._]*.s[a-v][a-z]
 [._]*.sw[a-p]
 [._]s[a-rt-v][a-z]
@@ -82,12 +103,12 @@ undo/
 .netrwhist
 *~
 
-# OS specific
+# os specific
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# Screenshots & Assets
+# screenshots & assets
 *.png
 !assets/**/*.png
 *.webp
@@ -95,5 +116,20 @@ desktop.ini
 screenshot_*.tga
 *.tga
 
-# Temporary Scripts
+# temporary scripts
 fix_*.py
+
+# rust & cargo
+target/
+**/*.rs.bk
+
+# python testing & linting
+.mypy_cache/
+.tox/
+.coverage
+htmlcov/
+.nox/
+
+# c++ tools
+.cache/
+.clangd/
