@@ -6,11 +6,16 @@
 
 # simd-f128
 
+[![Documentation](https://img.shields.io/badge/docs-API_Reference-blue.svg?style=for-the-badge)](docs/index.md)
+[![Live Demo](https://img.shields.io/badge/demo-WebAssembly-orange.svg?style=for-the-badge)](https://tiw302.github.io/simd-f128/)
+
 [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
 [![macOS](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
 [![Windows](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
 [![WASM](https://github.com/tiw302/simd-f128/actions/workflows/wasm.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
 [![Mobile](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
+[![PyPI](https://img.shields.io/pypi/v/simd-f128.svg)](https://pypi.org/project/simd-f128/)
+[![NPM](https://img.shields.io/npm/v/simd-f128.svg)](https://www.npmjs.com/package/simd-f128)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Language](https://img.shields.io/badge/Language-C11-00599C.svg)](https://en.wikipedia.org/wiki/C11_(C_standard_revision))
@@ -129,12 +134,28 @@ The following toolchains are tested on every commit via CI. All others fall back
 
 ## Build and Installation
 
+`simd-f128` can be integrated natively via C/C++ headers, Python, or JavaScript (WebAssembly).
+
+### Python (PyPI)
+
+```bash
+pip install simd-f128
+```
+
+### JavaScript / Node.js (NPM)
+
+```bash
+npm install simd-f128
+```
+
+### C/C++ (Header Only)
+
 simd-f128 is header-only. The simplest integration is copying the `.h` files directly into your project, then defining the implementation macro in exactly one translation unit:
 
 ```c
 #define SIMD_F128_IMPLEMENTATION
 #include "simd_f128.h"
-#include "simd_f128_io.h"   /* optional */
+#include "simd_f128_io.h"   // optional
 ```
 
 All other translation units include the headers without the macro.
@@ -143,7 +164,7 @@ For C++ projects, include the convenience wrapper instead:
 
 ```cpp
 #define SIMD_F128_IMPLEMENTATION
-#include "simd_f128.hpp"   /* pulls in all headers automatically */
+#include "simd_f128.hpp"   // pulls in all headers automatically
 ```
 
 ### CMake
@@ -219,10 +240,10 @@ Pre-computed, high-precision mathematical constants stored as Double-Double pair
 #include "simd_f128_consts.h"
 
 int main() {
-    simd_f128 pi     = SIMD_F128_PI;    /* 3.14159265358979323846... */
-    simd_f128 e      = SIMD_F128_E;     /* 2.71828182845904523536... */
-    simd_f128 sqrt_2 = SIMD_F128_SQRT2; /* 1.41421356237309504880... */
-    simd_f128 ln2    = SIMD_F128_LN2;   /* 0.69314718055994530941... */
+    simd_f128 pi     = SIMD_F128_PI;    // 3.14159265358979323846...
+    simd_f128 e      = SIMD_F128_E;     // 2.71828182845904523536...
+    simd_f128 sqrt_2 = SIMD_F128_SQRT2; // 1.41421356237309504880...
+    simd_f128 ln2    = SIMD_F128_LN2;   // 0.69314718055994530941...
 
     return 0;
 }
@@ -242,10 +263,10 @@ Handles conversion between the internal Double-Double representation and human-r
 int main() {
     simd_f128 val = simd_f128_from_double(3.141592653589793);
 
-    /* Direct console output */
+    // direct console output
     simd_f128_print(val);
 
-    /* String conversion for logging or UI */
+    // string conversion for logging or ui
     char buffer[128];
     simd_f128_to_string(buffer, sizeof(buffer), val);
 
@@ -276,22 +297,22 @@ Advanced mathematical functions built on top of the core Double-Double primitive
 int main() {
     simd_f128 x = SIMD_F128_PI;
 
-    /* e^π */
+    // e^π
     simd_f128 epi = simd_f128_exp(x);
 
-    /* ln(e) == 1 */
+    // ln(e) == 1
     simd_f128 one = simd_f128_log(SIMD_F128_E);
 
-    /* 2^10 == 1024 */
+    // 2^10 == 1024
     simd_f128 base = simd_f128_from_double(2.0);
     simd_f128 exp  = simd_f128_from_double(10.0);
     simd_f128 pw   = simd_f128_pow(base, exp);
 
-    /* sin(π/6) == 0.5 */
+    // sin(π/6) == 0.5
     simd_f128 half_pi = simd_f128_mul(x, simd_f128_from_double(1.0 / 6.0));
     simd_f128 s       = simd_f128_sin(half_pi);
 
-    /* cos(0) == 1 */
+    // cos(0) == 1
     simd_f128 c = simd_f128_cos(simd_f128_from_double(0.0));
 
     return 0;
@@ -316,16 +337,16 @@ int main() {
     simd_f128 a = simd_f128_from_double(1.0);
     simd_f128 b = simd_f128_from_double(2.0);
 
-    /* comparisons */
-    int lt = simd_f128_lt(a, b);  /* 1 */
-    int eq = simd_f128_eq(a, b);  /* 0 */
-    int ge = simd_f128_ge(b, a);  /* 1 */
+    // comparisons
+    int lt = simd_f128_lt(a, b);  // 1
+    int eq = simd_f128_eq(a, b);  // 0
+    int ge = simd_f128_ge(b, a);  // 1
 
-    /* utility */
+    // utility
     simd_f128 neg = simd_f128_from_double(-3.14);
-    simd_f128 abs_val = simd_f128_abs(neg);       /* 3.14... */
-    simd_f128 lo      = simd_f128_min(a, b);      /* 1.0 */
-    simd_f128 hi      = simd_f128_max(a, b);      /* 2.0 */
+    simd_f128 abs_val = simd_f128_abs(neg);       // 3.14...
+    simd_f128 lo      = simd_f128_min(a, b);      // 1.0
+    simd_f128 hi      = simd_f128_max(a, b);      // 2.0
 
     return 0;
 }
@@ -340,6 +361,8 @@ A modern C++ wrapper that makes `simd_f128` feel like a native arithmetic type. 
 **Features:**
 
 - `f128::float128` class with full operator overloading (`+`, `-`, `*`, `/`, `+=`, `-=`, `*=`, `/=`).
+- Full interoperability with `std::complex<double>` via `f128::complex128`.
+- Seamless integration with the **Eigen** matrix library via `simd_f128_eigen.hpp`.
 - All six comparison operators (`==`, `!=`, `<`, `>`, `<=`, `>=`).
 - Unary negation (`-x`).
 - `std::ostream` integration (`std::cout << val`).
@@ -355,20 +378,20 @@ int main() {
     f128::float128 a(1.5);
     f128::float128 b(2.5);
 
-    /* natural arithmetic */
+    // natural arithmetic
     f128::float128 sum  = a + b;
     f128::float128 prod = a * b;
 
-    /* math functions */
+    // math functions
     f128::float128 root = f128::sqrt(a);
     f128::float128 s    = f128::sin(f128::pi);
 
-    /* stream output */
+    // stream output
     std::cout << "a + b = " << sum  << "\n";
     std::cout << "a * b = " << prod << "\n";
     std::cout << "sqrt(a) = " << root << "\n";
 
-    /* comparisons */
+    // comparisons
     if (a < b) {
         std::cout << "a is smaller\n";
     }
@@ -381,7 +404,7 @@ The `float128` class stores a `simd_f128 data` member publicly, so it can be pas
 
 ```cpp
 f128::float128 val(3.14);
-simd_f128_print(val.data);  /* call C API directly */
+simd_f128_print(val.data);  // call c api directly
 ```
 
 ---
@@ -470,9 +493,11 @@ Here is an actual test run and precision comparison from the `Extreme Performanc
 ❯ ctest --test-dir build -C Release
 Test project /simd-f128/build
     Start 1: arithmetic_test
-1/1 Test #1: arithmetic_test ..................   Passed    0.00 sec
+1/2 Test #1: arithmetic_test ..................   Passed    0.00 sec
+    Start 2: arithmetic_test_cpp
+2/2 Test #2: arithmetic_test_cpp ..............   Passed    0.00 sec
 
-100% tests passed, 0 tests failed out of 1
+100% tests passed, 0 tests failed out of 2
 
 ~/Public/simd-f128 master* ⇡
 ❯ ./build/example_precision
@@ -496,6 +521,29 @@ final |z| components:
   zy = 0.35443468442007221298624089031401
 ```
 
+### Benchmark: Raw Speed (Google Benchmark)
+
+Because `simd-f128` operations are purely CPU-register bound, they are extremely fast. A single `simd_f128_mul` completes in ~12 nanoseconds on modern hardware.
+
+```console
+Run on (12 X 3268.33 MHz CPU s)
+CPU Caches:
+  L1 Data 32 KiB (x6)
+  L1 Instruction 32 KiB (x6)
+  L2 Unified 512 KiB (x6)
+  L3 Unified 16384 KiB (x1)
+----------------------------------------------------------
+Benchmark                Time             CPU   Iterations
+----------------------------------------------------------
+BM_Double_Add         3.07 ns         3.06 ns    228461238
+BM_Double_Mul         3.07 ns         3.06 ns    228446705
+BM_Float128_Add       16.0 ns         16.0 ns     43691862
+BM_Float128_Mul       8.63 ns         8.60 ns     81239843
+BM_SimdF128_Add       11.7 ns         11.6 ns     60113767
+BM_SimdF128_Mul       12.4 ns         12.3 ns     56728837
+```
+
+
 ---
 
 ## Double-Double Arithmetic
@@ -508,9 +556,11 @@ This non-overlapping constraint provides ~106 bits of mantissa — approximately
 
 **Implementation basis:**
 
-- **TwoSum (Knuth)** — error-free transformation for addition, capturing the exact rounding residual.
-- **TwoProd (Dekker)** — error-free transformation for multiplication, exploiting FMA where available.
-- **Normalisation** — each operation re-establishes the non-overlapping property before returning.
+- **Addition: TwoSum (Knuth)** — An error-free transformation (EFT) for addition that captures the exact rounding residual.
+- **Multiplication: TwoProd (Dekker)** — Exploits hardware FMA (Fused Multiply-Add) where available. On platforms lacking FMA, it seamlessly falls back to **Veltkamp's Split** to divide 53-bit mantissas into 26-bit halves, calculating the exact error product natively without precision loss.
+- **Division: Newton-Raphson Iteration** — Approximates the reciprocal $1/b_{hi}$ and refines it quadratically. Includes rigorous guards against `NaN` propagation during division-by-zero scenarios.
+- **Square Root: Fast Inverse Square Root (`rsqrt`)** — A heavily optimized 128-bit variant of the famous algorithm used in 3D physics engines. Computes $1/\sqrt{x}$ directly via Newton-Raphson to save CPU cycles in deep-zoom Mandelbrot escapes.
+- **Normalisation** — Every arithmetic operation rigidly re-establishes the non-overlapping property before returning.
 
 No memory allocation is required. The entire number lives in two registers.
 
@@ -549,7 +599,7 @@ int main() {
     simd_f128 r2   = simd_f128_mul(r, r);
     simd_f128 area = simd_f128_mul(SIMD_F128_PI, r2);
 
-    /* Output: 314.15926535897932384626433832795028 */
+    // output: 314.15926535897932384626433832795028
     printf("Circle Area: ");
     simd_f128_print(area);
 
@@ -568,7 +618,7 @@ int main() {
     f128::float128 r(10.0);
     f128::float128 area = f128::pi * r * r;
 
-    /* Output: 314.15926535897932384626433832795028 */
+    // output: 314.15926535897932384626433832795028
     std::cout << "Circle Area: " << area << "\n";
 
     return 0;
