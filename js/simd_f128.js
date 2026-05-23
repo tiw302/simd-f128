@@ -15,7 +15,8 @@ class Float128 {
         if (typeof val === 'string') {
             const ptr = Module._malloc(16); // 2 doubles = 16 bytes
             Module.ccall('simd_f128_wasm_from_string', 'null', ['string', 'number'], [val, ptr]);
-            this.data.set(new Float64Array(Module.HEAPF64.buffer, ptr, 2));
+            this.data[0] = Module.getValue(ptr, 'double');
+            this.data[1] = Module.getValue(ptr + 8, 'double');
             Module._free(ptr);
         } else if (typeof val === 'number') {
             this.data[0] = val;
@@ -32,12 +33,16 @@ class Float128 {
         const ptrB = Module._malloc(16);
         const ptrOut = Module._malloc(16);
         
-        new Float64Array(Module.HEAPF64.buffer, ptrA, 2).set(this.data);
-        new Float64Array(Module.HEAPF64.buffer, ptrB, 2).set(other.data);
+        Module.setValue(ptrA, this.data[0], 'double');
+        Module.setValue(ptrA + 8, this.data[1], 'double');
+        Module.setValue(ptrB, other.data[0], 'double');
+        Module.setValue(ptrB + 8, other.data[1], 'double');
         
         Module.ccall('simd_f128_wasm_add', 'null', ['number', 'number', 'number'], [ptrA, ptrB, ptrOut]);
         
-        const result = new Float128(new Float64Array(Module.HEAPF64.buffer, ptrOut, 2));
+        const result = new Float128(0);
+        result.data[0] = Module.getValue(ptrOut, 'double');
+        result.data[1] = Module.getValue(ptrOut + 8, 'double');
         
         Module._free(ptrA);
         Module._free(ptrB);
@@ -51,12 +56,16 @@ class Float128 {
         const ptrB = Module._malloc(16);
         const ptrOut = Module._malloc(16);
         
-        new Float64Array(Module.HEAPF64.buffer, ptrA, 2).set(this.data);
-        new Float64Array(Module.HEAPF64.buffer, ptrB, 2).set(other.data);
+        Module.setValue(ptrA, this.data[0], 'double');
+        Module.setValue(ptrA + 8, this.data[1], 'double');
+        Module.setValue(ptrB, other.data[0], 'double');
+        Module.setValue(ptrB + 8, other.data[1], 'double');
         
         Module.ccall('simd_f128_wasm_mul', 'null', ['number', 'number', 'number'], [ptrA, ptrB, ptrOut]);
         
-        const result = new Float128(new Float64Array(Module.HEAPF64.buffer, ptrOut, 2));
+        const result = new Float128(0);
+        result.data[0] = Module.getValue(ptrOut, 'double');
+        result.data[1] = Module.getValue(ptrOut + 8, 'double');
         
         Module._free(ptrA);
         Module._free(ptrB);
@@ -69,7 +78,8 @@ class Float128 {
         const ptrA = Module._malloc(16);
         const ptrBuf = Module._malloc(128); // 128 bytes string buffer
         
-        new Float64Array(Module.HEAPF64.buffer, ptrA, 2).set(this.data);
+        Module.setValue(ptrA, this.data[0], 'double');
+        Module.setValue(ptrA + 8, this.data[1], 'double');
         
         Module.ccall('simd_f128_wasm_to_string', 'null', ['number', 'number', 'number'], [ptrA, ptrBuf, 128]);
         
