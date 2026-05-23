@@ -1,40 +1,35 @@
-// updated 2026-05-09
+// updated 2026-05-23
 
 #ifndef SIMD_F128_H
 #define SIMD_F128_H
 
 /*
-    simd_f128.h -- high-performance 128-bit (double-double) arithmetic for SIMD.
-
-    Project URL: https://github.com/tiw302/simd-f128
-
-    Do this:
-        #define SIMD_F128_IMPLEMENTATION
-    before you include this file in *one* C or C++ file to create the
-    implementation.
-
-    technical background:
-    ---------------------
-    this library uses "double-double" arithmetic. basically, we represent a
-    high-precision number as the sum of two 64-bit doubles (hi + lo).
-    this gives us about 31 decimal digits of precision, which is roughly
-    the same as quad precision (f128) but much faster because it uses
-    hardware double-precision units.
-
-    simd optimization:
-    ------------------
-    we've got backends for pretty much everything:
-    - avx2:     x86_64 modern (haswell+, ryzen+)
-    - sse2:     x86_64 older or low-power
-    - neon:     arm64 (apple silicon, graviton, android)
-    - wasm:     webassembly with simd128
-    - scalar:   fallback for everything else (risc-v, ppc, etc.)
-
-    license:
-    --------
-    mit license
-    copyright (c) 2026 jirawat siripuk
-*/
+ * simd_f128.h -- high-performance 128-bit (double-double) arithmetic for simd.
+ * project url: https://github.com/tiw302/simd-f128
+ * do this:
+ * #define simd_f128_implementation
+ * before you include this file in *one* c or c++ file to create the
+ * implementation.
+ * technical background:
+ * ---------------------
+ * this library uses "double-double" arithmetic. basically, we represent a
+ * high-precision number as the sum of two 64-bit doubles (hi + lo).
+ * this gives us about 31 decimal digits of precision, which is roughly
+ * the same as quad precision (f128) but much faster because it uses
+ * hardware double-precision units.
+ * simd optimization:
+ * ------------------
+ * we've got backends for pretty much everything:
+ * - avx2:     x86_64 modern (haswell+, ryzen+)
+ * - sse2:     x86_64 older or low-power
+ * - neon:     arm64 (apple silicon, graviton, android)
+ * - wasm:     webassembly with simd128
+ * - scalar:   fallback for everything else (risc-v, ppc, etc.)
+ * license:
+ * --------
+ * mit license
+ * copyright (c) 2026 jirawat siripuk
+ */
 
 #include <stdint.h>
 #include <math.h>
@@ -47,27 +42,27 @@
 //
 // >>arch detection
 
-/* we check for avx2 first since it's the fastest on x86 */
+// we check for avx2 first since it's the fastest on x86
 #if defined(__AVX2__)
     #define SIMD_F128_USE_AVX2
     #include <immintrin.h>
 
-/* then sse2 as a fallback for older x86 or when avx2 is disabled */
+// then sse2 as a fallback for older x86 or when avx2 is disabled
 #elif defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64)
     #define SIMD_F128_USE_SSE2
     #include <emmintrin.h>
 
-/* wasm simd128 is great for web apps that need the speed */
+// wasm simd128 is great for web apps that need the speed
 #elif defined(__wasm_simd128__)
     #define SIMD_F128_USE_WASM
     #include <wasm_simd128.h>
 
-/* neon is standard on arm64 (aarch64) */
+// neon is standard on arm64 (aarch64)
 #elif defined(__aarch64__) || defined(_M_ARM64) || defined(__ARM_ARCH_ISA_A64)
     #define SIMD_F128_USE_NEON
     #include <arm_neon.h>
 
-/* everything else goes to the scalar path */
+// everything else goes to the scalar path
 #else
     #define SIMD_F128_USE_SCALAR
 #endif
@@ -82,7 +77,6 @@
 
 /*
  * simd_f128 - conceptually (hi + lo)
- *
  * we use 128-bit simd registers where possible to store both hi and lo
  * doubles in a single variable. this makes the code much cleaner and
  * helps the compiler optimize the data flow.
@@ -113,15 +107,22 @@
 extern "C" {
 #endif
 
-/* 
+// gpu (cuda/hip) support
+#if defined(__CUDACC__) || defined(__HIPCC__)
+    #define SIMD_F128_DEVICE __device__ __host__
+#else
+    #define SIMD_F128_DEVICE
+#endif
+
+/*
  * we use always_inline to make sure there's no function call overhead.
- * for double-double arithmetic, the overhead of a function call can 
+ * for double-double arithmetic, the overhead of a function call can
  * be significant compared to the actual math.
  */
 #if defined(_MSC_VER)
-    #define SIMD_F128_INLINE static __forceinline
+    #define SIMD_F128_INLINE SIMD_F128_DEVICE static __forceinline
 #else
-    #define SIMD_F128_INLINE static inline __attribute__((always_inline))
+    #define SIMD_F128_INLINE SIMD_F128_DEVICE static inline __attribute__((always_inline))
 #endif
 
 // initialization
@@ -133,6 +134,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b);
 SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b);
 SIMD_F128_INLINE simd_f128 simd_f128_div(simd_f128 a, simd_f128 b);
 SIMD_F128_INLINE simd_f128 simd_f128_sqrt(simd_f128 x);
+SIMD_F128_INLINE simd_f128 simd_f128_rsqrt(simd_f128 x);
 
 // extraction
 SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
@@ -176,13 +178,13 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
 #if defined(SIMD_F128_USE_AVX2)
 
     SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
-        /* hi = d, lo = 0.0 */
+        // hi = d, lo = 0.0
         return _mm_set_pd(0.0, d);
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
-        /* 
-         * knuth's two-sum algorithm. 
+        /*
+         * knuth's two-sum algorithm.
          * we basically do (a + b) and then calculate the exact error.
          */
         __m128d ahi = _mm_unpacklo_pd(a, a);
@@ -192,12 +194,12 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         __m128d v = _mm_sub_sd(s, ahi);
         __m128d e = _mm_add_sd(_mm_sub_sd(ahi, _mm_sub_sd(s, v)), _mm_sub_sd(bhi, v));
 
-        /* mix in the low parts of the inputs */
+        // mix in the low parts of the inputs
         __m128d alo = _mm_unpackhi_pd(a, a);
         __m128d blo = _mm_unpackhi_pd(b, b);
         __m128d t = _mm_add_sd(_mm_add_sd(alo, blo), e);
 
-        /* final normalization so that |hi| is as large as possible */
+        // final normalization so that |hi| is as large as possible
         __m128d final_hi = _mm_add_sd(s, t);
         __m128d final_lo = _mm_sub_sd(t, _mm_sub_sd(final_hi, s));
 
@@ -205,7 +207,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
-        /* simple subtraction by flipping the sign of b and adding */
+        // simple subtraction by flipping the sign of b and adding
         return simd_f128_add(a, _mm_xor_pd(b, _mm_set1_pd(-0.0)));
     }
 
@@ -222,14 +224,14 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         __m128d p = _mm_mul_sd(ahi, bhi);
         __m128d e = _mm_fmsub_sd(ahi, bhi, p);
         
-        /* add cross-terms from the low parts */
+        // add cross-terms from the low parts
         __m128d alo = _mm_unpackhi_pd(a, a);
         __m128d blo = _mm_unpackhi_pd(b, b);
         __m128d c1 = _mm_mul_sd(ahi, blo);
         __m128d c2 = _mm_mul_sd(alo, bhi);
         e = _mm_add_sd(e, _mm_add_sd(c1, c2));
 
-        /* re-normalize */
+        // re-normalize
         __m128d final_hi = _mm_add_sd(p, e);
         __m128d final_lo = _mm_sub_sd(e, _mm_sub_sd(final_hi, p));
 
@@ -237,24 +239,29 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_div(simd_f128 a, simd_f128 b) {
-        /* 
-         * division is tricky. we use a few iterations of newton-raphson 
+        /*
+         * division is tricky. we use a few iterations of newton-raphson
          * to get high precision for the reciprocal.
          */
         double ahi, alo, bhi, blo;
         simd_f128_extract(a, &ahi, &alo);
         simd_f128_extract(b, &bhi, &blo);
 
+        // initial guess for 1/bhi (hardware precision)
         double r = 1.0 / bhi;
-        r = r * (2.0 - bhi * r);
-        r = r * (2.0 - bhi * r);
+        // newton-raphson iterations: x_{n+1} = x_n * (2 - b * x_n)
+        r = r * (2.0 - bhi * r); // refine guess iter 1
+        r = r * (2.0 - bhi * r); // refine guess iter 2
 
-        double q = ahi * r;
-        double qlo = fma(ahi, r, -q) + alo * r;
+        // multiply a * (1/b) with exact error tracking via fma
+        double q = ahi * r; // main quotient hi
+        double qlo = fma(ahi, r, -q) + alo * r; // exact error of hi + cross term
 
+        // refine quotient: p = b * q
         double p = bhi * q;
-        double plo = fma(bhi, q, -p) + blo * q + qlo * bhi;
+        double plo = fma(bhi, q, -p) + blo * q + qlo * bhi; // compute error of p
 
+        // final quotient correction using residual
         double final_hi = q + (ahi - p - plo) * r;
         double final_lo = (ahi - p - plo) * r - (final_hi - q);
 
@@ -262,21 +269,26 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_sqrt(simd_f128 x) {
-        /* same logic as division, using newton-raphson for the root */
+        // same logic as division, using newton-raphson for the root
         double xhi, xlo;
         simd_f128_extract(x, &xhi, &xlo);
 
+        // initial hardware guess for 1/sqrt(xhi)
         double y = 1.0 / sqrt(xhi);
-        y = 0.5 * y * (3.0 - xhi * y * y);
-        y = 0.5 * y * (3.0 - xhi * y * y);
+        // newton-raphson iter for inverse sqrt: y_{n+1} = 0.5 * y_n * (3 - x * y_n^2)
+        y = 0.5 * y * (3.0 - xhi * y * y); // iter 1
+        y = 0.5 * y * (3.0 - xhi * y * y); // iter 2
 
+        // compute sqrt(x) from 1/sqrt(x) -> z = x * y
         double z = xhi * y;
         double zlo = fma(xhi, y, -z) + xlo * y;
 
+        // refine and compute error of z^2 vs x
         double est = z * z;
         double estlo = fma(z, z, -est) + 2.0 * z * zlo;
-        double err = (xhi - est) - estlo + xlo;
+        double err = (xhi - est) - estlo + xlo; // exact difference
 
+        // apply correction
         double final_hi = z + 0.5 * err * y;
         double final_lo = 0.5 * err * y - (final_hi - z);
 
@@ -285,7 +297,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
 
 #elif defined(SIMD_F128_USE_SSE2)
 
-    /* 
+    /*
      * sse2 path is similar to avx2 but without fma intrinsics.
      * we have to use the standard fma() from math.h which might be slower
      * if the cpu doesn't have the instruction, but it's still accurate.
@@ -459,7 +471,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
 #elif defined(SIMD_F128_USE_NEON)
 
     SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
-        /* hi in index 0, lo in index 1 for neon */
+        // hi in index 0, lo in index 1 for neon
         float64x2_t r = vdupq_n_f64(0.0);
         return vsetq_lane_f64(d, r, 0);
     }
@@ -572,10 +584,26 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         return simd_f128_add(a, b);
     }
 
+    // dekker's split (fallback when no fma)
+    SIMD_F128_INLINE double simd_f128_exact_mul_err(double a, double b, double p) {
+#ifdef FP_FAST_FMA
+        return fma(a, b, -p);
+#else
+        double c, ahi, alo, bhi, blo;
+        c = 134217729.0 * a;
+        ahi = c - (c - a);
+        alo = a - ahi;
+        c = 134217729.0 * b;
+        bhi = c - (c - b);
+        blo = b - bhi;
+        return ((ahi * bhi - p) + ahi * blo + alo * bhi) + alo * blo;
+#endif
+    }
+
     SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
         double p = a.hi * b.hi;
-        double e = fma(a.hi, b.hi, -p);
-        e += fma(a.hi, b.lo, a.lo * b.hi);
+        double e = simd_f128_exact_mul_err(a.hi, b.hi, p);
+        e += (a.hi * b.lo + a.lo * b.hi);
         
         double final_hi = p + e;
         double final_lo = e - (final_hi - p);
@@ -585,15 +613,22 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_div(simd_f128 a, simd_f128 b) {
+        if (b.hi == 0.0) {
+            double inf_val = (a.hi > 0.0) ? INFINITY : -INFINITY;
+            if (a.hi == 0.0) inf_val = NAN;
+            simd_f128 res = {inf_val, 0.0};
+            return res;
+        }
+
         double r = 1.0 / b.hi;
         r = r * (2.0 - b.hi * r);
         r = r * (2.0 - b.hi * r);
 
         double q = a.hi * r;
-        double qlo = fma(a.hi, r, -q) + a.lo * r;
+        double qlo = simd_f128_exact_mul_err(a.hi, r, q) + a.lo * r;
 
         double p = b.hi * q;
-        double plo = fma(b.hi, q, -p) + b.lo * q + qlo * b.hi;
+        double plo = simd_f128_exact_mul_err(b.hi, q, p) + b.lo * q + qlo * b.hi;
 
         double final_hi = q + (a.hi - p - plo) * r;
         double final_lo = (a.hi - p - plo) * r - (final_hi - q);
@@ -603,15 +638,21 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_sqrt(simd_f128 x) {
+        if (x.hi < 0.0) {
+            simd_f128 res = {NAN, 0.0};
+            return res;
+        }
+        if (x.hi == 0.0) return x;
+
         double y = 1.0 / sqrt(x.hi);
         y = 0.5 * y * (3.0 - x.hi * y * y);
         y = 0.5 * y * (3.0 - x.hi * y * y);
 
         double z = x.hi * y;
-        double zlo = fma(x.hi, y, -z) + x.lo * y;
+        double zlo = simd_f128_exact_mul_err(x.hi, y, z) + x.lo * y;
 
         double est = z * z;
-        double estlo = fma(z, z, -est) + 2.0 * z * zlo;
+        double estlo = simd_f128_exact_mul_err(z, z, est) + 2.0 * z * zlo;
         double err = (x.hi - est) - estlo + x.lo;
 
         double final_hi = z + 0.5 * err * y;
@@ -620,7 +661,17 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         simd_f128 res = {final_hi, final_lo};
         return res;
     }
+
 #endif
 
-#endif // SIMD_F128_IMPLEMENTATION
-#endif // SIMD_F128_H
+    /*
+     * architecture-agnostic inverse square root.
+     * utilizes the respective hardware-accelerated div and sqrt.
+     */
+    SIMD_F128_INLINE simd_f128 simd_f128_rsqrt(simd_f128 x) {
+        simd_f128 one = simd_f128_from_double(1.0);
+        return simd_f128_div(one, simd_f128_sqrt(x));
+    }
+
+#endif // simd_f128_implementation
+#endif // simd_f128_h
