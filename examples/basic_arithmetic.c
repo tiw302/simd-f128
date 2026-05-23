@@ -1,8 +1,8 @@
 #include <stdio.h>
 #define SIMD_F128_IMPLEMENTATION
-#include "../simd_f128.h"
-#include "../simd_f128_consts.h"
-#include "../simd_f128_io.h"
+#include "../include/simd_f128.h"
+#include "../include/simd_f128_consts.h"
+#include "../include/simd_f128_io.h"
 
 int main() {
     printf("--- simd-fp basic arithmetic ---\n\n");

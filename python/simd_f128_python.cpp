@@ -1,8 +1,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
 #define SIMD_F128_IMPLEMENTATION
-#include "../simd_f128.hpp"
-#include "../simd_f128_complex.hpp"
+#include "../include/simd_f128.hpp"
+#include "../include/simd_f128_complex.hpp"
 
 namespace py = pybind11;
 

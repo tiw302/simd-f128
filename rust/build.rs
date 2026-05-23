@@ -12,10 +12,10 @@ fn main() {
     
     let includes = format!(r#"
 #define SIMD_F128_IMPLEMENTATION
-#include "{0}/simd_f128.h"
-#include "{0}/simd_f128_io.h"
-#include "{0}/simd_f128_math.h"
-#include "{0}/simd_f128_utils.h"
+#include "{0}/include/simd_f128.h"
+#include "{0}/include/simd_f128_io.h"
+#include "{0}/include/simd_f128_math.h"
+#include "{0}/include/simd_f128_utils.h"
 "#, parent_dir);
 
     let wrapper_code = r#"

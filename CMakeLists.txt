@@ -36,7 +36,43 @@ endif()
 
 # library target (header-only)
 add_library(simd_fp INTERFACE)
-target_include_directories(simd_fp INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(simd_fp INTERFACE 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+include(GNUInstallDirs)
+
+install(DIRECTORY include/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+
+install(TARGETS simd_fp
+        EXPORT simd_fpTargets
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "simd_fpConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/simd_fpConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/simd_fpConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/simd_fp
+)
+
+install(EXPORT simd_fpTargets
+        FILE simd_fpTargets.cmake
+        NAMESPACE simd_fp::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/simd_fp)
+
+install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/simd_fpConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/simd_fpConfigVersion.cmake"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/simd_fp)
 
 # examples
 add_executable(example_basic      examples/basic_arithmetic.c)

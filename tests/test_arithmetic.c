@@ -4,12 +4,12 @@
 #include <string.h>
 
 #define SIMD_F128_IMPLEMENTATION
-#include "../simd_f128.h"
-#include "../simd_f128_consts.h"
-#include "../simd_f128_io.h"
-#include "../simd_f128_utils.h"
-#include "../simd_f128_math.h"
-#include "../simd_f128_complex.h"
+#include "../include/simd_f128.h"
+#include "../include/simd_f128_consts.h"
+#include "../include/simd_f128_io.h"
+#include "../include/simd_f128_utils.h"
+#include "../include/simd_f128_math.h"
+#include "../include/simd_f128_complex.h"
 
 static void extract(simd_f128 x, double *hi, double *lo) {
     simd_f128_extract(x, hi, lo);

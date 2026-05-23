@@ -21,14 +21,28 @@ The `simd-f128` library provides a high-performance, cross-platform implementati
 
 ### C/C++ (Header Only)
 
-The library is designed to be easily integrated into any C or C++ project without complex build systems.
+The library is designed to be easily integrated into any C or C++ project.
 
-1. Drop the `simd_f128.h` and `simd_f128.hpp` files into your project's include path.
+**Option 1: System Install via CMake (Recommended)**
+```bash
+git clone https://github.com/tiw302/simd-f128.git
+cd simd-f128
+cmake -S . -B build
+sudo cmake --install build
+```
+Then in your project's `CMakeLists.txt`:
+```cmake
+find_package(simd_fp REQUIRED)
+target_link_libraries(your_target PRIVATE simd_fp::simd_fp)
+```
+
+**Option 2: Drop-in Headers**
+1. Copy the `include/` directory into your project.
 2. In exactly **one** C/C++ file, define the implementation macro before including:
 
 ```c
 #define SIMD_F128_IMPLEMENTATION
-#include "simd_f128.h"
+#include <simd_f128.h>
 ```
 
 ### Python
@@ -51,8 +65,8 @@ npm install simd-f128
 
 ```cpp
 #include <iostream>
-#include "simd_f128.hpp"
-#include "simd_f128_io.h"
+#include <simd_f128.hpp>
+#include <simd_f128_io.h>
 
 using namespace f128;
 

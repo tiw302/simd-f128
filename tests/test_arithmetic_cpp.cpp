@@ -1,7 +1,7 @@
 #define SIMD_F128_IMPLEMENTATION
-#include "../simd_f128.hpp"
-#include "../simd_f128_complex.hpp"
-#include "../simd_f128_array.h"
+#include "../include/simd_f128.hpp"
+#include "../include/simd_f128_complex.hpp"
+#include "../include/simd_f128_array.h"
 #include <iostream>
 #include <vector>
 #include <complex>

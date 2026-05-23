@@ -150,12 +150,12 @@ npm install simd-f128
 
 ### C/C++ (Header Only)
 
-simd-f128 is header-only. The simplest integration is copying the `.h` files directly into your project, then defining the implementation macro in exactly one translation unit:
+simd-f128 is header-only. The simplest integration is copying the `include/` directory directly into your project, then defining the implementation macro in exactly one translation unit:
 
 ```c
 #define SIMD_F128_IMPLEMENTATION
-#include "simd_f128.h"
-#include "simd_f128_io.h"   // optional
+#include <simd_f128.h>
+#include <simd_f128_io.h>   // optional
 ```
 
 All other translation units include the headers without the macro.
@@ -164,11 +164,24 @@ For C++ projects, include the convenience wrapper instead:
 
 ```cpp
 #define SIMD_F128_IMPLEMENTATION
-#include "simd_f128.hpp"   // pulls in all headers automatically
+#include <simd_f128.hpp>   // pulls in all headers automatically
 ```
 
 ### CMake
 
+**System Install (Recommended)**
+You can install the library system-wide to easily use `find_package` in other projects:
+```bash
+cmake -S . -B build
+sudo cmake --install build
+```
+Then in your project's `CMakeLists.txt`:
+```cmake
+find_package(simd_fp REQUIRED)
+target_link_libraries(my_app PRIVATE simd_fp::simd_fp)
+```
+
+**Local Build Options**
 ```bash
 # Scalar backend (default - works everywhere)
 cmake -S . -B build
@@ -213,7 +226,7 @@ The central engine of the library. Implements the Double-Double type and all fun
 
 ```c
 #define SIMD_F128_IMPLEMENTATION
-#include "simd_f128.h"
+#include <simd_f128.h>
 
 int main() {
     simd_f128 a = simd_f128_from_double(1.234567890123456789);
@@ -236,8 +249,8 @@ int main() {
 Pre-computed, high-precision mathematical constants stored as Double-Double pairs. Each constant captures the full ~106-bit mantissa, avoiding the precision loss inherent in standard 64-bit initialisers.
 
 ```c
-#include "simd_f128.h"
-#include "simd_f128_consts.h"
+#include <simd_f128.h>
+#include <simd_f128_consts.h>
 
 int main() {
     simd_f128 pi     = SIMD_F128_PI;    // 3.14159265358979323846...
@@ -257,8 +270,8 @@ Handles conversion between the internal Double-Double representation and human-r
 
 ```c
 #define SIMD_F128_IMPLEMENTATION
-#include "simd_f128.h"
-#include "simd_f128_io.h"
+#include <simd_f128.h>
+#include <simd_f128_io.h>
 
 int main() {
     simd_f128 val = simd_f128_from_double(3.141592653589793);
@@ -290,9 +303,9 @@ Advanced mathematical functions built on top of the core Double-Double primitive
 
 ```c
 #define SIMD_F128_IMPLEMENTATION
-#include "simd_f128.h"
-#include "simd_f128_consts.h"
-#include "simd_f128_math.h"
+#include <simd_f128.h>
+#include <simd_f128_consts.h>
+#include <simd_f128_math.h>
 
 int main() {
     simd_f128 x = SIMD_F128_PI;
@@ -330,8 +343,8 @@ Comparison operators and utility functions. All are `static inline` and work wit
 The foundation is `simd_f128_cmp`, which compares the `hi` components first and only falls through to the `lo` components when `hi` values are identical — matching the canonical Double-Double ordering rule.
 
 ```c
-#include "simd_f128.h"
-#include "simd_f128_utils.h"
+#include <simd_f128.h>
+#include <simd_f128_utils.h>
 
 int main() {
     simd_f128 a = simd_f128_from_double(1.0);
@@ -371,7 +384,7 @@ A modern C++ wrapper that makes `simd_f128` feel like a native arithmetic type. 
 
 ```cpp
 #define SIMD_F128_IMPLEMENTATION
-#include "simd_f128.hpp"
+#include <simd_f128.hpp>
 #include <iostream>
 
 int main() {
@@ -590,9 +603,9 @@ Quick example — circle area at 32-digit precision:
 #include <stdio.h>
 
 #define SIMD_F128_IMPLEMENTATION
-#include "simd_f128.h"
-#include "simd_f128_consts.h"
-#include "simd_f128_io.h"
+#include <simd_f128.h>
+#include <simd_f128_consts.h>
+#include <simd_f128_io.h>
 
 int main() {
     simd_f128 r    = simd_f128_from_double(10.0);
@@ -611,7 +624,7 @@ Same example using the C++ wrapper:
 
 ```cpp
 #define SIMD_F128_IMPLEMENTATION
-#include "simd_f128.hpp"
+#include <simd_f128.hpp>
 #include <iostream>
 
 int main() {
@@ -655,12 +668,13 @@ Every commit is tested across all backends via GitHub Actions. The table below m
 ├── tests/                # Arithmetic unit tests
 │   └── test_arithmetic.c
 ├── .github/workflows/    # CI pipelines (linux, macos, windows, wasm, mobile)
-├── simd_f128.h           # Core library - Double-Double arithmetic engine
-├── simd_f128_consts.h    # High-precision mathematical constants
-├── simd_f128_io.h        # String conversion and console output
-├── simd_f128_math.h      # Advanced mathematical functions (exp, log, sin, cos, pow)
-├── simd_f128_utils.h     # Comparison and utility functions (cmp, abs, min, max)
-├── simd_f128.hpp         # Modern C++ wrapper with operator overloading
+├── include/              # Core library and headers
+│   ├── simd_f128.h           # Double-Double arithmetic engine
+│   ├── simd_f128_consts.h    # High-precision mathematical constants
+│   ├── simd_f128_io.h        # String conversion and console output
+│   ├── simd_f128_math.h      # Advanced mathematical functions (exp, log, sin, cos, pow)
+│   ├── simd_f128_utils.h     # Comparison and utility functions (cmp, abs, min, max)
+│   └── simd_f128.hpp         # Modern C++ wrapper with operator overloading
 ├── CMakeLists.txt        # Cross-platform build configuration
 └── LICENSE               # MIT License
 ```

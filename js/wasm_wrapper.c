@@ -1,6 +1,6 @@
 #define SIMD_F128_IMPLEMENTATION
-#include "../simd_f128.h"
-#include "../simd_f128_io.h"
+#include "../include/simd_f128.h"
+#include "../include/simd_f128_io.h"
 #include <stdlib.h>
 #include <string.h>
 

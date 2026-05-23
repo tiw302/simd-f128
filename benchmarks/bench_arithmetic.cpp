@@ -1,7 +1,7 @@
 #include <benchmark/benchmark.h>
 #define SIMD_F128_IMPLEMENTATION
-#include "../simd_f128.h"
-#include "../simd_f128_vector.h"
+#include "../include/simd_f128.h"
+#include "../include/simd_f128_vector.h"
 
 /*
  * ---------------------------------------------------------

@@ -5,7 +5,7 @@ ext_modules = [
     Extension(
         'simd_f128',
         ['python/simd_f128_python.cpp'],
-        include_dirs=[pybind11.get_include(), '.'],
+        include_dirs=[pybind11.get_include(), 'include'],
         language='c++',
         extra_compile_args=['-O3', '-march=native', '-std=c++14', '-DSIMD_F128_EXCEPTIONS']
     ),

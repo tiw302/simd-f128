@@ -1,7 +1,7 @@
 #include <stdio.h>
 #define SIMD_F128_IMPLEMENTATION
-#include "../simd_f128.h"
-#include "../simd_f128_io.h"
+#include "../include/simd_f128.h"
+#include "../include/simd_f128_io.h"
 
 int main() {
     printf("--- mandelbrot core loop (128-bit precision) ---\n\n");
