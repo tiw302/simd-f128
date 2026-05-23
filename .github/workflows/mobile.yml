@@ -10,7 +10,7 @@ jobs:
   android-arm64:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install AArch64 toolchain and QEMU
         run: |
           sudo apt-get update -q
@@ -20,16 +20,11 @@ jobs:
           aarch64-linux-gnu-gcc tests/test_arithmetic.c \
             -O3 -lm -static -o test_aarch64
           qemu-aarch64 ./test_aarch64
-      - name: Discord Notification
-        uses: sarisia/actions-status-discord@v1
-        if: always()
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
 
   android-armv7:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install ARMv7 toolchain and QEMU
         run: |
           sudo apt-get update -q
@@ -41,8 +36,3 @@ jobs:
             -mfpu=neon-vfpv4 -mfloat-abi=hard \
             -o test_armv7
           qemu-arm ./test_armv7
-      - name: Discord Notification
-        uses: sarisia/actions-status-discord@v1
-        if: always()
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}

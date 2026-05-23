@@ -10,31 +10,21 @@ jobs:
   msvc-scalar:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Configure
         run: cmake -S . -B build -DSIMD_F128_AVX2=OFF
       - name: Build
         run: cmake --build build --config Release
       - name: Run tests
         run: ctest --test-dir build -C Release --output-on-failure
-      - name: Discord Notification
-        uses: sarisia/actions-status-discord@v1
-        if: always()
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
 
   msvc-avx2:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Configure
         run: cmake -S . -B build_avx2 -DSIMD_F128_AVX2=ON
       - name: Build
         run: cmake --build build_avx2 --config Release
       - name: Run tests
         run: ctest --test-dir build_avx2 -C Release --output-on-failure
-      - name: Discord Notification
-        uses: sarisia/actions-status-discord@v1
-        if: always()
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}

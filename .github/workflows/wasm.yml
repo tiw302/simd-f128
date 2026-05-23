@@ -10,7 +10,7 @@ jobs:
   simd128:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Emscripten
         run: |
           git clone --depth 1 https://github.com/emscripten-core/emsdk.git
@@ -28,16 +28,11 @@ jobs:
           ./build_wasm.sh
           cd ..
           node tests/test_js.js
-      - name: Discord Notification
-        uses: sarisia/actions-status-discord@v1
-        if: always()
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
 
   scalar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Emscripten
         run: |
           git clone --depth 1 https://github.com/emscripten-core/emsdk.git
@@ -47,8 +42,3 @@ jobs:
           source emsdk/emsdk_env.sh
           emcc tests/test_arithmetic.c -O3 -o test_wasm_scalar.js
           node test_wasm_scalar.js
-      - name: Discord Notification
-        uses: sarisia/actions-status-discord@v1
-        if: always()
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
