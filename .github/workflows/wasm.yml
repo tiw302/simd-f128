@@ -20,6 +20,14 @@ jobs:
           source emsdk/emsdk_env.sh
           emcc tests/test_arithmetic.c -O3 -msimd128 -o test_wasm_simd.js
           node test_wasm_simd.js
+      - name: Build JS Wrapper and test
+        run: |
+          source emsdk/emsdk_env.sh
+          cd js
+          chmod +x build_wasm.sh
+          ./build_wasm.sh
+          cd ..
+          node tests/test_js.js
       - name: Discord Notification
         uses: sarisia/actions-status-discord@v1
         if: always()
