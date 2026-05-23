@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/images/logo.webp" width="400" alt="simd-f128 Logo">
+  <img src="https://raw.githubusercontent.com/tiw302/simd-f128/master/assets/images/logo.webp" width="400" alt="simd-f128 Logo">
   <br>
   <b>High-performance cross-platform 128-bit arithmetic for SIMD applications.</b>
 </p>
