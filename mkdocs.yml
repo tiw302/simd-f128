@@ -1,0 +1,15 @@
+site_name: simd-f128
+site_description: High-performance 128-bit Double-Double arithmetic for SIMD applications
+repo_url: https://github.com/USERNAME/simd-f128
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+  palette:
+    scheme: slate
+    primary: teal
+    accent: cyan
+nav:
+  - Home: index.md
+  - Live Demo: index.html
