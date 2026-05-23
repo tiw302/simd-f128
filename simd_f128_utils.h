@@ -1,4 +1,4 @@
-// updated 2026-05-09
+// updated 2026-05-23
 
 #ifndef SIMD_F128_UTILS_H
 #define SIMD_F128_UTILS_H
@@ -17,20 +17,22 @@
 extern "C" {
 #endif
 
-/* 
+/*
  * returns -1 if a < b, 1 if a > b, and 0 if a == b.
  * this is the foundation for all other comparison functions.
  */
 SIMD_F128_INLINE int simd_f128_cmp(simd_f128 a, simd_f128 b);
 
-/* standard boolean comparisons */
+// standard boolean comparisons
 SIMD_F128_INLINE int simd_f128_eq(simd_f128 a, simd_f128 b);
 SIMD_F128_INLINE int simd_f128_gt(simd_f128 a, simd_f128 b);
 SIMD_F128_INLINE int simd_f128_lt(simd_f128 a, simd_f128 b);
 SIMD_F128_INLINE int simd_f128_ge(simd_f128 a, simd_f128 b);
 SIMD_F128_INLINE int simd_f128_le(simd_f128 a, simd_f128 b);
 
-/* utility math functions */
+// utility math functions
+SIMD_F128_INLINE int simd_f128_isnan(simd_f128 x);
+SIMD_F128_INLINE int simd_f128_isinf(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_abs(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_min(simd_f128 a, simd_f128 b);
 SIMD_F128_INLINE simd_f128 simd_f128_max(simd_f128 a, simd_f128 b);
@@ -52,10 +54,10 @@ SIMD_F128_INLINE int simd_f128_cmp(simd_f128 a, simd_f128 b) {
     simd_f128_extract(a, &ahi, &alo);
     simd_f128_extract(b, &bhi, &blo);
 
-    /* 
-     * in double-double, we compare the hi part first. 
-     * if hi is different, that's our result. 
-     * if hi is the same, we have to look at the lo part (the error) 
+    /*
+     * in double-double, we compare the hi part first.
+     * if hi is different, that's our result.
+     * if hi is the same, we have to look at the lo part (the error)
      * to see which one is actually bigger.
      */
     if (ahi < bhi) return -1;
@@ -85,11 +87,23 @@ SIMD_F128_INLINE int simd_f128_le(simd_f128 a, simd_f128 b) {
     return simd_f128_cmp(a, b) <= 0;
 }
 
+SIMD_F128_INLINE int simd_f128_isnan(simd_f128 x) {
+    double hi, lo;
+    simd_f128_extract(x, &hi, &lo);
+    return isnan(hi);
+}
+
+SIMD_F128_INLINE int simd_f128_isinf(simd_f128 x) {
+    double hi, lo;
+    simd_f128_extract(x, &hi, &lo);
+    return isinf(hi);
+}
+
 SIMD_F128_INLINE simd_f128 simd_f128_abs(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
     
-    /* 
+    /*
      * if the number is negative, we flip both hi and lo.
      * check hi first, but if hi is 0 (like -0.0), check lo.
      */
@@ -108,4 +122,4 @@ SIMD_F128_INLINE simd_f128 simd_f128_max(simd_f128 a, simd_f128 b) {
     return (simd_f128_cmp(a, b) >= 0) ? a : b;
 }
 
-#endif /* SIMD_F128_UTILS_H */
+#endif // simd_f128_utils_h
