@@ -1,4 +1,4 @@
-// updated 2026-05-09
+// updated 2026-05-23
 
 #ifndef SIMD_F128_CONSTS_H
 #define SIMD_F128_CONSTS_H
@@ -52,4 +52,4 @@ static inline simd_f128 _simd_f128_from_raw(const double *raw) {
 #define SIMD_F128_SQRT2 _simd_f128_from_raw(_simd_f128_sqrt2_raw)
 #define SIMD_F128_LN2   _simd_f128_from_raw(_simd_f128_ln2_raw)
 
-#endif /* SIMD_F128_CONSTS_H */
+#endif /* simd_f128_consts_h */
