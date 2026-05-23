@@ -6,10 +6,7 @@
 int main() {
     printf("--- precision comparison: double vs simd-fp ---\n\n");
 
-    /*
-     * Adding 1e-17 to 1.0 exceeds the resolution of a 64-bit double.
-     * The small value is silently dropped, leaving the result unchanged.
-     */
+    // 1e-17 is too small for standard double -> gets dropped entirely
     double big_d   = 1.0;
     double small_d = 1e-17;
     double result_d = big_d + small_d;
@@ -17,10 +14,7 @@ int main() {
     printf("[double]  1.0 + 1e-17 = %.20f\n", result_d);
     printf("          precision lost: %s\n\n", result_d == 1.0 ? "yes" : "no");
 
-    /*
-     * simd-fp stores the residual in the lo component.
-     * The small value is preserved and participates in subsequent operations.
-     */
+    // simd-f128 saves the 1e-17 in the .lo component natively
     simd_f128 big_f   = simd_f128_from_double(1.0);
     simd_f128 small_f = simd_f128_from_double(1e-17);
     simd_f128 result_f = simd_f128_add(big_f, small_f);
