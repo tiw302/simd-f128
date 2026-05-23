@@ -73,3 +73,23 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
+
+  python_bindings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip setuptools pybind11
+      - name: Build and install simd-f128 Python module
+        run: pip install .
+      - name: Run Python binding tests
+        run: python tests/test_python.py
+      - name: Discord Notification
+        uses: sarisia/actions-status-discord@v1
+        if: always()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
