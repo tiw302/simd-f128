@@ -9,6 +9,7 @@
 #include "../simd_f128_io.h"
 #include "../simd_f128_utils.h"
 #include "../simd_f128_math.h"
+#include "../simd_f128_complex.h"
 
 static void extract(simd_f128 x, double *hi, double *lo) {
     simd_f128_extract(x, hi, lo);
@@ -56,9 +57,9 @@ int tests_failed = 0;
     } while (0)
 
 int main() {
-    printf("========================================\n");
-    printf("  simd-f128 comprehensive test suite\n");
-    printf("========================================\n\n");
+    printf("====================================================================================\n");
+    printf("simd-f128 comprehensive test suite\n");
+    printf("====================================================================================\n\n");
 
     double hi, lo;
 
@@ -343,6 +344,83 @@ printf("\n[1.7] sqrt\n");
     simd_f128 cos_pi = simd_f128_cos(SIMD_F128_PI);
     extract(cos_pi, &hi, &lo);
     CHECK("cos(pi) ~ -1.0", fabs(hi - (-1.0)) < 1e-15);
+
+    printf("\n=== SECTION 7: Extended Math ===\n\n");
+
+    printf("[7.1] rounding\n");
+    simd_f128 r_val = simd_f128_from_double(4.7);
+    simd_f128 fl = simd_f128_floor(r_val);
+    extract(fl, &hi, &lo);
+    CHECK("floor(4.7) == 4.0", hi == 4.0);
+    
+    simd_f128 ce = simd_f128_ceil(r_val);
+    extract(ce, &hi, &lo);
+    CHECK("ceil(4.7) == 5.0", hi == 5.0);
+
+    simd_f128 tr = simd_f128_trunc(simd_f128_from_double(-4.7));
+    extract(tr, &hi, &lo);
+    CHECK("trunc(-4.7) == -4.0", hi == -4.0);
+
+    simd_f128 ro = simd_f128_round(simd_f128_from_double(4.5));
+    extract(ro, &hi, &lo);
+    CHECK("round(4.5) == 5.0", hi == 5.0);
+
+    printf("\n[7.2] fmod\n");
+    simd_f128 f_mod = simd_f128_fmod(simd_f128_from_double(10.5), simd_f128_from_double(3.0));
+    extract(f_mod, &hi, &lo);
+    CHECK("fmod(10.5, 3.0) == 1.5", hi == 1.5);
+
+    printf("\n[7.3] inverse trig\n");
+    simd_f128 asin_1 = simd_f128_asin(simd_f128_from_double(1.0));
+    extract(asin_1, &hi, &lo);
+    CHECK("asin(1.0) ~ pi/2", fabs(hi - 1.5707963267948966) < 1e-14);
+
+    simd_f128 acos_0 = simd_f128_acos(simd_f128_from_double(0.0));
+    extract(acos_0, &hi, &lo);
+    CHECK("acos(0.0) ~ pi/2", fabs(hi - 1.5707963267948966) < 1e-14);
+
+    simd_f128 atan2_val = simd_f128_atan2(simd_f128_from_double(1.0), simd_f128_from_double(1.0));
+    extract(atan2_val, &hi, &lo);
+    CHECK("atan2(1.0, 1.0) ~ pi/4", fabs(hi - 0.7853981633974483) < 1e-14);
+
+    printf("\n=== SECTION 8: I/O and State Checks ===\n\n");
+
+    printf("[8.1] string parsing\n");
+    simd_f128 parsed = simd_f128_from_string("3.14159265358979323846264338327950");
+    CHECK_CLOSE("from_string(pi) matches PI constant", parsed, SIMD_F128_PI, 100);
+
+    simd_f128 parsed_exp = simd_f128_from_string("-1.5e3");
+    extract(parsed_exp, &hi, &lo);
+    CHECK("from_string(-1.5e3) == -1500", hi == -1500.0);
+
+    printf("\n[8.2] isnan / isinf\n");
+    CHECK("isnan(NAN) is true", simd_f128_isnan(simd_f128_from_double(NAN)));
+    CHECK("isinf(INFINITY) is true", simd_f128_isinf(simd_f128_from_double(INFINITY)));
+    CHECK("isinf(-INFINITY) is true", simd_f128_isinf(simd_f128_from_double(-INFINITY)));
+    CHECK("isnan(1.0) is false", !simd_f128_isnan(simd_f128_from_double(1.0)));
+
+    printf("\n=== SECTION 9: Complex Numbers ===\n\n");
+
+    printf("[9.1] complex arithmetic\n");
+    simd_f128_complex c1 = {simd_f128_from_double(1.0), simd_f128_from_double(2.0)};
+    simd_f128_complex c2 = {simd_f128_from_double(3.0), simd_f128_from_double(4.0)};
+    
+    simd_f128_complex c_sum = simd_f128_complex_add(c1, c2);
+    extract(c_sum.real, &hi, &lo);
+    CHECK("c_sum.real == 4.0", hi == 4.0);
+    extract(c_sum.imag, &hi, &lo);
+    CHECK("c_sum.imag == 6.0", hi == 6.0);
+
+    simd_f128_complex c_mul = simd_f128_complex_mul(c1, c2);
+    // (1 + 2i) * (3 + 4i) = 3 + 4i + 6i - 8 = -5 + 10i
+    extract(c_mul.real, &hi, &lo);
+    CHECK("c_mul.real == -5.0", hi == -5.0);
+    extract(c_mul.imag, &hi, &lo);
+    CHECK("c_mul.imag == 10.0", hi == 10.0);
+
+    simd_f128 c_abs = simd_f128_complex_abs_sqr(c2); // |3+4i|^2 = 9 + 16 = 25
+    extract(c_abs, &hi, &lo);
+    CHECK("|c2|^2 == 25.0", hi == 25.0);
 
     printf("\n=== SUMMARY ===\n\n");
     printf("Total tests:  %d\n", tests_run);
