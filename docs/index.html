@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>simd-f128 | High Precision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=2">
+</head>
+
+<body>
+    <div class="hero">
+        <h1>simd-f128</h1>
+        <p>128-bit double-double precision directly in your browser using webassembly.</p>
+        <div class="demo-box">
+            <div class="constants-bar">
+                <button id="btnLoadPi" class="btn-small">Load Pi (π)</button>
+                <button id="btnLoadE" class="btn-small">Load Euler (e)</button>
+            </div>
+            
+            <input type="text" id="inputA" value="3.1415926535897932384626433832795">
+            <select id="operator" class="op-select">
+                <option value="add">+</option>
+                <option value="sub">-</option>
+                <option value="mul" selected>×</option>
+                <option value="div">÷</option>
+            </select>
+            <input type="text" id="inputB" value="2.7182818284590452353602874713527">
+            <br>
+            <button id="calcBtn">Calculate 128-bit Result</button>
+            
+            <div class="result-container">
+                <div class="result-header">
+                    <div class="result-title">simd-f128 WASM (128-bit)</div>
+                    <button id="btnCopy" class="btn-small">Copy</button>
+                </div>
+                <div class="result" id="resultBox">Loading WASM Module...</div>
+                
+                <div class="result-title js-title">Standard JavaScript (64-bit)</div>
+                <div class="result js-result" id="jsResultBox">...</div>
+            </div>
+        </div>
+
+        <div class="footer-links">
+            <a href="https://github.com/tiw302/simd-f128">GitHub Repository</a> | 
+            <a href="https://github.com/tiw302/simd-f128/blob/master/docs/index.md" target="_blank" rel="noopener noreferrer">API Documentation</a>
+        </div>
+    </div>
+
+    <script src="simd_f128_wasm.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
