@@ -22,8 +22,8 @@
 [![No-Dependencies](https://img.shields.io/badge/Dependencies-None-blueviolet.svg)](#introduction)
 [![Last Commit](https://img.shields.io/github/last-commit/tiw302/simd-f128.svg)](https://github.com/tiw302/simd-f128/commits/master)
 
-**[Read the Official Documentation: docs/index.md)](docs/index.md)**<br>
-**[Try the Live WebAssembly Demo: https://tiw302.github.io/simd-f128/demo.html)](https://tiw302.github.io/simd-f128/demo.html)**
+**[Read the Official Documentation: docs/index.md](docs/index.md)**<br>
+**[Try the Live WebAssembly Demo: https://tiw302.github.io/simd-f128/demo.html](https://tiw302.github.io/simd-f128/demo.html)**
 
 > **Verified Compatibility — 11/11 Platforms Passing**
 
