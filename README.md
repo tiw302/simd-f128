@@ -6,9 +6,6 @@
 
 # simd-f128
 
-**[Read the Official Documentation](docs/index.md)**<br>
-**[Try the Live WebAssembly Demo](https://tiw302.github.io/simd-f128/demo.html)**
-
 [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
 [![macOS](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
 [![Windows](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
@@ -25,6 +22,9 @@
 [![No-Dependencies](https://img.shields.io/badge/Dependencies-None-blueviolet.svg)](#introduction)
 [![Last Commit](https://img.shields.io/github/last-commit/tiw302/simd-f128.svg)](https://github.com/tiw302/simd-f128/commits/master)
 
+**[Read the Official Documentation: docs/index.md)](docs/index.md)**<br>
+**[Try the Live WebAssembly Demo: https://tiw302.github.io/simd-f128/demo.html)](https://tiw302.github.io/simd-f128/demo.html)**
+
 > **Verified Compatibility — 11/11 Platforms Passing**
 
 | Architecture | Platform | Verified Backend |
@@ -38,7 +38,6 @@
 | **WebAssembly** | Universal Web | **WASM Scalar** |
 | **RISC-V64** | Linux (QEMU) | **Scalar** C11 |
 | **General Desktop** | Linux / Windows | **Scalar** C11 Fallback |
-
 
 ---
 
@@ -171,17 +170,21 @@ For C++ projects, include the convenience wrapper instead:
 
 **System Install (Recommended)**
 You can install the library system-wide to easily use `find_package` in other projects:
+
 ```bash
 cmake -S . -B build
 sudo cmake --install build
 ```
+
 Then in your project's `CMakeLists.txt`:
+
 ```cmake
 find_package(simd_fp REQUIRED)
 target_link_libraries(my_app PRIVATE simd_fp::simd_fp)
 ```
 
 **Local Build Options**
+
 ```bash
 # Scalar backend (default - works everywhere)
 cmake -S . -B build
@@ -501,6 +504,7 @@ simd_f128_print(val.data);  // call c api directly
 The core advantage of `simd-f128` is preserving small values that standard 64-bit doubles silently discard. All operations execute strictly within SIMD registers without heap allocation.
 
 Here is an actual test run and precision comparison from the `Extreme Performance` build:
+
 ```console
 ~/Public/simd-f128 master* ⇡
 ❯ ctest --test-dir build -C Release
@@ -555,7 +559,6 @@ BM_Float128_Mul       8.63 ns         8.60 ns     81239843
 BM_SimdF128_Add       11.7 ns         11.6 ns     60113767
 BM_SimdF128_Mul       12.4 ns         12.3 ns     56728837
 ```
-
 
 ---
 
