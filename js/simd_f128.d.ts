@@ -1,13 +1,16 @@
 export class Float128 {
-    // create from string, number, or float128 (allocates wasm memory)
+    // create from string, number, or float128
     constructor(val: string | number | Float128);
 
-    // add another float128 (calls wasm exported func)
+    // returns a Promise that resolves when the WASM module is fully initialized
+    static ready(): Promise<void>;
+
+    // arithmetic operations
     add(other: Float128): Float128;
-
-    // multiply with another float128
+    sub(other: Float128): Float128;
     mul(other: Float128): Float128;
+    div(other: Float128): Float128;
 
-    // convert to high-precision string (reads directly from wasm linear memory)
+    // convert to high-precision string representation
     toString(): string;
 }
