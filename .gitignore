@@ -2,7 +2,7 @@
 build/
 build_test/
 build_bench/
-bin/
+build_wasm/
 out/
 obj/
 
