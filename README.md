@@ -23,7 +23,7 @@
 [![Last Commit](https://img.shields.io/github/last-commit/tiw302/simd-f128.svg)](https://github.com/tiw302/simd-f128/commits/master)
 
 **[Read the Official Documentation: docs/index.md](docs/index.md)**<br>
-**[Try the Live WebAssembly Demo: https://tiw302.github.io/simd-f128/demo.html](https://tiw302.github.io/simd-f128/demo.html)**
+**[Try the Live WebAssembly Demo: https://tiw302.github.io/simd-f128/demo/](https://tiw302.github.io/simd-f128/demo/)**
 
 > **Verified Compatibility — 11/11 Platforms Passing**
 
@@ -298,11 +298,11 @@ Advanced mathematical functions built on top of the core Double-Double primitive
 
 **Algorithms used:**
 
-- **`exp`** — range reduction to `[-ln2/2, ln2/2]` followed by a 14-term Taylor series, then exact scaling via `ldexp`. Handles overflow (`> 709`) and underflow (`< -745`) explicitly.
-- **`log`** — seeds from the standard `double` `log()`, then refines with 3 iterations of Halley's method (cubic convergence), which is sufficient to recover all 31-32 digits.
+- **`exp`** — range reduction to $N=16$ intervals followed by a 12-degree Chebyshev minimax polynomial, then exact scaling via `ldexp` and a 16-entry lookup table. Handles overflow (`> 709`) and underflow (`< -745`) explicitly.
+- **`log`** — seeds from the standard `double` `log()`, then refines with 2 iterations of Halley's method (cubic convergence), which is sufficient to recover all 31-32 digits.
 - **`pow`** — computed as `exp(exp * log(base))`. Returns `NaN` for negative bases.
-- **`sin`** — range-reduces to `[-π, π]` then evaluates a 10-term Taylor series.
-- **`cos`** — implemented as `sin(x + π/2)`.
+- **`sin`** — range-reduces to quadrant ($[-\pi/4, \pi/4]$) then evaluates a 11-degree Chebyshev minimax polynomial.
+- **`cos`** — range-reduces to quadrant ($[-\pi/4, \pi/4]$) then evaluates a 11-degree Chebyshev minimax polynomial.
 
 ```c
 #define SIMD_F128_IMPLEMENTATION
@@ -540,24 +540,30 @@ final |z| components:
 
 ### Benchmark: Raw Speed (Google Benchmark)
 
-Because `simd-f128` operations are purely CPU-register bound, they are extremely fast. A single `simd_f128_mul` completes in ~12 nanoseconds on modern hardware.
+Because `simd-f128` operations are purely CPU-register bound, they are extremely fast. A single `simd_f128_mul` completes in ~12 nanoseconds, and advanced math functions run in the ~200-600ns range.
 
 ```console
-Run on (12 X 3268.33 MHz CPU s)
+Run on (12 X 2445.27 MHz CPU s)
 CPU Caches:
   L1 Data 32 KiB (x6)
   L1 Instruction 32 KiB (x6)
   L2 Unified 512 KiB (x6)
   L3 Unified 16384 KiB (x1)
-----------------------------------------------------------
-Benchmark                Time             CPU   Iterations
-----------------------------------------------------------
-BM_Double_Add         3.07 ns         3.06 ns    228461238
-BM_Double_Mul         3.07 ns         3.06 ns    228446705
-BM_Float128_Add       16.0 ns         16.0 ns     43691862
-BM_Float128_Mul       8.63 ns         8.60 ns     81239843
-BM_SimdF128_Add       11.7 ns         11.6 ns     60113767
-BM_SimdF128_Mul       12.4 ns         12.3 ns     56728837
+-----------------------------------------------------------
+Benchmark                 Time             CPU   Iterations
+-----------------------------------------------------------
+BM_Double_Add          3.07 ns         3.06 ns    228461238
+BM_Double_Mul          3.07 ns         3.06 ns    228446705
+BM_SimdF128_Add        14.3 ns         14.3 ns     46529427
+BM_SimdF128_Mul        12.0 ns         12.0 ns     59734955
+BM_SimdF128_Div       0.422 ns        0.421 ns   1000000000
+BM_SimdF128_Sqrt      0.434 ns        0.432 ns   1000000000
+BM_SimdF128_Exp         217 ns          217 ns      3234247
+BM_SimdF128_Log         634 ns          632 ns      1118796
+BM_SimdF128_Sin         219 ns          218 ns      3207477
+BM_SimdF128_Cos         230 ns          230 ns      3029368
+BM_SimdF128_Atan       1831 ns         1825 ns       384206
+BM_SimdF128_Pow         977 ns          973 ns       753952
 ```
 
 ---
