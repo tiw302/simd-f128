@@ -66,8 +66,8 @@ input {
 
 .op-select {
     padding: 8px;
-    font-size: 1.2rem;
-    font-weight: bold;
+    font-size: 1rem;
+    font-weight: normal;
     border: 1px solid #999;
     background: #fff;
     vertical-align: middle;
@@ -104,7 +104,7 @@ button#calcBtn:hover {
 
 .result-title {
     font-size: 0.9rem;
-    font-weight: bold;
+    font-weight: normal;
     color: #0056b3;
     margin-bottom: 0;
 }
@@ -119,7 +119,7 @@ button#calcBtn:hover {
     background: #fff;
     border: 1px solid #0056b3;
     font-family: monospace;
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: #000;
     word-break: break-all;
 }
