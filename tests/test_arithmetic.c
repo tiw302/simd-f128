@@ -149,7 +149,7 @@ int main() {
     extract(div3, &hi, &lo);
     CHECK("1/3 hi ~ 0.3333", fabsl(hi - 0.3333333333333333) < 1e-14);
 
-printf("\n[1.7] sqrt\n");
+    printf("\n[1.7] sqrt\n");
     simd_f128 sq4 = simd_f128_sqrt(simd_f128_from_double(4.0));
     extract(sq4, &hi, &lo);
     CHECK("sqrt(4.0) == 2.0", hi == 2.0);
@@ -280,10 +280,9 @@ printf("\n[1.7] sqrt\n");
     CHECK_CLOSE("sqrt(2)^2 ≈ 2", sqrt2_sq, simd_f128_from_double(2.0), 10);
 
     printf("\n[4.4] e^ln(2) ≈ 2\n");
-    simd_f128 exp_ln2 = simd_f128_mul(SIMD_F128_E, SIMD_F128_LN2);
+    simd_f128 exp_ln2 = simd_f128_exp(SIMD_F128_LN2);
     extract(exp_ln2, &hi, &lo);
-    CHECK("e^ln(2) > 1.5", hi > 1.5);
-    CHECK("e^ln(2) < 2.1", hi < 2.1);
+    CHECK("e^ln(2) ~ 2.0", fabs(hi - 2.0) < 1e-15);
 
     printf("\n=== SECTION 5: Stress Tests ===\n\n");
 
