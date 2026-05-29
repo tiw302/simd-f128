@@ -1,6 +1,7 @@
 #define SIMD_F128_IMPLEMENTATION
 #include "../include/simd_f128.h"
 #include "../include/simd_f128_io.h"
+#include "../include/simd_f128_math.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -45,6 +46,51 @@ double simd_f128_wasm_div(double a_hi, double a_lo, double b_hi, double b_lo) {
     simd_f128 va = simd_f128_from_hi_lo(a_hi, a_lo);
     simd_f128 vb = simd_f128_from_hi_lo(b_hi, b_lo);
     simd_f128 res = simd_f128_div(va, vb);
+    double r_hi, r_lo;
+    simd_f128_extract(res, &r_hi, &r_lo);
+    wasm_low_result = r_lo;
+    return r_hi;
+}
+
+double simd_f128_wasm_exp(double a_hi, double a_lo) {
+    simd_f128 va = simd_f128_from_hi_lo(a_hi, a_lo);
+    simd_f128 res = simd_f128_exp(va);
+    double r_hi, r_lo;
+    simd_f128_extract(res, &r_hi, &r_lo);
+    wasm_low_result = r_lo;
+    return r_hi;
+}
+
+double simd_f128_wasm_log(double a_hi, double a_lo) {
+    simd_f128 va = simd_f128_from_hi_lo(a_hi, a_lo);
+    simd_f128 res = simd_f128_log(va);
+    double r_hi, r_lo;
+    simd_f128_extract(res, &r_hi, &r_lo);
+    wasm_low_result = r_lo;
+    return r_hi;
+}
+
+double simd_f128_wasm_sin(double a_hi, double a_lo) {
+    simd_f128 va = simd_f128_from_hi_lo(a_hi, a_lo);
+    simd_f128 res = simd_f128_sin(va);
+    double r_hi, r_lo;
+    simd_f128_extract(res, &r_hi, &r_lo);
+    wasm_low_result = r_lo;
+    return r_hi;
+}
+
+double simd_f128_wasm_cos(double a_hi, double a_lo) {
+    simd_f128 va = simd_f128_from_hi_lo(a_hi, a_lo);
+    simd_f128 res = simd_f128_cos(va);
+    double r_hi, r_lo;
+    simd_f128_extract(res, &r_hi, &r_lo);
+    wasm_low_result = r_lo;
+    return r_hi;
+}
+
+double simd_f128_wasm_sqrt(double a_hi, double a_lo) {
+    simd_f128 va = simd_f128_from_hi_lo(a_hi, a_lo);
+    simd_f128 res = simd_f128_sqrt(va);
     double r_hi, r_lo;
     simd_f128_extract(res, &r_hi, &r_lo);
     wasm_low_result = r_lo;
