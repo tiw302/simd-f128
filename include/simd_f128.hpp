@@ -56,7 +56,12 @@ public:
     SIMD_F128_DEVICE float128& operator+=(const float128& b) { data = simd_f128_add(data, b.data); return *this; }
     SIMD_F128_DEVICE float128& operator-=(const float128& b) { data = simd_f128_sub(data, b.data); return *this; }
     SIMD_F128_DEVICE float128& operator*=(const float128& b) { data = simd_f128_mul(data, b.data); return *this; }
-    SIMD_F128_DEVICE float128& operator/=(const float128& b) { data = simd_f128_div(data, b.data); return *this; }
+    SIMD_F128_DEVICE float128& operator/=(const float128& b) {
+#if defined(SIMD_F128_EXCEPTIONS) && !defined(__CUDA_ARCH__) && !defined(__HIP_DEVICE_COMPILE__)
+        if (b == float128(0.0)) throw std::domain_error("Division by zero in float128");
+#endif
+        data = simd_f128_div(data, b.data); return *this;
+    }
 
     // operator overloading (comparison)
     SIMD_F128_DEVICE bool operator==(const float128& b) const { return simd_f128_eq(data, b.data); }
@@ -68,9 +73,7 @@ public:
 
     // unary operators
     SIMD_F128_DEVICE float128 operator-() const { 
-        double hi, lo;
-        simd_f128_extract(data, &hi, &lo);
-        return float128(simd_f128_sub(simd_f128_from_double(0.0), data)); 
+        return float128(simd_f128_neg(data)); 
     }
 
     // helper for printing
@@ -138,10 +141,10 @@ inline bool isnan(float128 x) { return simd_f128_isnan(x.data); }
 inline bool isinf(float128 x) { return simd_f128_isinf(x.data); }
 
 // constants in cpp style
-const float128 pi(SIMD_F128_PI);
-const float128 e(SIMD_F128_E);
-const float128 sqrt2(SIMD_F128_SQRT2);
-const float128 ln2(SIMD_F128_LN2);
+inline const float128 pi(SIMD_F128_PI);
+inline const float128 e(SIMD_F128_E);
+inline const float128 sqrt2(SIMD_F128_SQRT2);
+inline const float128 ln2(SIMD_F128_LN2);
 
 } // namespace f128
 
