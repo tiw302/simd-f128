@@ -75,12 +75,12 @@ SIMD_F128_INLINE simd_f128 simd_f128_exp(simd_f128 x) {
     simd_f128 r = simd_f128_sub(x, simd_f128_mul(k_f128, SIMD_F128_LN2));
 
     // taylor series for e^r: 1 + r + r^2/2! + r^3/3! + ...
-    // 14 terms is the sweet spot for 128-bit precision limits
+    // 23 terms is needed for 128-bit precision limits
     simd_f128 s = simd_f128_from_double(1.0);
     simd_f128 term = simd_f128_from_double(1.0);
-    for (int i = 1; i <= 14; i++) {
+    for (int i = 1; i <= 23; i++) {
         // compute next term: term_prev * (r / i)
-        term = simd_f128_mul(term, simd_f128_div(r, simd_f128_from_double((double)i)));
+        term = simd_f128_div(simd_f128_mul(term, r), simd_f128_from_double((double)i));
         s = simd_f128_add(s, term);
     }
 
@@ -89,15 +89,8 @@ SIMD_F128_INLINE simd_f128 simd_f128_exp(simd_f128 x) {
     simd_f128_extract(s, &res_hi, &res_lo);
     res_hi = ldexp(res_hi, k);
     res_lo = ldexp(res_lo, k);
-    
-    simd_f128 res;
-#if defined(SIMD_F128_USE_SCALAR)
-    res.hi = res_hi; res.lo = res_lo;
-#else
-    double raw[2] = { res_hi, res_lo };
-    memcpy(&res, raw, sizeof(res));
-#endif
-    return res;
+
+    return simd_f128_from_hi_lo(res_hi, res_lo);
 }
 
 SIMD_F128_INLINE simd_f128 simd_f128_log(simd_f128 x) {
@@ -145,14 +138,15 @@ SIMD_F128_INLINE simd_f128 simd_f128_sin(simd_f128 x) {
     simd_f128 r = simd_f128_sub(x, simd_f128_mul(simd_f128_from_double(k), twopi)); // r = x - k*2pi
 
     // taylor series for sin(r): r - r^3/3! + r^5/5! - ...
+    // 22 terms is needed for 128-bit precision limits
     simd_f128 s = r;
     simd_f128 term = r;
     simd_f128 rsq = simd_f128_mul(r, r); // precalculate r^2 for stepping
-    for (int i = 1; i <= 10; i++) {
+    for (int i = 1; i <= 22; i++) {
         // d is the denominator growth: (2i)*(2i+1)
         double d = (2.0 * i) * (2.0 * i + 1.0);
-        // term_next = term_prev * (-r^2 / d)
-        term = simd_f128_mul(term, simd_f128_div(rsq, simd_f128_from_double(-d)));
+        // term_next = term_prev * r^2 / (-d)
+        term = simd_f128_div(simd_f128_mul(term, rsq), simd_f128_from_double(-d));
         s = simd_f128_add(s, term);
     }
     return s;
