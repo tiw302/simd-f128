@@ -65,30 +65,37 @@ SIMD_F128_INLINE simd_f128 simd_f128_exp(simd_f128 x) {
     if (hi > 709.0) return simd_f128_from_double(INFINITY);
     if (hi < -745.0) return simd_f128_from_double(0.0);
 
-    // range reduction (x = k*ln(2) + r) to speed up taylor series
-    // 1.4426950408889634 is 1/ln(2)
-    double k_double = round(hi * 1.4426950408889634);
-    int k = (int)k_double;
+    // range reduction to N=16: x = (k / 16) * ln(2) + r
+    // 23.083120654223414 is 16 / ln(2)
+    double k_double = round(hi * 23.083120654223414);
+    long long k = (long long)k_double;
 
     simd_f128 k_f128 = simd_f128_from_double(k_double);
-    // r = x - k * ln(2)
-    simd_f128 r = simd_f128_sub(x, simd_f128_mul(k_f128, SIMD_F128_LN2));
+    simd_f128 r = simd_f128_sub(x, simd_f128_mul(k_f128, SIMD_F128_LN2_16));
 
-    // taylor series for e^r: 1 + r + r^2/2! + r^3/3! + ...
-    // 23 terms is needed for 128-bit precision limits
-    simd_f128 s = simd_f128_from_double(1.0);
-    simd_f128 term = simd_f128_from_double(1.0);
-    for (int i = 1; i <= 23; i++) {
-        // compute next term: term_prev * (r / i)
-        term = simd_f128_div(simd_f128_mul(term, r), simd_f128_from_double((double)i));
-        s = simd_f128_add(s, term);
+    // chebyshev polynomial approximation of degree 12 (k=10) for e^r on [-ln2/32, ln2/32]
+    simd_f128 s = _simd_f128_from_raw(_simd_f128_exp_coefs_n16[10]);
+    for (int j = 9; j >= 0; j--) {
+        s = simd_f128_add(_simd_f128_from_raw(_simd_f128_exp_coefs_n16[j]), simd_f128_mul(s, r));
+    }
+    // e^r ~ 1 + r + r^2 * s = 1 + r * (1 + r * s)
+    simd_f128 er = simd_f128_add(simd_f128_from_double(1.0), simd_f128_mul(r, simd_f128_add(simd_f128_from_double(1.0), simd_f128_mul(r, s))));
+
+    // exp(x) = e^r * 2^(k/16) = e^r * 2^(k % 16 / 16) * 2^(k / 16)
+    long long m = k / 16;
+    int i = (int)(k % 16);
+    if (i < 0) {
+        i += 16;
+        m -= 1;
     }
 
-    // scale by 2^k (use ldexp to keep relative precision intact without multi-step math)
+    simd_f128 T = _simd_f128_from_raw(_simd_f128_exp_table[i]);
+    simd_f128 res = simd_f128_mul(er, T);
+
     double res_hi, res_lo;
-    simd_f128_extract(s, &res_hi, &res_lo);
-    res_hi = ldexp(res_hi, k);
-    res_lo = ldexp(res_lo, k);
+    simd_f128_extract(res, &res_hi, &res_lo);
+    res_hi = ldexp(res_hi, (int)m);
+    res_lo = ldexp(res_lo, (int)m);
 
     return simd_f128_from_hi_lo(res_hi, res_lo);
 }
@@ -97,12 +104,16 @@ SIMD_F128_INLINE simd_f128 simd_f128_log(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
 
-    if (hi <= 0.0) return simd_f128_from_double(NAN);
+    if (isnan(hi)) return simd_f128_from_double(NAN);
+    if (isinf(hi)) return simd_f128_from_double(INFINITY);
+    if (hi < 0.0) return simd_f128_from_double(NAN);
+    if (hi == 0.0 && lo <= 0.0) return simd_f128_from_double(-INFINITY);
 
     // halley's method (newton on steroids, converges in 3 iters)
     // formula: y_{n+1} = y_n + 2 * (x - e^{y_n}) / (x + e^{y_n})
     simd_f128 y = simd_f128_from_double(log(hi)); // hardware precision initial guess
-    for (int i = 0; i < 3; i++) {
+    // 2 iterations of Halley's method is mathematically sufficient for 106-bit precision
+    for (int i = 0; i < 2; i++) {
         simd_f128 ey = simd_f128_exp(y);
         simd_f128 num = simd_f128_sub(x, ey);
         simd_f128 den = simd_f128_add(x, ey);
@@ -127,43 +138,86 @@ SIMD_F128_INLINE simd_f128 simd_f128_sin(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
 
-    /*
-     * simplified range reduction to [-pi, pi].
-     * for production, payne-hanek reduction would be better.
-     * 0.15915494309189535 is 1/(2*pi)
-     */
-    double twopi_inv = 0.15915494309189535;
-    double k = round(hi * twopi_inv); // find nearest multiple of 2*pi
-    simd_f128 twopi = simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(2.0));
-    simd_f128 r = simd_f128_sub(x, simd_f128_mul(simd_f128_from_double(k), twopi)); // r = x - k*2pi
+    if (isnan(hi) || isinf(hi)) return simd_f128_from_double(NAN);
 
-    // taylor series for sin(r): r - r^3/3! + r^5/5! - ...
-    // 22 terms is needed for 128-bit precision limits
-    simd_f128 s = r;
-    simd_f128 term = r;
-    simd_f128 rsq = simd_f128_mul(r, r); // precalculate r^2 for stepping
-    for (int i = 1; i <= 22; i++) {
-        // d is the denominator growth: (2i)*(2i+1)
-        double d = (2.0 * i) * (2.0 * i + 1.0);
-        // term_next = term_prev * r^2 / (-d)
-        term = simd_f128_div(simd_f128_mul(term, rsq), simd_f128_from_double(-d));
-        s = simd_f128_add(s, term);
+    // range reduction to quadrant: x = k * (pi/2) + r, where r in [-pi/4, pi/4]
+    // 0.6366197723675814 is 2/pi
+    double k_double = round(hi * 0.6366197723675814);
+    long long k = (long long)k_double;
+
+    simd_f128 r = simd_f128_sub(x, simd_f128_mul(simd_f128_from_double(k_double), SIMD_F128_PI_OVER_2));
+    simd_f128 rsq = simd_f128_mul(r, r);
+
+    // evaluate Chebyshev approximations for sin(r) and cos(r) on [-pi/4, pi/4]
+    // sin(r) = r * (1 + rsq * s_sin)
+    simd_f128 s_sin = _simd_f128_from_raw(_simd_f128_sin_coefs_n4[11]);
+    for (int j = 10; j >= 0; j--) {
+        s_sin = simd_f128_add(_simd_f128_from_raw(_simd_f128_sin_coefs_n4[j]), simd_f128_mul(s_sin, rsq));
     }
-    return s;
+    simd_f128 sin_r = simd_f128_mul(r, simd_f128_add(simd_f128_from_double(1.0), simd_f128_mul(rsq, s_sin)));
+
+    // cos(r) = 1 + rsq * s_cos
+    simd_f128 s_cos = _simd_f128_from_raw(_simd_f128_cos_coefs_n4[11]);
+    for (int j = 10; j >= 0; j--) {
+        s_cos = simd_f128_add(_simd_f128_from_raw(_simd_f128_cos_coefs_n4[j]), simd_f128_mul(s_cos, rsq));
+    }
+    simd_f128 cos_r = simd_f128_add(simd_f128_from_double(1.0), simd_f128_mul(rsq, s_cos));
+
+    int q = (int)(k % 4);
+    if (q < 0) q += 4;
+
+    if (q == 0) return sin_r;
+    if (q == 1) return cos_r;
+    if (q == 2) return simd_f128_neg(sin_r);
+    return simd_f128_neg(cos_r);
 }
 
 SIMD_F128_INLINE simd_f128 simd_f128_cos(simd_f128 x) {
-    // cos(x) = sin(x + pi/2)
-    simd_f128 piover2 = simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(0.5));
-    return simd_f128_sin(simd_f128_add(x, piover2));
+    double hi, lo;
+    simd_f128_extract(x, &hi, &lo);
+
+    if (isnan(hi) || isinf(hi)) return simd_f128_from_double(NAN);
+
+    // range reduction to quadrant: x = k * (pi/2) + r
+    double k_double = round(hi * 0.6366197723675814);
+    long long k = (long long)k_double;
+
+    simd_f128 r = simd_f128_sub(x, simd_f128_mul(simd_f128_from_double(k_double), SIMD_F128_PI_OVER_2));
+    simd_f128 rsq = simd_f128_mul(r, r);
+
+    // evaluate Chebyshev approximations for sin(r) and cos(r)
+    simd_f128 s_sin = _simd_f128_from_raw(_simd_f128_sin_coefs_n4[11]);
+    for (int j = 10; j >= 0; j--) {
+        s_sin = simd_f128_add(_simd_f128_from_raw(_simd_f128_sin_coefs_n4[j]), simd_f128_mul(s_sin, rsq));
+    }
+    simd_f128 sin_r = simd_f128_mul(r, simd_f128_add(simd_f128_from_double(1.0), simd_f128_mul(rsq, s_sin)));
+
+    simd_f128 s_cos = _simd_f128_from_raw(_simd_f128_cos_coefs_n4[11]);
+    for (int j = 10; j >= 0; j--) {
+        s_cos = simd_f128_add(_simd_f128_from_raw(_simd_f128_cos_coefs_n4[j]), simd_f128_mul(s_cos, rsq));
+    }
+    simd_f128 cos_r = simd_f128_add(simd_f128_from_double(1.0), simd_f128_mul(rsq, s_cos));
+
+    int q = (int)(k % 4);
+    if (q < 0) q += 4;
+
+    if (q == 0) return cos_r;
+    if (q == 1) return simd_f128_neg(sin_r);
+    if (q == 2) return simd_f128_neg(cos_r);
+    return sin_r;
 }
 
 SIMD_F128_INLINE simd_f128 simd_f128_atan(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
+
+    if (isnan(hi)) return simd_f128_from_double(NAN);
+    if (isinf(hi)) return (hi > 0.0) ? SIMD_F128_PI_OVER_2 : simd_f128_neg(SIMD_F128_PI_OVER_2);
+
     // newton-raphson for atan: y_{n+1} = y_n + cos(y_n) * (x * cos(y_n) - sin(y_n))
     simd_f128 y = simd_f128_from_double(atan(hi)); // hardware initial guess
-    for (int i = 0; i < 3; i++) {
+    // 2 iterations of Newton-Raphson is mathematically sufficient for 106-bit precision
+    for (int i = 0; i < 2; i++) {
         simd_f128 sy = simd_f128_sin(y);
         simd_f128 cy = simd_f128_cos(y);
         simd_f128 term = simd_f128_sub(simd_f128_mul(x, cy), sy); // x*cos(y) - sin(y)
@@ -193,13 +247,14 @@ SIMD_F128_INLINE simd_f128 simd_f128_atan2(simd_f128 y, simd_f128 x) {
 SIMD_F128_INLINE simd_f128 simd_f128_asin(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
-    if (hi > 1.0 || hi < -1.0) return simd_f128_from_double(NAN);
+    if (isnan(hi) || isinf(hi) || hi > 1.0 || hi < -1.0) return simd_f128_from_double(NAN);
     if (hi == 1.0 && lo == 0.0) return simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(0.5));
     if (hi == -1.0 && lo == 0.0) return simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(-0.5));
     
     // newton-raphson for asin: y_{n+1} = y_n + (x - sin(y_n)) / cos(y_n)
     simd_f128 y = simd_f128_from_double(asin(hi)); // hardware initial guess
-    for (int i = 0; i < 3; i++) {
+    // 2 iterations of Newton-Raphson is mathematically sufficient for 106-bit precision
+    for (int i = 0; i < 2; i++) {
         simd_f128 sy = simd_f128_sin(y);
         simd_f128 cy = simd_f128_cos(y);
         // correction term = (x - sin(y)) / cos(y)
