@@ -4,6 +4,9 @@ const Module = require('./simd_f128_wasm.js');
 let isReady = false;
 Module.onRuntimeInitialized = () => {
     isReady = true;
+    if (Float128.onReady) {
+        Float128.onReady();
+    }
 };
 
 class Float128 {
@@ -20,7 +23,7 @@ class Float128 {
             Module._free(ptr);
         } else if (typeof val === 'number') {
             this.data[0] = val;
-            this.data[1] = 0;
+            this.data[1] = 0.0;
         } else if (val instanceof Float64Array && val.length === 2) {
             this.data.set(val);
         } else if (val instanceof Float128) {
@@ -28,66 +31,62 @@ class Float128 {
         }
     }
 
+    // Static helper to wait for initialization
+    static ready() {
+        return new Promise((resolve) => {
+            if (isReady) {
+                resolve();
+            } else {
+                const prev = Float128.onReady;
+                Float128.onReady = () => {
+                    if (prev) prev();
+                    resolve();
+                };
+            }
+        });
+    }
+
     add(other) {
-        const ptrA = Module._malloc(16);
-        const ptrB = Module._malloc(16);
-        const ptrOut = Module._malloc(16);
-        
-        Module.setValue(ptrA, this.data[0], 'double');
-        Module.setValue(ptrA + 8, this.data[1], 'double');
-        Module.setValue(ptrB, other.data[0], 'double');
-        Module.setValue(ptrB + 8, other.data[1], 'double');
-        
-        Module.ccall('simd_f128_wasm_add', 'null', ['number', 'number', 'number'], [ptrA, ptrB, ptrOut]);
-        
+        const hi = Module._simd_f128_wasm_add(this.data[0], this.data[1], other.data[0], other.data[1]);
+        const lo = Module._simd_f128_wasm_get_low();
         const result = new Float128(0);
-        result.data[0] = Module.getValue(ptrOut, 'double');
-        result.data[1] = Module.getValue(ptrOut + 8, 'double');
-        
-        Module._free(ptrA);
-        Module._free(ptrB);
-        Module._free(ptrOut);
-        
+        result.data[0] = hi;
+        result.data[1] = lo;
+        return result;
+    }
+
+    sub(other) {
+        const hi = Module._simd_f128_wasm_sub(this.data[0], this.data[1], other.data[0], other.data[1]);
+        const lo = Module._simd_f128_wasm_get_low();
+        const result = new Float128(0);
+        result.data[0] = hi;
+        result.data[1] = lo;
         return result;
     }
 
     mul(other) {
-        const ptrA = Module._malloc(16);
-        const ptrB = Module._malloc(16);
-        const ptrOut = Module._malloc(16);
-        
-        Module.setValue(ptrA, this.data[0], 'double');
-        Module.setValue(ptrA + 8, this.data[1], 'double');
-        Module.setValue(ptrB, other.data[0], 'double');
-        Module.setValue(ptrB + 8, other.data[1], 'double');
-        
-        Module.ccall('simd_f128_wasm_mul', 'null', ['number', 'number', 'number'], [ptrA, ptrB, ptrOut]);
-        
+        const hi = Module._simd_f128_wasm_mul(this.data[0], this.data[1], other.data[0], other.data[1]);
+        const lo = Module._simd_f128_wasm_get_low();
         const result = new Float128(0);
-        result.data[0] = Module.getValue(ptrOut, 'double');
-        result.data[1] = Module.getValue(ptrOut + 8, 'double');
-        
-        Module._free(ptrA);
-        Module._free(ptrB);
-        Module._free(ptrOut);
-        
+        result.data[0] = hi;
+        result.data[1] = lo;
+        return result;
+    }
+
+    div(other) {
+        const hi = Module._simd_f128_wasm_div(this.data[0], this.data[1], other.data[0], other.data[1]);
+        const lo = Module._simd_f128_wasm_get_low();
+        const result = new Float128(0);
+        result.data[0] = hi;
+        result.data[1] = lo;
         return result;
     }
 
     toString() {
-        const ptrA = Module._malloc(16);
         const ptrBuf = Module._malloc(128); // 128 bytes string buffer
-        
-        Module.setValue(ptrA, this.data[0], 'double');
-        Module.setValue(ptrA + 8, this.data[1], 'double');
-        
-        Module.ccall('simd_f128_wasm_to_string', 'null', ['number', 'number', 'number'], [ptrA, ptrBuf, 128]);
-        
+        Module._simd_f128_wasm_to_string(this.data[0], this.data[1], ptrBuf, 128);
         const str = Module.UTF8ToString(ptrBuf);
-        
-        Module._free(ptrA);
         Module._free(ptrBuf);
-        
         return str;
     }
 }
