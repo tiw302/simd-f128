@@ -73,47 +73,32 @@ SIMD_F128_INLINE int simd_f128_cmp(simd_f128 a, simd_f128 b) {
 }
 
 SIMD_F128_INLINE int simd_f128_eq(simd_f128 a, simd_f128 b) {
-    double ahi, alo, bhi, blo;
-    simd_f128_extract(a, &ahi, &alo);
-    simd_f128_extract(b, &bhi, &blo);
     /* IEEE 754: NaN != NaN */
-    if (isnan(ahi) || isnan(bhi)) return 0;
+    if (simd_f128_isnan(a) || simd_f128_isnan(b)) return 0;
     return simd_f128_cmp(a, b) == 0;
 }
 
 SIMD_F128_INLINE int simd_f128_gt(simd_f128 a, simd_f128 b) {
-    double ahi, alo, bhi, blo;
-    simd_f128_extract(a, &ahi, &alo);
-    simd_f128_extract(b, &bhi, &blo);
     /* IEEE 754: NaN is not greater than anything */
-    if (isnan(ahi) || isnan(bhi)) return 0;
+    if (simd_f128_isnan(a) || simd_f128_isnan(b)) return 0;
     return simd_f128_cmp(a, b) > 0;
 }
 
 SIMD_F128_INLINE int simd_f128_lt(simd_f128 a, simd_f128 b) {
-    double ahi, alo, bhi, blo;
-    simd_f128_extract(a, &ahi, &alo);
-    simd_f128_extract(b, &bhi, &blo);
     /* IEEE 754: NaN is not less than anything */
-    if (isnan(ahi) || isnan(bhi)) return 0;
+    if (simd_f128_isnan(a) || simd_f128_isnan(b)) return 0;
     return simd_f128_cmp(a, b) < 0;
 }
 
 SIMD_F128_INLINE int simd_f128_ge(simd_f128 a, simd_f128 b) {
-    double ahi, alo, bhi, blo;
-    simd_f128_extract(a, &ahi, &alo);
-    simd_f128_extract(b, &bhi, &blo);
     /* IEEE 754: NaN is not >= anything */
-    if (isnan(ahi) || isnan(bhi)) return 0;
+    if (simd_f128_isnan(a) || simd_f128_isnan(b)) return 0;
     return simd_f128_cmp(a, b) >= 0;
 }
 
 SIMD_F128_INLINE int simd_f128_le(simd_f128 a, simd_f128 b) {
-    double ahi, alo, bhi, blo;
-    simd_f128_extract(a, &ahi, &alo);
-    simd_f128_extract(b, &bhi, &blo);
     /* IEEE 754: NaN is not <= anything */
-    if (isnan(ahi) || isnan(bhi)) return 0;
+    if (simd_f128_isnan(a) || simd_f128_isnan(b)) return 0;
     return simd_f128_cmp(a, b) <= 0;
 }
 
