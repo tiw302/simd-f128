@@ -67,6 +67,6 @@ namespace numext {
     inline f128::float128 pow(const f128::float128& x, const f128::float128& y) { return f128::pow(x, y); }
 }
 
-} // namespace eigen
+} // namespace Eigen
 
 #endif // simd_f128_eigen_hpp
