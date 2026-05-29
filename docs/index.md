@@ -15,7 +15,7 @@ The `simd-f128` library provides a high-performance, cross-platform implementati
 ## Quick Links
 
 - [GitHub Repository](https://github.com/tiw302/simd-f128)
-- [Live 128-bit Web Demo](https://tiw302.github.io/simd-f128/demo.html)
+- [Live 128-bit Web Demo](https://tiw302.github.io/simd-f128/demo/)
 
 ## Installation
 
