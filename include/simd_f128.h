@@ -127,8 +127,10 @@ extern "C" {
 
 // initialization
 SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d);
+SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo);
 
 // arithmetic
+SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b);
 SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b);
 SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b);
@@ -182,6 +184,14 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         return _mm_set_pd(0.0, d);
     }
 
+    SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
+        return _mm_set_pd(lo, hi);
+    }
+
+    SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
+        return _mm_xor_pd(x, _mm_set1_pd(-0.0));
+    }
+
     SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
         /*
          * knuth's two-sum algorithm.
@@ -207,8 +217,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
-        // simple subtraction by flipping the sign of b and adding
-        return simd_f128_add(a, _mm_xor_pd(b, _mm_set1_pd(-0.0)));
+        return simd_f128_add(a, simd_f128_neg(b));
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
@@ -239,39 +248,41 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_div(simd_f128 a, simd_f128 b) {
-        /*
-         * division is tricky. we use a few iterations of newton-raphson
-         * to get high precision for the reciprocal.
-         */
         double ahi, alo, bhi, blo;
         simd_f128_extract(a, &ahi, &alo);
         simd_f128_extract(b, &bhi, &blo);
 
-        // initial guess for 1/bhi (hardware precision)
-        double r = 1.0 / bhi;
-        // newton-raphson iterations: x_{n+1} = x_n * (2 - b * x_n)
-        r = r * (2.0 - bhi * r); // refine guess iter 1
-        r = r * (2.0 - bhi * r); // refine guess iter 2
+        if (bhi == 0.0) {
+            double inf_val = (ahi > 0.0) ? INFINITY : -INFINITY;
+            if (ahi == 0.0) inf_val = NAN;
+            return _mm_set_pd(0.0, inf_val);
+        }
 
-        // multiply a * (1/b) with exact error tracking via fma
-        double q = ahi * r; // main quotient hi
-        double qlo = fma(ahi, r, -q) + alo * r; // exact error of hi + cross term
+        double q1 = ahi / bhi;
+        double p1 = q1 * bhi;
+        double p2 = fma(q1, bhi, -p1) + q1 * blo;
 
-        // refine quotient: p = b * q
-        double p = bhi * q;
-        double plo = fma(bhi, q, -p) + blo * q + qlo * bhi; // compute error of p
+        double s = ahi - p1;
+        double v = s - ahi;
+        double e = (ahi - (s - v)) + (-p1 - v);
+        double t = alo - p2 + e;
 
-        // final quotient correction using residual
-        double final_hi = q + (ahi - p - plo) * r;
-        double final_lo = (ahi - p - plo) * r - (final_hi - q);
+        double rh = s + t;
+        double rl = t - (rh - s);
+        double q2 = rh / bhi;
+
+        double final_hi = q1 + q2;
+        double final_lo = q2 - (final_hi - q1) + rl;
 
         return _mm_set_pd(final_lo, final_hi);
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_sqrt(simd_f128 x) {
-        // same logic as division, using newton-raphson for the root
         double xhi, xlo;
         simd_f128_extract(x, &xhi, &xlo);
+
+        if (xhi == 0.0) return x;
+        if (xhi < 0.0) return _mm_set_pd(0.0, NAN);
 
         // initial hardware guess for 1/sqrt(xhi)
         double y = 1.0 / sqrt(xhi);
@@ -307,6 +318,14 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         return _mm_set_pd(0.0, d);
     }
 
+    SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
+        return _mm_set_pd(lo, hi);
+    }
+
+    SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
+        return _mm_xor_pd(x, _mm_set1_pd(-0.0));
+    }
+
     SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
         double ahi, alo, bhi, blo;
         simd_f128_extract(a, &ahi, &alo);
@@ -324,7 +343,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
-        return simd_f128_add(a, _mm_xor_pd(b, _mm_set1_pd(-0.0)));
+        return simd_f128_add(a, simd_f128_neg(b));
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
@@ -347,18 +366,27 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         simd_f128_extract(a, &ahi, &alo);
         simd_f128_extract(b, &bhi, &blo);
 
-        double r = 1.0 / bhi;
-        r = r * (2.0 - bhi * r);
-        r = r * (2.0 - bhi * r);
+        if (bhi == 0.0) {
+            double inf_val = (ahi > 0.0) ? INFINITY : -INFINITY;
+            if (ahi == 0.0) inf_val = NAN;
+            return _mm_set_pd(0.0, inf_val);
+        }
 
-        double q = ahi * r;
-        double qlo = fma(ahi, r, -q) + alo * r;
+        double q1 = ahi / bhi;
+        double p1 = q1 * bhi;
+        double p2 = fma(q1, bhi, -p1) + q1 * blo;
 
-        double p = bhi * q;
-        double plo = fma(bhi, q, -p) + blo * q + qlo * bhi;
+        double s = ahi - p1;
+        double v = s - ahi;
+        double e = (ahi - (s - v)) + (-p1 - v);
+        double t = alo - p2 + e;
 
-        double final_hi = q + (ahi - p - plo) * r;
-        double final_lo = (ahi - p - plo) * r - (final_hi - q);
+        double rh = s + t;
+        double rl = t - (rh - s);
+        double q2 = rh / bhi;
+
+        double final_hi = q1 + q2;
+        double final_lo = q2 - (final_hi - q1) + rl;
 
         return _mm_set_pd(final_lo, final_hi);
     }
@@ -366,6 +394,9 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     SIMD_F128_INLINE simd_f128 simd_f128_sqrt(simd_f128 x) {
         double xhi, xlo;
         simd_f128_extract(x, &xhi, &xlo);
+
+        if (xhi == 0.0) return x;
+        if (xhi < 0.0) return _mm_set_pd(0.0, NAN);
 
         double y = 1.0 / sqrt(xhi);
         y = 0.5 * y * (3.0 - xhi * y * y);
@@ -390,6 +421,15 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         return wasm_f64x2_make(d, 0.0);
     }
 
+    SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
+        return wasm_f64x2_make(hi, lo);
+    }
+
+    SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
+        v128_t neg_mask = wasm_i64x2_const(0x8000000000000000ULL, 0x8000000000000000ULL);
+        return wasm_v128_xor(x, neg_mask);
+    }
+
     SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
         double ahi, alo, bhi, blo;
         simd_f128_extract(a, &ahi, &alo);
@@ -407,8 +447,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
-        v128_t neg_mask = wasm_i64x2_const(0x8000000000000000ULL, 0x8000000000000000ULL);
-        return simd_f128_add(a, wasm_v128_xor(b, neg_mask));
+        return simd_f128_add(a, simd_f128_neg(b));
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
@@ -431,18 +470,27 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         simd_f128_extract(a, &ahi, &alo);
         simd_f128_extract(b, &bhi, &blo);
 
-        double r = 1.0 / bhi;
-        r = r * (2.0 - bhi * r);
-        r = r * (2.0 - bhi * r);
+        if (bhi == 0.0) {
+            double inf_val = (ahi > 0.0) ? INFINITY : -INFINITY;
+            if (ahi == 0.0) inf_val = NAN;
+            return wasm_f64x2_make(inf_val, 0.0);
+        }
 
-        double q = ahi * r;
-        double qlo = fma(ahi, r, -q) + alo * r;
+        double q1 = ahi / bhi;
+        double p1 = q1 * bhi;
+        double p2 = fma(q1, bhi, -p1) + q1 * blo;
 
-        double p = bhi * q;
-        double plo = fma(bhi, q, -p) + blo * q + qlo * bhi;
+        double s = ahi - p1;
+        double v = s - ahi;
+        double e = (ahi - (s - v)) + (-p1 - v);
+        double t = alo - p2 + e;
 
-        double final_hi = q + (ahi - p - plo) * r;
-        double final_lo = (ahi - p - plo) * r - (final_hi - q);
+        double rh = s + t;
+        double rl = t - (rh - s);
+        double q2 = rh / bhi;
+
+        double final_hi = q1 + q2;
+        double final_lo = q2 - (final_hi - q1) + rl;
 
         return wasm_f64x2_make(final_hi, final_lo);
     }
@@ -450,6 +498,9 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     SIMD_F128_INLINE simd_f128 simd_f128_sqrt(simd_f128 x) {
         double xhi, xlo;
         simd_f128_extract(x, &xhi, &xlo);
+
+        if (xhi == 0.0) return x;
+        if (xhi < 0.0) return wasm_f64x2_make(NAN, 0.0);
 
         double y = 1.0 / sqrt(xhi);
         y = 0.5 * y * (3.0 - xhi * y * y);
@@ -471,9 +522,18 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
 #elif defined(SIMD_F128_USE_NEON)
 
     SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
-        // hi in index 0, lo in index 1 for neon
         float64x2_t r = vdupq_n_f64(0.0);
         return vsetq_lane_f64(d, r, 0);
+    }
+
+    SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
+        // hi in index 0, lo in index 1 for neon
+        float64x2_t r = vdupq_n_f64(lo);
+        return vsetq_lane_f64(hi, r, 0);
+    }
+
+    SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
+        return vnegq_f64(x);
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
@@ -495,7 +555,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
-        return simd_f128_add(a, vnegq_f64(b));
+        return simd_f128_add(a, simd_f128_neg(b));
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
@@ -521,18 +581,28 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         double bhi = vgetq_lane_f64(b, 0);
         double blo = vgetq_lane_f64(b, 1);
 
-        double r = 1.0 / bhi;
-        r = r * (2.0 - bhi * r);
-        r = r * (2.0 - bhi * r);
+        if (bhi == 0.0) {
+            double inf_val = (ahi > 0.0) ? INFINITY : -INFINITY;
+            if (ahi == 0.0) inf_val = NAN;
+            float64x2_t r_res = vdupq_n_f64(0.0);
+            return vsetq_lane_f64(inf_val, r_res, 0);
+        }
 
-        double q = ahi * r;
-        double qlo = fma(ahi, r, -q) + alo * r;
+        double q1 = ahi / bhi;
+        double p1 = q1 * bhi;
+        double p2 = fma(q1, bhi, -p1) + q1 * blo;
 
-        double p = bhi * q;
-        double plo = fma(bhi, q, -p) + blo * q + qlo * bhi;
+        double s = ahi - p1;
+        double v = s - ahi;
+        double e = (ahi - (s - v)) + (-p1 - v);
+        double t = alo - p2 + e;
 
-        double final_hi = q + (ahi - p - plo) * r;
-        double final_lo = (ahi - p - plo) * r - (final_hi - q);
+        double rh = s + t;
+        double rl = t - (rh - s);
+        double q2 = rh / bhi;
+
+        double final_hi = q1 + q2;
+        double final_lo = q2 - (final_hi - q1) + rl;
 
         float64x2_t r_res = vdupq_n_f64(final_lo);
         return vsetq_lane_f64(final_hi, r_res, 0);
@@ -541,6 +611,12 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     SIMD_F128_INLINE simd_f128 simd_f128_sqrt(simd_f128 x) {
         double xhi = vgetq_lane_f64(x, 0);
         double xlo = vgetq_lane_f64(x, 1);
+
+        if (xhi == 0.0) return x;
+        if (xhi < 0.0) {
+            float64x2_t r_res = vdupq_n_f64(0.0);
+            return vsetq_lane_f64(NAN, r_res, 0);
+        }
 
         double y = 1.0 / sqrt(xhi);
         y = 0.5 * y * (3.0 - xhi * y * y);
@@ -566,6 +642,16 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         return res;
     }
 
+    SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
+        simd_f128 res = {hi, lo};
+        return res;
+    }
+
+    SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
+        simd_f128 res = {-x.hi, -x.lo};
+        return res;
+    }
+
     SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
         double s = a.hi + b.hi;
         double v = s - a.hi;
@@ -580,8 +666,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
-        b.hi = -b.hi; b.lo = -b.lo;
-        return simd_f128_add(a, b);
+        return simd_f128_add(a, simd_f128_neg(b));
     }
 
     // dekker's split (fallback when no fma)
@@ -620,29 +705,32 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
             return res;
         }
 
-        double r = 1.0 / b.hi;
-        r = r * (2.0 - b.hi * r);
-        r = r * (2.0 - b.hi * r);
+        double q1 = a.hi / b.hi;
+        double p1 = q1 * b.hi;
+        double p2 = simd_f128_exact_mul_err(q1, b.hi, p1) + q1 * b.lo;
 
-        double q = a.hi * r;
-        double qlo = simd_f128_exact_mul_err(a.hi, r, q) + a.lo * r;
+        double s = a.hi - p1;
+        double v = s - a.hi;
+        double e = (a.hi - (s - v)) + (-p1 - v);
+        double t = a.lo - p2 + e;
 
-        double p = b.hi * q;
-        double plo = simd_f128_exact_mul_err(b.hi, q, p) + b.lo * q + qlo * b.hi;
+        double rh = s + t;
+        double rl = t - (rh - s);
+        double q2 = rh / b.hi;
 
-        double final_hi = q + (a.hi - p - plo) * r;
-        double final_lo = (a.hi - p - plo) * r - (final_hi - q);
+        double final_hi = q1 + q2;
+        double final_lo = q2 - (final_hi - q1) + rl;
 
         simd_f128 res = {final_hi, final_lo};
         return res;
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_sqrt(simd_f128 x) {
+        if (x.hi == 0.0) return x;
         if (x.hi < 0.0) {
             simd_f128 res = {NAN, 0.0};
             return res;
         }
-        if (x.hi == 0.0) return x;
 
         double y = 1.0 / sqrt(x.hi);
         y = 0.5 * y * (3.0 - x.hi * y * y);
