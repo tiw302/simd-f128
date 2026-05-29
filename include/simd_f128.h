@@ -201,6 +201,13 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         __m128d bhi = _mm_unpacklo_pd(b, b);
         
         __m128d s = _mm_add_sd(ahi, bhi);
+
+        // overflow guard: if the sum already overflows, error compensation
+        // would produce inf-inf=NaN, so return early
+        double s_val;
+        _mm_store_sd(&s_val, s);
+        if (isinf(s_val)) return _mm_unpacklo_pd(s, _mm_setzero_pd());
+
         __m128d v = _mm_sub_sd(s, ahi);
         __m128d e = _mm_add_sd(_mm_sub_sd(ahi, _mm_sub_sd(s, v)), _mm_sub_sd(bhi, v));
 
@@ -253,7 +260,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         simd_f128_extract(b, &bhi, &blo);
 
         if (bhi == 0.0) {
-            double inf_val = (ahi > 0.0) ? INFINITY : -INFINITY;
+            double inf_val = ahi / bhi; // IEEE 754: correctly handles sign of ±0
             if (ahi == 0.0) inf_val = NAN;
             return _mm_set_pd(0.0, inf_val);
         }
@@ -332,6 +339,11 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         simd_f128_extract(b, &bhi, &blo);
 
         double s = ahi + bhi;
+
+        // overflow guard: if the sum already overflows, error compensation
+        // would produce inf-inf=NaN, so return early
+        if (isinf(s)) return _mm_set_pd(0.0, s);
+
         double v = s - ahi;
         double e = (ahi - (s - v)) + (bhi - v);
         
@@ -367,7 +379,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         simd_f128_extract(b, &bhi, &blo);
 
         if (bhi == 0.0) {
-            double inf_val = (ahi > 0.0) ? INFINITY : -INFINITY;
+            double inf_val = ahi / bhi; // IEEE 754: correctly handles sign of ±0
             if (ahi == 0.0) inf_val = NAN;
             return _mm_set_pd(0.0, inf_val);
         }
@@ -436,6 +448,11 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         simd_f128_extract(b, &bhi, &blo);
 
         double s = ahi + bhi;
+
+        // overflow guard: if the sum already overflows, error compensation
+        // would produce inf-inf=NaN, so return early
+        if (isinf(s)) return wasm_f64x2_make(s, 0.0);
+
         double v = s - ahi;
         double e = (ahi - (s - v)) + (bhi - v);
         
@@ -471,7 +488,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         simd_f128_extract(b, &bhi, &blo);
 
         if (bhi == 0.0) {
-            double inf_val = (ahi > 0.0) ? INFINITY : -INFINITY;
+            double inf_val = ahi / bhi; // IEEE 754: correctly handles sign of ±0
             if (ahi == 0.0) inf_val = NAN;
             return wasm_f64x2_make(inf_val, 0.0);
         }
@@ -543,6 +560,14 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         double blo = vgetq_lane_f64(b, 1);
 
         double s = ahi + bhi;
+
+        // overflow guard: if the sum already overflows, error compensation
+        // would produce inf-inf=NaN, so return early
+        if (isinf(s)) {
+            float64x2_t r = vdupq_n_f64(0.0);
+            return vsetq_lane_f64(s, r, 0);
+        }
+
         double v = s - ahi;
         double e = (ahi - (s - v)) + (bhi - v);
         
@@ -582,7 +607,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         double blo = vgetq_lane_f64(b, 1);
 
         if (bhi == 0.0) {
-            double inf_val = (ahi > 0.0) ? INFINITY : -INFINITY;
+            double inf_val = ahi / bhi; // IEEE 754: correctly handles sign of ±0
             if (ahi == 0.0) inf_val = NAN;
             float64x2_t r_res = vdupq_n_f64(0.0);
             return vsetq_lane_f64(inf_val, r_res, 0);
@@ -654,6 +679,14 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
 
     SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
         double s = a.hi + b.hi;
+
+        // overflow guard: if the sum already overflows, error compensation
+        // would produce inf-inf=NaN, so return early
+        if (isinf(s)) {
+            simd_f128 res = {s, 0.0};
+            return res;
+        }
+
         double v = s - a.hi;
         double e = (a.hi - (s - v)) + (b.hi - v);
         
@@ -699,7 +732,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
 
     SIMD_F128_INLINE simd_f128 simd_f128_div(simd_f128 a, simd_f128 b) {
         if (b.hi == 0.0) {
-            double inf_val = (a.hi > 0.0) ? INFINITY : -INFINITY;
+            double inf_val = a.hi / b.hi; // IEEE 754: correctly handles sign of ±0
             if (a.hi == 0.0) inf_val = NAN;
             simd_f128 res = {inf_val, 0.0};
             return res;
