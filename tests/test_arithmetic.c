@@ -398,6 +398,25 @@ int main() {
     CHECK("isinf(-INFINITY) is true", simd_f128_isinf(simd_f128_from_double(-INFINITY)));
     CHECK("isnan(1.0) is false", !simd_f128_isnan(simd_f128_from_double(1.0)));
 
+    printf("\n[8.3] math function edge cases (NaN/Inf)\n");
+    simd_f128 nan_val = simd_f128_from_double(NAN);
+    simd_f128 inf_val = simd_f128_from_double(INFINITY);
+    simd_f128 neg_inf_val = simd_f128_from_double(-INFINITY);
+
+    CHECK("exp(NaN) is NaN", simd_f128_isnan(simd_f128_exp(nan_val)));
+    
+    double res_hi, res_lo;
+    simd_f128_extract(simd_f128_exp(neg_inf_val), &res_hi, &res_lo);
+    CHECK("exp(-inf) is 0.0", res_hi == 0.0);
+
+    CHECK("sin(NaN) is NaN", simd_f128_isnan(simd_f128_sin(nan_val)));
+    CHECK("sin(inf) is NaN", simd_f128_isnan(simd_f128_sin(inf_val)));
+    CHECK("cos(NaN) is NaN", simd_f128_isnan(simd_f128_cos(nan_val)));
+    CHECK("cos(inf) is NaN", simd_f128_isnan(simd_f128_cos(inf_val)));
+
+    CHECK("log(NaN) is NaN", simd_f128_isnan(simd_f128_log(nan_val)));
+    CHECK("log(inf) is inf", simd_f128_isinf(simd_f128_log(inf_val)));
+
     printf("\n=== SECTION 9: Complex Numbers ===\n\n");
 
     printf("[9.1] complex arithmetic\n");
