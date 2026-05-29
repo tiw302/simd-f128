@@ -129,12 +129,20 @@ impl DivAssign for Float128 {
 
 impl PartialEq for Float128 {
     fn eq(&self, other: &Self) -> bool {
+        // NaN != NaN (IEEE 754)
+        if self.data[0].is_nan() || other.data[0].is_nan() {
+            return false;
+        }
         unsafe { rs_simd_f128_cmp(self.data.as_ptr(), other.data.as_ptr()) == 0 }
     }
 }
 
 impl PartialOrd for Float128 {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        // NaN comparisons should return None (IEEE 754)
+        if self.data[0].is_nan() || other.data[0].is_nan() {
+            return None;
+        }
         unsafe {
             let cmp = rs_simd_f128_cmp(self.data.as_ptr(), other.data.as_ptr());
             if cmp < 0 {
