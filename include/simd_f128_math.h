@@ -7,11 +7,11 @@
 #include "simd_f128_consts.h"
 #include "simd_f128_utils.h"
 
-// ██ ██████  
-// ██ ██  ██ 
-// ██ ██  ██ 
-// ██ ██  ██ 
-// ██ ██████ 
+// ██ ██████
+// ██ ██  ██
+// ██ ██  ██
+// ██ ██  ██
+// ██ ██████
 //
 // >>advanced math api
 
@@ -49,11 +49,11 @@ SIMD_F128_INLINE simd_f128 simd_f128_fmod(simd_f128 a, simd_f128 b);
 }
 #endif
 
-// ██ ███    ███ ██████  ██      ███████ ███    ██ ████████  █████  ████████ ██  ██████  ███    ██ 
-// ██ ████  ████ ██   ██ ██      ██      ████  ████ ██      ████   ██    ██    ██   ██    ██    ██ ██    ██ ████   ██ 
-// ██ ██ ████ ██ ██████  ██      █████   ██ ████ ██ █████   ██ ██  ██    ██    ███████    ██    ██ ██    ██ ██ ██  ██ 
-// ██ ██  ██  ██ ██      ██      ██      ██  ██  ██ ██      ██  ██ ██    ██    ██   ██    ██    ██ ██    ██ ██  ██ ██ 
-// ██ ██      ██ ██      ███████ ███████ ██      ██ ███████ ██   ████    ██    ██   ██    ██    ██  ██████  ██   ████ 
+// ██ ███    ███ ██████  ██      ███████ ███    ███ ███████ ███    ██ ████████  █████  ████████ ██  ██████  ███    ██
+// ██ ████  ████ ██   ██ ██      ██      ████  ████ ██      ████   ██    ██    ██   ██    ██    ██ ██    ██ ████   ██
+// ██ ██ ████ ██ ██████  ██      █████   ██ ████ ██ █████   ██ ██  ██    ██    ███████    ██    ██ ██    ██ ██ ██  ██
+// ██ ██  ██  ██ ██      ██      ██      ██  ██  ██ ██      ██  ██ ██    ██    ██   ██    ██    ██ ██    ██ ██  ██ ██
+// ██ ██      ██ ██      ███████ ███████ ██      ██ ███████ ██   ████    ██    ██   ██    ██    ██  ██████  ██   ████
 //
 // >>implementation logic
 
@@ -232,11 +232,11 @@ SIMD_F128_INLINE simd_f128 simd_f128_atan2(simd_f128 y, simd_f128 x) {
     double yhi, ylo, xhi, xlo;
     simd_f128_extract(y, &yhi, &ylo);
     simd_f128_extract(x, &xhi, &xlo);
-    
+
     if (isnan(xhi) || isnan(yhi)) return simd_f128_from_double(NAN);
-    
+
     if (xhi == 0.0 && yhi == 0.0) return simd_f128_from_double(0.0);
-    
+
     if (xhi > 0.0) {
         return simd_f128_atan(simd_f128_div(y, x));
     } else if (xhi < 0.0) {
@@ -254,7 +254,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_asin(simd_f128 x) {
     if (isnan(hi) || isinf(hi) || hi > 1.0 || hi < -1.0) return simd_f128_from_double(NAN);
     if (hi == 1.0 && lo == 0.0) return simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(0.5));
     if (hi == -1.0 && lo == 0.0) return simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(-0.5));
-    
+
     // newton-raphson for asin: y_{n+1} = y_n + (x - sin(y_n)) / cos(y_n)
     simd_f128 y = simd_f128_from_double(asin(hi)); // hardware initial guess
     // 2 iterations of Newton-Raphson is mathematically sufficient for 106-bit precision
