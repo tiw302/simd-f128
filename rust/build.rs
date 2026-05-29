@@ -20,20 +20,8 @@ fn main() {
 
     let wrapper_code = r#"
 // Expose some C wrappers using pointer arrays to bypass __m128d ABI issues
-static inline simd_f128 load(const double* v) {
-    simd_f128 res = simd_f128_from_double(v[0]); // hi
-    simd_f128 lo_vec = simd_f128_from_double(v[1]);
-    return simd_f128_add(res, lo_vec); // Not exactly, wait, there is no set(hi, lo)
-}
-
-/*
- * Actually, we can just use extract to get it, but how to set it?
- * We can use simd_f128_add(hi, lo)!
- */
 static inline simd_f128 arr_to_simd(const double* v) {
-    simd_f128 hi = simd_f128_from_double(v[0]);
-    simd_f128 lo = simd_f128_from_double(v[1]);
-    return simd_f128_add(hi, lo);
+    return simd_f128_from_hi_lo(v[0], v[1]);
 }
 static inline void simd_to_arr(simd_f128 x, double* out) {
     simd_f128_extract(x, &out[0], &out[1]);
