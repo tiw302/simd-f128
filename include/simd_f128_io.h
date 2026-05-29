@@ -7,6 +7,7 @@
 #include <string.h>
 #include <math.h>
 #include "simd_f128.h"
+#include "simd_f128_math.h"
 
 
 // ███████ ████████ ██████  ██ ███    ██  ██████  
@@ -86,6 +87,63 @@ void simd_f128_to_string(char* buf, size_t buf_size, simd_f128 x) {
     double int_part = floor(hi);
     if (hi == int_part && lo < 0.0) {
         int_part -= 1.0;
+    }
+
+    // Check if we should use scientific notation
+    double hi_abs = fabs(hi);
+    if (hi_abs > 0.0 && (hi_abs >= 1e15 || hi_abs < 1e-4)) {
+        int exp_val = (int)floor(log10(hi_abs));
+        
+        // Scale by 10^-exp_val
+        simd_f128 scale_factor = simd_f128_pow(simd_f128_from_double(10.0), simd_f128_from_double(-exp_val));
+        simd_f128 scaled_x = simd_f128_mul(x, scale_factor);
+        
+        double s_hi, s_lo;
+        _simd_f128_extract_internal(scaled_x, &s_hi, &s_lo);
+        if (fabs(s_hi) >= 10.0) {
+            scaled_x = simd_f128_div(scaled_x, simd_f128_from_double(10.0));
+            exp_val++;
+        } else if (fabs(s_hi) < 1.0) {
+            scaled_x = simd_f128_mul(scaled_x, simd_f128_from_double(10.0));
+            exp_val--;
+        }
+        
+        _simd_f128_extract_internal(scaled_x, &hi, &lo);
+        
+        double s_int_part = floor(hi);
+        if (hi == s_int_part && lo < 0.0) {
+            s_int_part -= 1.0;
+        }
+        
+        char s_int_buf[64];
+        snprintf(s_int_buf, sizeof(s_int_buf), "%.0f", s_int_part);
+        
+        simd_f128 f_int = simd_f128_from_double(s_int_part);
+        simd_f128 frac = simd_f128_sub(scaled_x, f_int);
+        simd_f128 ten = simd_f128_from_double(10.0);
+        
+        char frac_buf[64] = {0};
+        int frac_len = 0;
+        
+        for (int i = 0; i < 32; i++) {
+            frac = simd_f128_mul(frac, ten);
+            double f_hi, f_lo;
+            _simd_f128_extract_internal(frac, &f_hi, &f_lo);
+            
+            double digit = floor(f_hi + 1e-30);
+            if (f_hi == digit && f_lo < 0.0) {
+                digit -= 1.0;
+            }
+            if (digit < 0.0) digit = 0.0;
+            if (digit > 9.0) digit = 9.0;
+            
+            frac_buf[frac_len++] = (char)('0' + (int)digit);
+            frac = simd_f128_sub(frac, simd_f128_from_double(digit));
+        }
+        frac_buf[frac_len] = '\0';
+        
+        snprintf(buf, buf_size, "%s%s.%se%+d", is_neg ? "-" : "", s_int_buf, frac_buf, exp_val);
+        return;
     }
 
     char int_buf[64];
@@ -187,10 +245,14 @@ simd_f128 simd_f128_from_string(const char* str) {
             str++;
         }
         
-        // exp scaling
+        // exp scaling (exponentiation by squaring for O(log N))
         simd_f128 exp_mult = simd_f128_from_double(1.0);
-        for (int i = 0; i < exp_val; i++) {
-            exp_mult = simd_f128_mul(exp_mult, ten);
+        simd_f128 base = ten;
+        int e = exp_val;
+        while (e > 0) {
+            if (e & 1) exp_mult = simd_f128_mul(exp_mult, base);
+            base = simd_f128_mul(base, base);
+            e >>= 1;
         }
         
         if (exp_neg) {
