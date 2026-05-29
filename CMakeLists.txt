@@ -34,6 +34,17 @@ else()
     endif()
 endif()
 
+# sanitizers (asan/ubsan) option
+option(SIMD_F128_ENABLE_SANITY "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
+if(SIMD_F128_ENABLE_SANITY)
+    if(MSVC)
+        add_compile_options(/fsanitize=address)
+    else()
+        add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=address,undefined)
+    endif()
+endif()
+
 # library target (header-only)
 add_library(simd_fp INTERFACE)
 target_include_directories(simd_fp INTERFACE 
@@ -109,4 +120,7 @@ if(SIMD_F128_BUILD_BENCHMARKS)
 
     add_executable(bench_arithmetic benchmarks/bench_arithmetic.cpp)
     target_link_libraries(bench_arithmetic PRIVATE simd_fp benchmark::benchmark)
+
+    add_executable(bench_math benchmarks/bench_math.cpp)
+    target_link_libraries(bench_math PRIVATE simd_fp benchmark::benchmark)
 endif()
