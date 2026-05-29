@@ -59,6 +59,11 @@ SIMD_F128_INLINE int simd_f128_cmp(simd_f128 a, simd_f128 b) {
      * if hi is different, that's our result.
      * if hi is the same, we have to look at the lo part (the error)
      * to see which one is actually bigger.
+     *
+     * note: if either operand is NaN, all comparisons return false,
+     * so we fall through to return 0. callers that need IEEE 754
+     * NaN semantics should check simd_f128_isnan() first, or use
+     * the boolean comparison wrappers below which handle NaN.
      */
     if (ahi < bhi) return -1;
     if (ahi > bhi) return 1;
@@ -68,22 +73,47 @@ SIMD_F128_INLINE int simd_f128_cmp(simd_f128 a, simd_f128 b) {
 }
 
 SIMD_F128_INLINE int simd_f128_eq(simd_f128 a, simd_f128 b) {
+    double ahi, alo, bhi, blo;
+    simd_f128_extract(a, &ahi, &alo);
+    simd_f128_extract(b, &bhi, &blo);
+    /* IEEE 754: NaN != NaN */
+    if (isnan(ahi) || isnan(bhi)) return 0;
     return simd_f128_cmp(a, b) == 0;
 }
 
 SIMD_F128_INLINE int simd_f128_gt(simd_f128 a, simd_f128 b) {
+    double ahi, alo, bhi, blo;
+    simd_f128_extract(a, &ahi, &alo);
+    simd_f128_extract(b, &bhi, &blo);
+    /* IEEE 754: NaN is not greater than anything */
+    if (isnan(ahi) || isnan(bhi)) return 0;
     return simd_f128_cmp(a, b) > 0;
 }
 
 SIMD_F128_INLINE int simd_f128_lt(simd_f128 a, simd_f128 b) {
+    double ahi, alo, bhi, blo;
+    simd_f128_extract(a, &ahi, &alo);
+    simd_f128_extract(b, &bhi, &blo);
+    /* IEEE 754: NaN is not less than anything */
+    if (isnan(ahi) || isnan(bhi)) return 0;
     return simd_f128_cmp(a, b) < 0;
 }
 
 SIMD_F128_INLINE int simd_f128_ge(simd_f128 a, simd_f128 b) {
+    double ahi, alo, bhi, blo;
+    simd_f128_extract(a, &ahi, &alo);
+    simd_f128_extract(b, &bhi, &blo);
+    /* IEEE 754: NaN is not >= anything */
+    if (isnan(ahi) || isnan(bhi)) return 0;
     return simd_f128_cmp(a, b) >= 0;
 }
 
 SIMD_F128_INLINE int simd_f128_le(simd_f128 a, simd_f128 b) {
+    double ahi, alo, bhi, blo;
+    simd_f128_extract(a, &ahi, &alo);
+    simd_f128_extract(b, &bhi, &blo);
+    /* IEEE 754: NaN is not <= anything */
+    if (isnan(ahi) || isnan(bhi)) return 0;
     return simd_f128_cmp(a, b) <= 0;
 }
 
@@ -108,8 +138,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_abs(simd_f128 x) {
      * check hi first, but if hi is 0 (like -0.0), check lo.
      */
     if (hi < 0.0 || (hi == 0.0 && lo < 0.0)) {
-        simd_f128 zero = simd_f128_from_double(0.0);
-        return simd_f128_sub(zero, x);
+        return simd_f128_neg(x);
     }
     return x;
 }
