@@ -61,6 +61,8 @@ SIMD_F128_INLINE simd_f128 simd_f128_exp(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
 
+    if (isnan(hi)) return simd_f128_from_double(NAN);
+
     // catch overflow/underflow early
     if (hi > 709.0) return simd_f128_from_double(INFINITY);
     if (hi < -745.0) return simd_f128_from_double(0.0);
@@ -230,6 +232,8 @@ SIMD_F128_INLINE simd_f128 simd_f128_atan2(simd_f128 y, simd_f128 x) {
     double yhi, ylo, xhi, xlo;
     simd_f128_extract(y, &yhi, &ylo);
     simd_f128_extract(x, &xhi, &xlo);
+    
+    if (isnan(xhi) || isnan(yhi)) return simd_f128_from_double(NAN);
     
     if (xhi == 0.0 && yhi == 0.0) return simd_f128_from_double(0.0);
     
