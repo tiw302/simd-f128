@@ -20,25 +20,19 @@
 //
 // >>constants storage
 
-/*
- * these constants are stored as hi + lo pairs.
- * we keep them in raw double arrays so they're easy to load across 
- * different architectures without worrying about struct layout.
- */
+// constants are stored as raw double arrays (hi + lo pairs).
+// this layout is architecture-agnostic and avoids structure padding issues.
 static const double _simd_f128_pi_raw[2]    = { 3.1415926535897931, 1.2246467991473532e-16 };
 static const double _simd_f128_e_raw[2]     = { 2.7182818284590451, 1.4456468917292502e-16 };
 static const double _simd_f128_sqrt2_raw[2] = { 1.4142135623730951, -9.6672933134529135e-17 };
 static const double _simd_f128_ln2_raw[2]   = { 0.69314718055994529, 2.3190468138462996e-17 };
 
-/*
- * helper to load the raw doubles into our simd_f128 type.
- * uses simd_f128_from_hi_lo which is portable across all backends
- * and endianness, and the compiler optimizes it to a direct load.
- */
-static inline simd_f128 _simd_f128_from_raw(const double *raw) {
+// helper to load raw double arrays into portable simd_f128 registers
+SIMD_F128_INLINE simd_f128 _simd_f128_from_raw(const double *raw) {
     return simd_f128_from_hi_lo(raw[0], raw[1]);
 }
 
+// pre-computed standard mathematical constants definitions
 #define SIMD_F128_PI    _simd_f128_from_raw(_simd_f128_pi_raw)
 #define SIMD_F128_E     _simd_f128_from_raw(_simd_f128_e_raw)
 #define SIMD_F128_SQRT2 _simd_f128_from_raw(_simd_f128_sqrt2_raw)
@@ -47,6 +41,9 @@ static inline simd_f128 _simd_f128_from_raw(const double *raw) {
 // >> horner / minimax method constants (precomputed to 128-bit precision)
 static const double _simd_f128_pi_over_2_raw[2] = {  1.5707963267948966e+00,  6.1232339957367660e-17 };
 #define SIMD_F128_PI_OVER_2 _simd_f128_from_raw(_simd_f128_pi_over_2_raw)
+
+static const double _simd_f128_two_over_pi_raw[2] = { 0.6366197723675814, -3.935735335036497e-17 };
+#define SIMD_F128_TWO_OVER_PI _simd_f128_from_raw(_simd_f128_two_over_pi_raw)
 
 static const double _simd_f128_ln2_16_raw[2] = {  4.3321698784996580e-02,  1.4494042586539372e-18 };
 #define SIMD_F128_LN2_16 _simd_f128_from_raw(_simd_f128_ln2_16_raw)
