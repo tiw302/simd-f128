@@ -1,4 +1,0 @@
-@PACKAGE_INIT@
-
-include("${CMAKE_CURRENT_LIST_DIR}/simd_fpTargets.cmake")
-check_required_components(simd_fp)

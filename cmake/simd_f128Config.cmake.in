@@ -1,0 +1,4 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/simd_f128Targets.cmake")
+check_required_components(simd_f128)
