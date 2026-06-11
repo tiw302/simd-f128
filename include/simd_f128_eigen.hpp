@@ -17,6 +17,7 @@
 
 namespace Eigen {
 
+// specialize eigen::numtraits for float128 type
 template<> struct NumTraits<f128::float128>
  : NumTraits<double> 
 {
@@ -29,14 +30,15 @@ template<> struct NumTraits<f128::float128>
     IsInteger = 0,
     IsSigned = 1,
     RequireInitialization = 1,
-    // costs are artificially high because double-double requires 
-    // multiple avx instructions (e.g. 20+ operations for a multiply)
+    // costs are high because double-double arithmetic requires multiple instruction
+    // sequences (e.g. 20+ floating-point operations for a single multiplication)
     ReadCost = 2,
     AddCost = 10,
     MulCost = 20
   };
 };
 
+// specialize eigen::numtraits for complex128 type
 template<> struct NumTraits<f128::complex128>
  : NumTraits<std::complex<double>>
 {
@@ -49,7 +51,7 @@ template<> struct NumTraits<f128::complex128>
     IsInteger = 0,
     IsSigned = 1,
     RequireInitialization = 1,
-    // complex ops are 4x more expensive than real
+    // complex operations are approximately four times more expensive than real operations
     ReadCost = 4,
     AddCost = 20,
     MulCost = 80
@@ -57,7 +59,7 @@ template<> struct NumTraits<f128::complex128>
 };
 
 namespace numext {
-    // map eigen's generic math functions to f128 namespace
+    // map eigen's math extension functions to the high-precision float128 functions
     inline f128::float128 exp(const f128::float128& x) { return f128::exp(x); }
     inline f128::float128 log(const f128::float128& x) { return f128::log(x); }
     inline f128::float128 sin(const f128::float128& x) { return f128::sin(x); }
