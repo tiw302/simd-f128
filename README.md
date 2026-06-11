@@ -22,7 +22,7 @@
 [![No-Dependencies](https://img.shields.io/badge/Dependencies-None-blueviolet.svg)](#introduction)
 [![Last Commit](https://img.shields.io/github/last-commit/tiw302/simd-f128.svg)](https://github.com/tiw302/simd-f128/commits/master)
 
-**[Read the Official Documentation: docs/index.md](docs/index.md)**<br>
+**[Read the Official Documentation: docs/index.md](https://tiw302.github.io/simd-f128/)**<br>
 **[Try the Live WebAssembly Demo: https://tiw302.github.io/simd-f128/demo/](https://tiw302.github.io/simd-f128/demo/)**
 
 > **Verified Compatibility — 11/11 Platforms Passing**
@@ -298,11 +298,12 @@ Advanced mathematical functions built on top of the core Double-Double primitive
 
 **Algorithms used:**
 
-- **`exp`** — range reduction to $N=16$ intervals followed by a 12-degree Chebyshev minimax polynomial, then exact scaling via `ldexp` and a 16-entry lookup table. Handles overflow (`> 709`) and underflow (`< -745`) explicitly.
-- **`log`** — seeds from the standard `double` `log()`, then refines with 2 iterations of Halley's method (cubic convergence), which is sufficient to recover all 31-32 digits.
-- **`pow`** — computed as `exp(exp * log(base))`. Returns `NaN` for negative bases.
+- **`exp`** — range reduction to $N=16$ intervals followed by a 12-degree Chebyshev minimax polynomial, then exact scaling via `ldexp` and a 16-entry lookup table. Handles overflow (`> 709.78`) and underflow explicitly.
+- **`log`** — seeds from the standard `double` `log()`, then refines with 1 iteration of Halley's method (cubic convergence), which is mathematically sufficient to recover all 31-32 digits due to cubic convergence.
+- **`pow`** — computed as `exp(exp * log(base))`. Supports base-zero inputs and propagates `NaN` according to IEEE-754.
 - **`sin`** — range-reduces to quadrant ($[-\pi/4, \pi/4]$) then evaluates a 11-degree Chebyshev minimax polynomial.
 - **`cos`** — range-reduces to quadrant ($[-\pi/4, \pi/4]$) then evaluates a 11-degree Chebyshev minimax polynomial.
+- **`sincos`** — computes both sine and cosine simultaneously, saving redundant Range Reduction and polynomial evaluation steps.
 
 ```c
 #define SIMD_F128_IMPLEMENTATION
@@ -459,11 +460,12 @@ simd_f128_print(val.data);  // call c api directly
 
 | Function | Signature | Description |
 |---|---|---|
-| `simd_f128_exp` | `simd_f128 simd_f128_exp(simd_f128 x)` | `e^x`. Returns `+Inf` for `x > 709`, `0` for `x < -745`. |
+| `simd_f128_exp` | `simd_f128 simd_f128_exp(simd_f128 x)` | `e^x`. Returns `+Inf` for `x > 709.78`, `0` for `x < -745`. |
 | `simd_f128_log` | `simd_f128 simd_f128_log(simd_f128 x)` | Natural logarithm. Returns `NaN` for `x ≤ 0`. |
-| `simd_f128_pow` | `simd_f128 simd_f128_pow(simd_f128 base, simd_f128 exp)` | `base^exp`. Returns `0` for `base == 0`, `NaN` for `base < 0`. |
+| `simd_f128_pow` | `simd_f128 simd_f128_pow(simd_f128 base, simd_f128 exp)` | `base^exp`. Correctly handles base zero, infinity, and NaN according to IEEE-754. |
 | `simd_f128_sin` | `simd_f128 simd_f128_sin(simd_f128 x)` | Sine (radians). Best accuracy for moderate arguments. |
-| `simd_f128_cos` | `simd_f128 simd_f128_cos(simd_f128 x)` | Cosine (radians). Implemented as `sin(x + π/2)`. |
+| `simd_f128_cos` | `simd_f128 simd_f128_cos(simd_f128 x)` | Cosine (radians). Best accuracy for moderate arguments. |
+| `simd_f128_sincos` | `void simd_f128_sincos(simd_f128 x, simd_f128* s, simd_f128* c)` | Computes sine and cosine simultaneously. |
 
 ### simd_f128_utils.h
 
@@ -540,10 +542,10 @@ final |z| components:
 
 ### Benchmark: Raw Speed (Google Benchmark)
 
-Because `simd-f128` operations are purely CPU-register bound, they are extremely fast. A single `simd_f128_mul` completes in ~12 nanoseconds, and advanced math functions run in the ~200-600ns range.
+Because `simd-f128` operations are purely CPU-register bound, they are extremely fast. A single `simd_f128_mul` completes in ~10 nanoseconds, and advanced math functions run in the ~170-490ns range.
 
 ```console
-Run on (12 X 2445.27 MHz CPU s)
+Run on (12 X 3266.69 MHz CPU s)
 CPU Caches:
   L1 Data 32 KiB (x6)
   L1 Instruction 32 KiB (x6)
@@ -552,18 +554,16 @@ CPU Caches:
 -----------------------------------------------------------
 Benchmark                 Time             CPU   Iterations
 -----------------------------------------------------------
-BM_Double_Add          3.07 ns         3.06 ns    228461238
-BM_Double_Mul          3.07 ns         3.06 ns    228446705
-BM_SimdF128_Add        14.3 ns         14.3 ns     46529427
-BM_SimdF128_Mul        12.0 ns         12.0 ns     59734955
-BM_SimdF128_Div       0.422 ns        0.421 ns   1000000000
-BM_SimdF128_Sqrt      0.434 ns        0.432 ns   1000000000
-BM_SimdF128_Exp         217 ns          217 ns      3234247
-BM_SimdF128_Log         634 ns          632 ns      1118796
-BM_SimdF128_Sin         219 ns          218 ns      3207477
-BM_SimdF128_Cos         230 ns          230 ns      3029368
-BM_SimdF128_Atan       1831 ns         1825 ns       384206
-BM_SimdF128_Pow         977 ns          973 ns       753952
+BM_SimdF128_Add        11.7 ns         11.7 ns     60057911
+BM_SimdF128_Mul        10.1 ns         10.1 ns     69579904
+BM_SimdF128_Div        2.87 ns         2.86 ns    244206304
+BM_SimdF128_Sqrt       6.05 ns         6.04 ns    115940003
+BM_SimdF128_Exp         192 ns          192 ns      3646032
+BM_SimdF128_Log         240 ns          240 ns      2920704
+BM_SimdF128_Sin         192 ns          192 ns      3645663
+BM_SimdF128_Cos         200 ns          199 ns      3510110
+BM_SimdF128_Atan        402 ns          401 ns      1743733
+BM_SimdF128_Pow         492 ns          491 ns      1426559
 ```
 
 ---
