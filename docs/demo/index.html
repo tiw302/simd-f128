@@ -25,14 +25,20 @@
                 <option value="sub">-</option>
                 <option value="mul" selected>×</option>
                 <option value="div">÷</option>
+                <option value="pow">pow(A, B)</option>
                 <option value="exp">exp(A)</option>
                 <option value="log">log(A)</option>
                 <option value="sin">sin(A)</option>
                 <option value="cos">cos(A)</option>
+                <option value="atan">atan(A)</option>
+                <option value="atan2">atan2(A, B)</option>
+                <option value="asin">asin(A)</option>
+                <option value="acos">acos(A)</option>
                 <option value="sqrt">sqrt(A)</option>
             </select>
             <input type="text" id="inputB" value="2.7182818284590452353602874713527">
             <br>
+            <div id="validationWarning" class="warning-box" style="display: none;"></div>
             <button id="calcBtn">Calculate 128-bit Result</button>
             
             <div class="result-container">
