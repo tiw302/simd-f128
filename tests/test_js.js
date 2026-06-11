@@ -60,6 +60,76 @@ console.log("Starting JS Wrapper Tests...");
             errors++;
         }
 
+        // [7] testing new math functions
+        console.log("[7] Testing New Math Functions...");
+        const two = new Float128("2.0");
+        const threeF128 = new Float128("3.0");
+        const powRes = two.pow(threeF128);
+        if (!powRes.toString().startsWith("8.0")) {
+            console.error("JS pow failed! Got " + powRes.toString());
+            errors++;
+        }
+
+        const negVal = new Float128("-4.5");
+        if (!negVal.abs().toString().startsWith("4.5")) {
+            console.error("JS abs failed! Got " + negVal.abs().toString());
+            errors++;
+        }
+        if (!negVal.floor().toString().startsWith("-5.0")) {
+            console.error("JS floor failed! Got " + negVal.floor().toString());
+            errors++;
+        }
+        if (!negVal.ceil().toString().startsWith("-4.0")) {
+            console.error("JS ceil failed! Got " + negVal.ceil().toString());
+            errors++;
+        }
+        if (!negVal.round().toString().startsWith("-5.0")) {
+            console.error("JS round failed! Got " + negVal.round().toString());
+            errors++;
+        }
+        if (!negVal.trunc().toString().startsWith("-4.0")) {
+            console.error("JS trunc failed! Got " + negVal.trunc().toString());
+            errors++;
+        }
+
+        const tenPointFive = new Float128("10.5");
+        const fmodRes = tenPointFive.fmod(threeF128);
+
+
+        if (!fmodRes.toString().startsWith("1.5")) {
+            console.error("JS fmod failed! Got " + fmodRes.toString());
+            errors++;
+        }
+
+        // test tan, sinh, cosh, tanh
+        const zero = new Float128("0.0");
+        const tanZero = zero.tan();
+        if (Math.abs(parseFloat(tanZero.toString())) > 1e-15) {
+            console.error("JS tan(0) failed! Got " + tanZero.toString());
+            errors++;
+        }
+
+        const oneF128 = new Float128("1.0");
+        const sinhRes = oneF128.sinh();
+        const coshRes = oneF128.cosh();
+        const tanhRes = oneF128.tanh();
+
+        // check sinh(1) - 1.1752011936438014 < 1e-12
+        if (Math.abs(parseFloat(sinhRes.toString()) - 1.1752011936438014) > 1e-12) {
+            console.error("JS sinh(1) failed! Got " + sinhRes.toString());
+            errors++;
+        }
+        // check cosh(1) - 1.5430806348152437 < 1e-12
+        if (Math.abs(parseFloat(coshRes.toString()) - 1.5430806348152437) > 1e-12) {
+            console.error("JS cosh(1) failed! Got " + coshRes.toString());
+            errors++;
+        }
+        // check tanh(1) - 0.7615941559557649 < 1e-12
+        if (Math.abs(parseFloat(tanhRes.toString()) - 0.7615941559557649) > 1e-12) {
+            console.error("JS tanh(1) failed! Got " + tanhRes.toString());
+            errors++;
+        }
+
         if (errors === 0) {
             console.log("All JS WASM Tests Passed!");
             process.exit(0);
