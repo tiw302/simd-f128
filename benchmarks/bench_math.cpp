@@ -31,7 +31,10 @@ static void BM_SimdF128_Div(benchmark::State& state) {
     simd_f128 a = simd_f128_from_double(3.14159);
     simd_f128 b = simd_f128_from_double(2.71828);
     for (auto _ : state) {
-        benchmark::DoNotOptimize(simd_f128_div(a, b));
+        benchmark::DoNotOptimize(a);
+        benchmark::DoNotOptimize(b);
+        simd_f128 r = simd_f128_div(a, b);
+        benchmark::DoNotOptimize(r);
     }
 }
 BENCHMARK(BM_SimdF128_Div);
@@ -39,7 +42,9 @@ BENCHMARK(BM_SimdF128_Div);
 static void BM_SimdF128_Sqrt(benchmark::State& state) {
     simd_f128 a = simd_f128_from_double(2.0);
     for (auto _ : state) {
-        benchmark::DoNotOptimize(simd_f128_sqrt(a));
+        benchmark::DoNotOptimize(a);
+        simd_f128 r = simd_f128_sqrt(a);
+        benchmark::DoNotOptimize(r);
     }
 }
 BENCHMARK(BM_SimdF128_Sqrt);
@@ -93,5 +98,57 @@ static void BM_SimdF128_Pow(benchmark::State& state) {
     }
 }
 BENCHMARK(BM_SimdF128_Pow);
+
+/* new math functions */
+static void BM_SimdF128_Tan(benchmark::State& state) {
+    simd_f128 x = simd_f128_from_double(1.0);
+    for (auto _ : state) {
+        benchmark::DoNotOptimize(simd_f128_tan(x));
+    }
+}
+BENCHMARK(BM_SimdF128_Tan);
+
+static void BM_SimdF128_Sinh(benchmark::State& state) {
+    simd_f128 x = simd_f128_from_double(1.0);
+    for (auto _ : state) {
+        benchmark::DoNotOptimize(simd_f128_sinh(x));
+    }
+}
+BENCHMARK(BM_SimdF128_Sinh);
+
+static void BM_SimdF128_Cosh(benchmark::State& state) {
+    simd_f128 x = simd_f128_from_double(1.0);
+    for (auto _ : state) {
+        benchmark::DoNotOptimize(simd_f128_cosh(x));
+    }
+}
+BENCHMARK(BM_SimdF128_Cosh);
+
+static void BM_SimdF128_Tanh(benchmark::State& state) {
+    simd_f128 x = simd_f128_from_double(1.0);
+    for (auto _ : state) {
+        benchmark::DoNotOptimize(simd_f128_tanh(x));
+    }
+}
+BENCHMARK(BM_SimdF128_Tanh);
+
+/* string formatting and parsing */
+static void BM_SimdF128_ToString(benchmark::State& state) {
+    simd_f128 x = SIMD_F128_PI;
+    char buf[128];
+    for (auto _ : state) {
+        simd_f128_to_string(buf, sizeof(buf), x);
+        benchmark::DoNotOptimize(buf);
+    }
+}
+BENCHMARK(BM_SimdF128_ToString);
+
+static void BM_SimdF128_FromString(benchmark::State& state) {
+    const char* str = "3.1415926535897932384626433832795";
+    for (auto _ : state) {
+        benchmark::DoNotOptimize(simd_f128_from_string(str));
+    }
+}
+BENCHMARK(BM_SimdF128_FromString);
 
 BENCHMARK_MAIN();
