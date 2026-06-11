@@ -16,7 +16,8 @@ PYBIND11_MODULE(simd_f128, m) {
         .def(py::init([](const std::string& s) { return f128::float128(simd_f128_from_string(s.c_str())); }))
         .def("to_string", &f128::float128::to_string)
         .def("__str__", &f128::float128::to_string)
-        .def("__repr__", &f128::float128::to_string)
+        // repr returns valid code
+        .def("__repr__", [](const f128::float128& self) { return "Float128('" + self.to_string() + "')"; })
         .def(py::self + py::self)
         .def(py::self - py::self)
         .def(py::self * py::self)
@@ -69,6 +70,9 @@ PYBIND11_MODULE(simd_f128, m) {
     m.def("isnan", &f128::isnan);
     m.def("isinf", &f128::isinf);
     m.def("abs_sqr", &f128::abs_sqr);
+
+    // implicit conversions
+    py::implicitly_convertible<std::complex<double>, f128::complex128>();
 
     // constants
     m.attr("pi") = f128::pi;
