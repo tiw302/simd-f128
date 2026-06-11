@@ -42,6 +42,31 @@ int main() {
         failed++;
     }
 
+    // testing std overloads for float128
+    f128::float128 rad = f128::pi * 0.25;
+    f128::float128 tan_val = std::tan(rad);
+    if (std::abs(tan_val - 1.0) > 1e-12) {
+        std::cerr << "std::tan failed! Got " << tan_val.to_string() << std::endl;
+        failed++;
+    }
+
+    f128::float128 one_f(1.0);
+    f128::float128 sinh_val = std::sinh(one_f);
+    f128::float128 cosh_val = std::cosh(one_f);
+    f128::float128 tanh_val = std::tanh(one_f);
+    if (std::abs(sinh_val - (std::exp(one_f) - std::exp(-one_f)) * 0.5) > 1e-12) {
+        std::cerr << "std::sinh failed! Got " << sinh_val.to_string() << std::endl;
+        failed++;
+    }
+    if (std::abs(cosh_val - (std::exp(one_f) + std::exp(-one_f)) * 0.5) > 1e-12) {
+        std::cerr << "std::cosh failed! Got " << cosh_val.to_string() << std::endl;
+        failed++;
+    }
+    if (std::abs(tanh_val - sinh_val / cosh_val) > 1e-12) {
+        std::cerr << "std::tanh failed! Got " << tanh_val.to_string() << std::endl;
+        failed++;
+    }
+
     std::cout << "[3] Testing std::complex Integration..." << std::endl;
     std::complex<double> std_c(1.0, 2.0);
     f128::complex128 f128_c(std_c);
@@ -51,6 +76,17 @@ int main() {
     std::complex<double> std_res = static_cast<std::complex<double>>(f128_res);
     if (std_res.real() != -5.0 || std_res.imag() != 10.0) {
         std::cerr << "std::complex conversion failed! Got " << std_res.real() << " + " << std_res.imag() << "i" << std::endl;
+        failed++;
+    }
+
+    // testing complex math functions
+    f128::complex128 comp_z(1.0, 1.0);
+    f128::complex128 comp_sinh = std::sinh(comp_z);
+    std::complex<double> std_sinh_res = static_cast<std::complex<double>>(comp_sinh);
+    double expected_real = std::sinh(1.0) * std::cos(1.0);
+    double expected_imag = std::cosh(1.0) * std::sin(1.0);
+    if (std::abs(std_sinh_res.real() - expected_real) > 1e-12 || std::abs(std_sinh_res.imag() - expected_imag) > 1e-12) {
+        std::cerr << "complex sinh failed! Got " << std_sinh_res << std::endl;
         failed++;
     }
 
