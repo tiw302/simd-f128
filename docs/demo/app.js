@@ -5,30 +5,115 @@ Module.onRuntimeInitialized = () => {
 };
 
 // Constants loader
+const inputA = document.getElementById('inputA');
+const warnBox = document.getElementById('validationWarning');
+const opSelect = document.getElementById('operator');
+const inputB = document.getElementById('inputB');
+
+function checkValidation() {
+    const valA = inputA.value.trim();
+    const valB = inputB.style.display !== 'none' ? inputB.value.trim() : '';
+    const op = opSelect.value;
+    const numA = Number(valA);
+    const numB = Number(valB);
+    
+    // clear warning by default
+    warnBox.style.display = 'none';
+    warnBox.innerHTML = '';
+
+    if (valA === '') return;
+
+    if (isNaN(numA)) {
+        warnBox.innerHTML = `⚠️ Input A is not a valid number.`;
+        warnBox.style.display = 'block';
+        return;
+    }
+
+    if (inputB.style.display !== 'none') {
+        if (valB !== '' && isNaN(numB)) {
+            warnBox.innerHTML = `⚠️ Input B is not a valid number.`;
+            warnBox.style.display = 'block';
+            return;
+        }
+        if (op === 'div' && numB === 0) {
+            warnBox.innerHTML = `⚠️ Domain Error: Division by zero is undefined.`;
+            warnBox.style.display = 'block';
+            return;
+        }
+    }
+
+    if ((op === 'asin' || op === 'acos') && (numA < -1 || numA > 1)) {
+        warnBox.innerHTML = `⚠️ Domain Error: A must be between -1.0 and 1.0 for ${op}. <a class="fix-link" id="btnFixAsin">Set to 0.5</a>`;
+        warnBox.style.display = 'block';
+        
+        document.getElementById('btnFixAsin').addEventListener('click', (e) => {
+            e.preventDefault();
+            inputA.value = "0.5";
+            checkValidation();
+        });
+        return;
+    }
+
+    if (op === 'log' && numA <= 0) {
+        warnBox.innerHTML = `⚠️ Domain Error: A must be greater than 0 for log. <a class="fix-link" id="btnFixLog">Set to 2.71828...</a>`;
+        warnBox.style.display = 'block';
+        
+        document.getElementById('btnFixLog').addEventListener('click', (e) => {
+            e.preventDefault();
+            inputA.value = "2.7182818284590452353602874713527";
+            checkValidation();
+        });
+        return;
+    }
+
+    if (op === 'sqrt' && numA < 0) {
+        warnBox.innerHTML = `⚠️ Domain Error: A must be non-negative for sqrt. <a class="fix-link" id="btnFixSqrt">Set to 2.0</a>`;
+        warnBox.style.display = 'block';
+        
+        document.getElementById('btnFixSqrt').addEventListener('click', (e) => {
+            e.preventDefault();
+            inputA.value = "2.0";
+            checkValidation();
+        });
+        return;
+    }
+}
+
 document.getElementById('btnLoadPi').addEventListener('click', () => {
-    document.getElementById('inputA').value = "3.1415926535897932384626433832795";
+    inputA.value = "3.1415926535897932384626433832795";
+    checkValidation();
 });
 
 document.getElementById('btnLoadE').addEventListener('click', () => {
-    document.getElementById('inputA').value = "2.7182818284590452353602874713527";
+    inputA.value = "2.7182818284590452353602874713527";
+    checkValidation();
 });
 
+inputA.addEventListener('input', checkValidation);
+inputB.addEventListener('input', checkValidation);
+
 // Toggle inputB display based on operator
-const opSelect = document.getElementById('operator');
-const inputB = document.getElementById('inputB');
 function updateUnaryState() {
-    const unaryOps = ['exp', 'log', 'sin', 'cos', 'sqrt'];
+    const unaryOps = ['exp', 'log', 'sin', 'cos', 'sqrt', 'atan', 'asin', 'acos'];
     const isUnary = unaryOps.includes(opSelect.value);
     inputB.style.display = isUnary ? 'none' : 'inline-block';
+    checkValidation();
 }
 opSelect.addEventListener('change', updateUnaryState);
 updateUnaryState();
 
 document.getElementById('calcBtn').addEventListener('click', () => {
     try {
-        const valA = document.getElementById('inputA').value;
-        const valB = document.getElementById('inputB').value;
-        const op = document.getElementById('operator').value;
+        checkValidation();
+        if (warnBox.style.display === 'block') {
+            document.getElementById('resultBox').innerText = warnBox.textContent.replace('Set to 0.5', '').replace('Set to 2.71828...', '').replace('Set to 2.0', '').replace('⚠️ ', '').trim();
+            document.getElementById('jsResultBox').innerText = "NaN";
+            return;
+        }
+
+        const valA = inputA.value;
+        const valB = inputB.value;
+        const op = opSelect.value;
 
         // 1. Calculate Standard JS 64-bit Result
         let jsRes = 0;
@@ -43,6 +128,11 @@ document.getElementById('calcBtn').addEventListener('click', () => {
         if (op === 'sin') jsRes = Math.sin(numA);
         if (op === 'cos') jsRes = Math.cos(numA);
         if (op === 'sqrt') jsRes = Math.sqrt(numA);
+        if (op === 'pow') jsRes = Math.pow(numA, numB);
+        if (op === 'atan') jsRes = Math.atan(numA);
+        if (op === 'atan2') jsRes = Math.atan2(numA, numB);
+        if (op === 'asin') jsRes = Math.asin(numA);
+        if (op === 'acos') jsRes = Math.acos(numA);
         
         // Show up to 20 digits to demonstrate standard precision limit
         document.getElementById('jsResultBox').innerText = jsRes.toPrecision(21);
@@ -89,6 +179,21 @@ document.getElementById('calcBtn').addEventListener('click', () => {
             res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
         } else if (op === 'sqrt') {
             res_hi = Module.ccall('simd_f128_wasm_sqrt', 'number', ['number', 'number'], [a_hi, a_lo]);
+            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
+        } else if (op === 'pow') {
+            res_hi = Module.ccall('simd_f128_wasm_pow', 'number', ['number', 'number', 'number', 'number'], [a_hi, a_lo, b_hi, b_lo]);
+            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
+        } else if (op === 'atan') {
+            res_hi = Module.ccall('simd_f128_wasm_atan', 'number', ['number', 'number'], [a_hi, a_lo]);
+            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
+        } else if (op === 'atan2') {
+            res_hi = Module.ccall('simd_f128_wasm_atan2', 'number', ['number', 'number', 'number', 'number'], [a_hi, a_lo, b_hi, b_lo]);
+            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
+        } else if (op === 'asin') {
+            res_hi = Module.ccall('simd_f128_wasm_asin', 'number', ['number', 'number'], [a_hi, a_lo]);
+            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
+        } else if (op === 'acos') {
+            res_hi = Module.ccall('simd_f128_wasm_acos', 'number', ['number', 'number'], [a_hi, a_lo]);
             res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
         }
 
