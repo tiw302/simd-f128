@@ -20,8 +20,19 @@ static int within_ulp(simd_f128 a, simd_f128 b, int ulps) {
     extract(a, &ahi, &alo);
     extract(b, &bhi, &blo);
 
-    if (fabsl(ahi - bhi) > ulps * 0x1.0p-52) return 0;
-    if (fabsl(alo - blo) > ulps * 0x1.0p-52) return 0;
+    // handle exact matches first
+    if (ahi == bhi && alo == blo) return 1;
+
+    // relative check for the high parts
+    double eps = 0x1.0p-52;
+    double tol_hi = ulps * eps * (fabs(ahi) > 0.0 ? fabs(ahi) : 1.0);
+    if (fabs(ahi - bhi) > tol_hi) return 0;
+
+    // relative check for the low parts
+    double scale_lo = fabs(alo) > 0.0 ? fabs(alo) : (fabs(ahi) * eps);
+    double tol_lo = ulps * eps * (scale_lo > 0.0 ? scale_lo : 1.0);
+    if (fabs(alo - blo) > tol_lo) return 0;
+
     return 1;
 }
 
@@ -314,7 +325,7 @@ int main() {
     extract(sqrt_vs, &hi, &lo);
     CHECK("sqrt(1e-200) > 0", hi > 0.0);
 
-    printf("\n=== section 6: advanced math ===\n\n");
+    printf("\n=== SECTION 6: Advanced Math ===\n\n");
 
     printf("[6.1] exp(x)\n");
     simd_f128 exp1 = simd_f128_exp(simd_f128_from_double(1.0));
@@ -382,6 +393,23 @@ int main() {
     extract(atan2_val, &hi, &lo);
     CHECK("atan2(1.0, 1.0) ~ pi/4", fabs(hi - 0.7853981633974483) < 1e-14);
 
+    printf("\n[7.4] hyperbolic and tangent functions\n");
+    simd_f128 tan_val = simd_f128_tan(simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(0.25)));
+    extract(tan_val, &hi, &lo);
+    CHECK("tan(pi/4) ~ 1.0", fabs(hi - 1.0) < 1e-14);
+
+    simd_f128 sinh_val = simd_f128_sinh(simd_f128_from_double(1.0));
+    extract(sinh_val, &hi, &lo);
+    CHECK("sinh(1.0) ~ 1.1752", fabs(hi - 1.1752011936438014) < 1e-14);
+
+    simd_f128 cosh_val = simd_f128_cosh(simd_f128_from_double(1.0));
+    extract(cosh_val, &hi, &lo);
+    CHECK("cosh(1.0) ~ 1.5430", fabs(hi - 1.5430806348152437) < 1e-14);
+
+    simd_f128 tanh_val = simd_f128_tanh(simd_f128_from_double(1.0));
+    extract(tanh_val, &hi, &lo);
+    CHECK("tanh(1.0) ~ 0.7615", fabs(hi - 0.7615941559557649) < 1e-14);
+
     printf("\n=== SECTION 8: I/O and State Checks ===\n\n");
 
     printf("[8.1] string parsing\n");
@@ -416,6 +444,55 @@ int main() {
 
     CHECK("log(NaN) is NaN", simd_f128_isnan(simd_f128_log(nan_val)));
     CHECK("log(inf) is inf", simd_f128_isinf(simd_f128_log(inf_val)));
+
+    CHECK("tan(NaN) is NaN", simd_f128_isnan(simd_f128_tan(nan_val)));
+    CHECK("tan(inf) is NaN", simd_f128_isnan(simd_f128_tan(inf_val)));
+    CHECK("sinh(NaN) is NaN", simd_f128_isnan(simd_f128_sinh(nan_val)));
+    CHECK("sinh(inf) is inf", simd_f128_isinf(simd_f128_sinh(inf_val)));
+    CHECK("cosh(NaN) is NaN", simd_f128_isnan(simd_f128_cosh(nan_val)));
+    CHECK("cosh(inf) is inf", simd_f128_isinf(simd_f128_cosh(inf_val)));
+    CHECK("tanh(NaN) is NaN", simd_f128_isnan(simd_f128_tanh(nan_val)));
+    double th_inf_hi, th_inf_lo;
+    simd_f128_extract(simd_f128_tanh(inf_val), &th_inf_hi, &th_inf_lo);
+    CHECK("tanh(inf) is 1.0", th_inf_hi == 1.0);
+
+
+    // [8.4] new edge cases and bug fixes
+    printf("\n[8.4] new bug fixes and edge cases\n");
+    // sqrt of negative/sub-zero values
+    simd_f128 tiny_neg = simd_f128_from_hi_lo(0.0, -1e-16);
+    CHECK("sqrt(0.0 - 1e-16) is NaN", simd_f128_isnan(simd_f128_sqrt(tiny_neg)));
+    simd_f128 neg_zero_f128 = simd_f128_from_double(-0.0);
+    double sqrt_nz_hi, sqrt_nz_lo;
+    simd_f128_extract(simd_f128_sqrt(neg_zero_f128), &sqrt_nz_hi, &sqrt_nz_lo);
+    CHECK("sqrt(-0.0) is -0.0", sqrt_nz_hi == 0.0 && signbit(sqrt_nz_hi));
+
+    // log of negative infinity
+    CHECK("log(-inf) is NaN", simd_f128_isnan(simd_f128_log(neg_inf_val)));
+
+    // pow fixes
+    simd_f128 zero_f128 = simd_f128_from_double(0.0);
+    simd_f128 pow_0_0 = simd_f128_pow(zero_f128, zero_f128);
+    double pow_0_0_hi, pow_0_0_lo;
+    simd_f128_extract(pow_0_0, &pow_0_0_hi, &pow_0_0_lo);
+    CHECK("pow(0, 0) == 1.0", pow_0_0_hi == 1.0);
+
+    simd_f128 neg_two = simd_f128_from_double(-2.0);
+    simd_f128 three_f128 = simd_f128_from_double(3.0);
+    simd_f128 pow_neg = simd_f128_pow(neg_two, three_f128);
+    double pow_neg_hi, pow_neg_lo;
+    simd_f128_extract(pow_neg, &pow_neg_hi, &pow_neg_lo);
+    CHECK("pow(-2, 3) == -8.0", pow_neg_hi == -8.0);
+
+    // asin boundary check
+    simd_f128 tiny_above_one = simd_f128_from_hi_lo(1.0, 1e-16);
+    CHECK("asin(1.0 + 1e-16) is NaN", simd_f128_isnan(simd_f128_asin(tiny_above_one)));
+
+    // atan2 sign-of-zero compliance
+    double a2_hi, a2_lo;
+    simd_f128_extract(simd_f128_atan2(neg_zero_f128, neg_zero_f128), &a2_hi, &a2_lo);
+    CHECK("atan2(-0.0, -0.0) is -pi", fabsl(a2_hi - (-3.141592653589793)) < 1e-12);
+
 
     printf("\n=== SECTION 9: Complex Numbers ===\n\n");
 
