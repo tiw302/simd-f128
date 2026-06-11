@@ -145,3 +145,28 @@ button#calcBtn:hover {
 .footer-links a:hover {
     text-decoration: underline;
 }
+
+.warning-box {
+    margin: 15px 5px;
+    padding: 12px 16px;
+    background: #fff5f5;
+    border: 1px solid #ffc9c9;
+    border-left: 4px solid #ff6b6b;
+    border-radius: 6px;
+    color: #c92a2a;
+    font-size: 0.95rem;
+    font-family: inherit;
+    text-align: left;
+}
+
+.warning-box a.fix-link {
+    color: #1c7ed6;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 8px;
+}
+
+.warning-box a.fix-link:hover {
+    color: #101113;
+}
