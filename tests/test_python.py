@@ -44,6 +44,28 @@ def test_python_bindings():
         print(f"Error: PI constant failed. Got {pi.to_string()}")
         errors += 1
 
+    print("[4] Testing New Math Functions...")
+    # test tan, sinh, cosh, tanh
+    zero = simd_f128.Float128(0.0)
+    tan_zero = simd_f128.tan(zero)
+    if not tan_zero.to_string().startswith("0.0"):
+        print(f"Error: Float128 tan(0) failed. Got {tan_zero.to_string()}")
+        errors += 1
+
+    one = simd_f128.Float128(1.0)
+    sinh_one = simd_f128.sinh(one)
+    cosh_one = simd_f128.cosh(one)
+    tanh_one = simd_f128.tanh(one)
+    if not sinh_one.to_string().startswith("1.17520119"):
+        print(f"Error: Float128 sinh(1) failed. Got {sinh_one.to_string()}")
+        errors += 1
+
+    comp_z = simd_f128.Complex128(1.0, 1.0)
+    comp_sinh = simd_f128.sinh(comp_z)
+    if not comp_sinh.real().to_string().startswith("0.634963"):
+        print(f"Error: Complex128 sinh(1+i) failed. Got {comp_sinh.real().to_string()}")
+        errors += 1
+
     if errors == 0:
         print("All Python Binding Tests Passed!")
         sys.exit(0)
