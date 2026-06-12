@@ -67,6 +67,12 @@
     #define SIMD_F128_USE_SCALAR
 #endif
 
+// msvc doesn't support gcc builtins like __builtin_expect, so we define a fallback macro
+#if defined(_MSC_VER) && !defined(__clang__)
+#define __builtin_expect(x, y) (x)
+#endif
+
+
 // ████████ ██    ██ ██████  ███████ ███████
 //    ██     ██  ██  ██   ██ ██      ██
 //    ██      ████   ██████  █████   ███████
