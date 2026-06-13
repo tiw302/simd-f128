@@ -1,4 +1,6 @@
-// updated 2026-06-06
+// updated 2026-06-12
+// spdx-license-identifier: mit
+// copyright (c) 2026 jirawat siripuk
 
 #ifndef SIMD_F128_MATH_H
 #define SIMD_F128_MATH_H
@@ -19,33 +21,57 @@
 extern "C" {
 #endif
 
-// exponential function (e^x)
+/* exponential function (e^x):
+ * computes base-e exponential. employs a careful range reduction using
+ * log2(e) to scale the input, then uses a high-precision minimax polynomial 
+ * approximation for the fractional part. handles overflow (> 709.78) and 
+ * underflow (< -745.13) gracefully by returning inf or 0.0. */
 SIMD_F128_INLINE simd_f128 simd_f128_exp(simd_f128 x);
 
-// natural logarithm (ln x)
+/* natural logarithm (ln x):
+ * computes the natural logarithm. extracts the exponent using frexp,
+ * and processes the normalized significand using a chebyshev approximation.
+ * handles domain errors (x <= 0) by returning nan or -inf. */
 SIMD_F128_INLINE simd_f128 simd_f128_log(simd_f128 x);
 
-// power function (base^exp)
+/* power function (base^exp):
+ * computes base raised to the power of exp using the identity:
+ * base^exp = exp(exp * log(base)).
+ * includes special handling for edge cases (base=0, fractional exponents
+ * of negative bases) to strictly adhere to ieee-754 pow() semantics. */
 SIMD_F128_INLINE simd_f128 simd_f128_pow(simd_f128 base, simd_f128 exp);
 
-// trigonometric functions
+/* trigonometric functions:
+ * computes sine, cosine, and tangent. employs range reduction to map
+ * the input into the primary domain [-pi/4, pi/4], then approximates 
+ * using a taylor/minimax polynomial. */
 SIMD_F128_INLINE simd_f128 simd_f128_sin(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_cos(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_tan(simd_f128 x);
+
+/* simultaneous sine and cosine:
+ * computes both sin(x) and cos(x) simultaneously. shares the expensive
+ * range reduction step, making it much faster than calling sin and cos
+ * separately. perfect for rendering loops and complex rotations. */
 SIMD_F128_INLINE void simd_f128_sincos(simd_f128 x, simd_f128* s, simd_f128* c);
 
-// inverse trigonometric functions
+/* inverse trigonometric functions:
+ * computes arc sine, arc cosine, and arc tangent.
+ * atan2 handles all four quadrants correctly based on the signs of y and x. */
 SIMD_F128_INLINE simd_f128 simd_f128_atan(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_atan2(simd_f128 y, simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_asin(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_acos(simd_f128 x);
 
-// hyperbolic functions
+/* hyperbolic functions:
+ * computes sinh, cosh, and tanh using combinations of the exponential function. */
 SIMD_F128_INLINE simd_f128 simd_f128_sinh(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_cosh(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_tanh(simd_f128 x);
 
-// rounding and remainder
+/* rounding and remainder functions:
+ * correctly handles the two-component structure of the double-double 
+ * format to perform precise ieee-754 rounding operations. */
 SIMD_F128_INLINE simd_f128 simd_f128_floor(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_ceil(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_trunc(simd_f128 x);
@@ -72,8 +98,8 @@ SIMD_F128_INLINE simd_f128 simd_f128_exp(simd_f128 x) {
     if (isnan(hi)) return simd_f128_from_double(NAN);
 
     // catch overflow/underflow early to prevent invalid math steps
-    if (hi > 709.0) return simd_f128_from_double(INFINITY);
-    if (hi < -745.0) return simd_f128_from_double(0.0);
+    if (hi > 709.78271289338399) return simd_f128_from_double(INFINITY);
+    if (hi < -745.13321910194110) return simd_f128_from_double(0.0);
 
     // range reduction to quadrant or sub-interval with n = 16:
     // x = (k / 16) * ln(2) + r, where r is in [-ln(2)/32, ln(2)/32]
