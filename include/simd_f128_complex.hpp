@@ -1,4 +1,6 @@
-// updated 2026-05-23
+// updated 2026-06-12
+// spdx-license-identifier: mit
+// copyright (c) 2026 jirawat siripuk
 
 #ifndef SIMD_F128_COMPLEX_HPP
 #define SIMD_F128_COMPLEX_HPP
@@ -22,7 +24,12 @@ public:
     // raw double-double complex value
     simd_f128_complex data;
 
-    // default constructor initializes to 0 + 0i
+    // =========================================================================
+    // object lifetime and interoperability
+    // =========================================================================
+    // provides zero-cost initialization and seamless type coercion between 
+    // strictly typed c++11 domains, the c-core, and standard library complex types.
+
     SIMD_F128_DEVICE complex128() {
         data.real = simd_f128_from_double(0.0);
         data.imag = simd_f128_from_double(0.0);
@@ -62,13 +69,17 @@ public:
     // retrieve imaginary component
     SIMD_F128_DEVICE float128 imag() const { return float128(data.imag); }
 
-    // overloaded operators for complex arithmetic
+    // =========================================================================
+    // algebraic operators
+    // =========================================================================
+    // maps directly to optimized avx2/wasm c-core routines. all intermediate 
+    // variables are perfectly bounded to the cpu registers without heap allocation.
+
     SIMD_F128_DEVICE complex128 operator+(const complex128& b) const { return complex128(simd_f128_complex_add(data, b.data)); }
     SIMD_F128_DEVICE complex128 operator-(const complex128& b) const { return complex128(simd_f128_complex_sub(data, b.data)); }
     SIMD_F128_DEVICE complex128 operator*(const complex128& b) const { return complex128(simd_f128_complex_mul(data, b.data)); }
     SIMD_F128_DEVICE complex128 operator/(const complex128& b) const { return complex128(simd_f128_complex_div(data, b.data)); }
 
-    // compound assignment operators
     SIMD_F128_DEVICE complex128& operator+=(const complex128& b) { data = simd_f128_complex_add(data, b.data); return *this; }
     SIMD_F128_DEVICE complex128& operator-=(const complex128& b) { data = simd_f128_complex_sub(data, b.data); return *this; }
     SIMD_F128_DEVICE complex128& operator*=(const complex128& b) { data = simd_f128_complex_mul(data, b.data); return *this; }
@@ -88,7 +99,13 @@ inline std::ostream& operator<<(std::ostream& os, const complex128& val) {
     return os;
 }
 
-// compute absolute magnitude squared
+// =========================================================================
+// complex transcendental & geometric functions
+// =========================================================================
+// executes high-precision 128-bit operations on the complex plane.
+// functions like sin(z) perfectly utilize their mathematical identities
+// (e.g., sin(x)*cosh(y) + i*cos(x)*sinh(y)) leveraging the c-core.
+
 inline float128 abs_sqr(const complex128& a) {
     return float128(simd_f128_complex_abs_sqr(a.data));
 }
@@ -150,7 +167,12 @@ inline complex128 tanh(const complex128& z) {
 
 namespace std {
 
-// std namespace overloads to allow standard template resolution and adl integration
+// =========================================================================
+// standard library integration (adl)
+// =========================================================================
+// injects overloads into the std namespace so that float128 can be passed 
+// directly into templated algorithms and standard containers without modification.
+
 inline f128::complex128 sin(const f128::complex128& z) { return f128::sin(z); }
 inline f128::complex128 cos(const f128::complex128& z) { return f128::cos(z); }
 inline f128::complex128 tan(const f128::complex128& z) { return f128::tan(z); }
@@ -163,4 +185,4 @@ inline f128::complex128 conj(const f128::complex128& a) { return f128::conj(a); 
 
 } // namespace std
 
-#endif /* SIMD_F128_COMPLEX_HPP */
+#endif // SIMD_F128_COMPLEX_HPP
