@@ -3,11 +3,15 @@
 #include "../include/simd_f128.h"
 #include "../include/simd_f128_vector.h"
 
-/*
- * ---------------------------------------------------------
- * baseline: native 64-bit double precision
- * ---------------------------------------------------------
- */
+// ██████   ██████  ██    ██ ██████  ██      ███████ 
+// ██   ██ ██    ██ ██    ██ ██   ██ ██      ██      
+// ██   ██ ██    ██ ██    ██ ██████  ██      █████   
+// ██   ██ ██    ██ ██    ██ ██   ██ ██      ██      
+// ██████   ██████   ██████  ██████  ███████ ███████ 
+//
+// >>baseline: native 64-bit double precision
+
+// benchmark: baseline double addition
 static void BM_Double_Add(benchmark::State& state) {
     // note: this measures latency due to the loop-carried dependency chain
     double a = 1.0000001;
@@ -18,6 +22,7 @@ static void BM_Double_Add(benchmark::State& state) {
 }
 BENCHMARK(BM_Double_Add);
 
+// benchmark: baseline double multiplication
 static void BM_Double_Mul(benchmark::State& state) {
     // note: this measures latency due to the loop-carried dependency chain
     double a = 1.0000001;
@@ -28,12 +33,16 @@ static void BM_Double_Mul(benchmark::State& state) {
 }
 BENCHMARK(BM_Double_Mul);
 
-/*
- * ---------------------------------------------------------
- * baseline: gcc/clang 128-bit quad precision (if available)
- * ---------------------------------------------------------
- */
+//  ██████  ██    ██  █████  ██████  
+// ██    ██ ██    ██ ██   ██ ██   ██ 
+// ██    ██ ██    ██ ███████ ██   ██ 
+// ██  █ ██ ██    ██ ██   ██ ██   ██ 
+//  █████ █  ██████  ██   ██ ██████  
+//
+// >>baseline: gcc/clang 128-bit quad precision
 #ifdef __SIZEOF_FLOAT128__
+
+// benchmark: baseline quad-precision addition
 static void BM_Float128_Add(benchmark::State& state) {
     // note: this measures latency due to the loop-carried dependency chain
     __float128 a = 1.0000001q;
@@ -44,6 +53,7 @@ static void BM_Float128_Add(benchmark::State& state) {
 }
 BENCHMARK(BM_Float128_Add);
 
+// benchmark: baseline quad-precision multiplication
 static void BM_Float128_Mul(benchmark::State& state) {
     // note: this measures latency due to the loop-carried dependency chain
     __float128 a = 1.0000001q;
@@ -55,11 +65,15 @@ static void BM_Float128_Mul(benchmark::State& state) {
 BENCHMARK(BM_Float128_Mul);
 #endif
 
-/*
- * ---------------------------------------------------------
- * simd-f128: 128-bit double-double precision
- * ---------------------------------------------------------
- */
+// ███████  ██  █████   █████  
+// ██      ███ ██   ██ ██   ██ 
+// █████    ██   ███    █████  
+// ██       ██  ██     ██   ██ 
+// ██       ██ ███████  █████  
+//
+// >>simd-f128: 128-bit double-double precision
+
+// benchmark: double-double addition
 static void BM_SimdF128_Add(benchmark::State& state) {
     // note: this measures latency due to the loop-carried dependency chain
     simd_f128 a = simd_f128_from_double(1.0000001);
@@ -71,6 +85,7 @@ static void BM_SimdF128_Add(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Add);
 
+// benchmark: double-double multiplication
 static void BM_SimdF128_Mul(benchmark::State& state) {
     // note: this measures latency due to the loop-carried dependency chain
     simd_f128 a = simd_f128_from_double(1.0000001);
@@ -82,12 +97,16 @@ static void BM_SimdF128_Mul(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Mul);
 
-/*
- * ---------------------------------------------------------
- * simd-f128x4: AVX2 4-way parallel double-double precision
- * ---------------------------------------------------------
- */
+//  █████  ██    ██ ██   ██  █████  
+// ██   ██ ██    ██  ██ ██  ██   ██ 
+// ███████ ██    ██   ███     ███   
+// ██   ██  ██  ██   ██ ██   ██     
+// ██   ██   ████   ██   ██ ███████ 
+//
+// >>simd-f128x4: avx2 4-way parallel double-double precision
 #if defined(SIMD_F128_USE_AVX2)
+
+// benchmark: avx2 4-way addition
 static void BM_SimdF128x4_Add(benchmark::State& state) {
     // note: this measures latency due to the loop-carried dependency chain
     simd_f128x4 a = simd_f128x4_from_doubles(1.0, 2.0, 3.0, 4.0);
@@ -100,6 +119,7 @@ static void BM_SimdF128x4_Add(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128x4_Add);
 
+// benchmark: avx2 4-way multiplication
 static void BM_SimdF128x4_Mul(benchmark::State& state) {
     // note: this measures latency due to the loop-carried dependency chain
     simd_f128x4 a = simd_f128x4_from_doubles(1.0, 2.0, 3.0, 4.0);
@@ -112,6 +132,7 @@ static void BM_SimdF128x4_Mul(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128x4_Mul);
 
+// benchmark: avx2 4-way subtraction
 static void BM_SimdF128x4_Sub(benchmark::State& state) {
     // note: this measures latency due to the loop-carried dependency chain
     simd_f128x4 a = simd_f128x4_from_doubles(1.0, 2.0, 3.0, 4.0);
@@ -124,6 +145,7 @@ static void BM_SimdF128x4_Sub(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128x4_Sub);
 
+// benchmark: avx2 4-way division
 static void BM_SimdF128x4_Div(benchmark::State& state) {
     simd_f128x4 a = simd_f128x4_from_doubles(3.14, 3.14, 3.14, 3.14);
     simd_f128x4 b = simd_f128x4_from_doubles(2.71, 2.71, 2.71, 2.71);
@@ -137,6 +159,7 @@ static void BM_SimdF128x4_Div(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128x4_Div);
 
+// benchmark: avx2 4-way square root
 static void BM_SimdF128x4_Sqrt(benchmark::State& state) {
     simd_f128x4 a = simd_f128x4_from_doubles(2.0, 3.0, 4.0, 5.0);
     for (auto _ : state) {
