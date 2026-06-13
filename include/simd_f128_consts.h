@@ -1,4 +1,6 @@
-// updated 2026-05-23
+// updated 2026-06-12
+// spdx-license-identifier: mit
+// copyright (c) 2026 jirawat siripuk
 
 #ifndef SIMD_F128_CONSTS_H
 #define SIMD_F128_CONSTS_H
