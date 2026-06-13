@@ -1,0 +1,82 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define SIMD_F128_IMPLEMENTATION
+#include "../include/simd_f128.h"
+#include "../include/simd_f128_math.h"
+#include "../include/simd_f128_io.h"
+
+int main() {
+    printf("=======================================\n");
+    printf("    SIMD-F128 WEIRD CASES TESTING\n");
+    printf("=======================================\n\n");
+
+    char buf[256];
+
+    // 1. Extreme exp bounds testing
+    printf("--- [1] Extreme exp bounds ---\n");
+    simd_f128 val_exp_high = simd_f128_from_double(709.78271289338399);
+    simd_f128 val_exp_low = simd_f128_from_double(-745.13321910194110);
+    simd_f128 exp_max = simd_f128_exp(val_exp_high);
+    simd_f128 exp_min = simd_f128_exp(val_exp_low);
+    simd_f128_to_string(buf, sizeof(buf), exp_max);
+    printf("exp(709.78271...) = %s (expect near 1.79e308)\n", buf);
+    simd_f128_to_string(buf, sizeof(buf), exp_min);
+    printf("exp(-745.1332...) = %s (expect 0.0 or subnormal)\n", buf);
+
+    // 2. Weird pow tests
+    printf("\n--- [2] Weird pow cases ---\n");
+    simd_f128 neg_base = simd_f128_from_double(-2.5);
+    simd_f128 int_exp = simd_f128_from_double(3.0);
+    simd_f128 frac_exp = simd_f128_from_double(3.5);
+    
+    simd_f128 pow1 = simd_f128_pow(neg_base, int_exp); // -2.5^3 = -15.625
+    simd_f128 pow2 = simd_f128_pow(neg_base, frac_exp); // -2.5^3.5 = NaN
+    
+    simd_f128_to_string(buf, sizeof(buf), pow1);
+    printf("pow(-2.5, 3.0)   = %s (expect -15.625)\n", buf);
+    simd_f128_to_string(buf, sizeof(buf), pow2);
+    printf("pow(-2.5, 3.5)   = %s (expect NaN)\n", buf);
+
+    // 3. 0^0, 0^-1
+    simd_f128 zero = simd_f128_from_double(0.0);
+    simd_f128 neg_one = simd_f128_from_double(-1.0);
+    
+    simd_f128 pow3 = simd_f128_pow(zero, zero);
+    simd_f128 pow4 = simd_f128_pow(zero, neg_one); // 0^-1 = inf
+    
+    simd_f128_to_string(buf, sizeof(buf), pow3);
+    printf("pow(0.0, 0.0)    = %s (expect 1.0)\n", buf);
+    simd_f128_to_string(buf, sizeof(buf), pow4);
+    printf("pow(0.0, -1.0)   = %s (expect inf)\n", buf);
+
+    // 4. Catastrophic cancellation check
+    printf("\n--- [4] Catastrophic Cancellation Check ---\n");
+    simd_f128 a = simd_f128_from_string("1.0000000000000000000000000000001");
+    simd_f128 b = simd_f128_from_double(1.0);
+    simd_f128 c = simd_f128_sub(a, b);
+    simd_f128_to_string(buf, sizeof(buf), c);
+    printf("1.0...01 - 1.0   = %s\n", buf);
+
+    // 5. Trig functions way out of bounds
+    printf("\n--- [5] Trig huge bounds ---\n");
+    simd_f128 huge_val = simd_f128_from_double(1e100);
+    simd_f128 sin_huge = simd_f128_sin(huge_val);
+    simd_f128_to_string(buf, sizeof(buf), sin_huge);
+    printf("sin(1e100)       = %s (should be within [-1, 1] without crashing)\n", buf);
+
+    // 6. Atan2 with +/- zero
+    printf("\n--- [6] atan2 signs ---\n");
+    simd_f128 neg_zero = simd_f128_from_double(-0.0);
+    simd_f128 atan2_1 = simd_f128_atan2(zero, neg_zero); // atan2(0, -0) = PI
+    simd_f128 atan2_2 = simd_f128_atan2(neg_zero, neg_zero); // atan2(-0, -0) = -PI
+    
+    simd_f128_to_string(buf, sizeof(buf), atan2_1);
+    printf("atan2(0.0, -0.0) = %s\n", buf);
+    simd_f128_to_string(buf, sizeof(buf), atan2_2);
+    printf("atan2(-0.0, -0.0)= %s\n", buf);
+
+    printf("\n--- All tests executed smoothly without exceptions! ---\n");
+    return 0;
+}
