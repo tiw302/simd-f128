@@ -1,4 +1,6 @@
-// updated 2026-05-23
+// updated 2026-06-12
+// spdx-license-identifier: mit
+// copyright (c) 2026 jirawat siripuk
 
 #ifndef SIMD_F128_EIGEN_HPP
 #define SIMD_F128_EIGEN_HPP
@@ -71,4 +73,4 @@ namespace numext {
 
 } // namespace Eigen
 
-#endif // simd_f128_eigen_hpp
+#endif // SIMD_F128_EIGEN_HPP
