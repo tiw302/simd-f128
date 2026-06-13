@@ -1,4 +1,6 @@
-// updated 2026-05-23
+// updated 2026-06-12
+// spdx-license-identifier: mit
+// copyright (c) 2026 jirawat siripuk
 
 #ifndef SIMD_F128_IO_H
 #define SIMD_F128_IO_H
@@ -22,16 +24,28 @@
 extern "C" {
 #endif
 
-// prints the 128-bit number to stdout
+/* print function (stdout):
+ * formats and prints the 128-bit number directly to standard output
+ * followed by a newline. useful for quick debugging. */
 void simd_f128_print(simd_f128 x);
 
-// converts the number to a string buffer
+/* default string conversion:
+ * converts the 128-bit number into a character buffer using a default
+ * precision of 31 significant decimal digits. this is sufficient to capture 
+ * the full accuracy of the double-double format without garbage digits. */
 void simd_f128_to_string(char* buf, size_t buf_size, simd_f128 x);
 
-// converts the number to a string buffer with a specific number of significant digits
+/* precise string conversion:
+ * converts the number into a character buffer with a strictly defined
+ * number of significant digits. employs iterative scaling to prevent overflow
+ * when extracting digits from extreme subnormal numbers. */
 void simd_f128_to_string_prec(char* buf, size_t buf_size, simd_f128 x, int digits);
 
-// parses a string into a 128-bit number
+/* string parser:
+ * robustly parses a scientific notation or decimal string into a 128-bit number.
+ * accumulates the integer and fractional parts carefully to preserve up to
+ * 31 decimal digits of precision. handles inf, nan, and extremely small/large
+ * exponents gracefully. */
 simd_f128 simd_f128_from_string(const char* str);
 
 #ifdef __cplusplus
@@ -755,9 +769,17 @@ void simd_f128_to_string_prec(char* buf, size_t buf_size, simd_f128 x, int digit
     if (hi_abs > 0.0 && (hi_abs >= 1e15 || hi_abs < 1e-4)) {
         int exp_val = (int)floor(log10(hi_abs));
         
-        // scale the number by 10^-exp_val to normalize the significand
-        simd_f128 scale_factor = _simd_f128_pow10_int(-exp_val);
-        simd_f128 scaled_x = simd_f128_mul(x, scale_factor);
+        // scale the number by 10^-exp_val iteratively to avoid overflow
+        int shift_exp = -exp_val;
+        simd_f128 scaled_x = x;
+        if (shift_exp > 250) {
+            scaled_x = simd_f128_mul(scaled_x, _simd_f128_pow10_int(250));
+            shift_exp -= 250;
+        } else if (shift_exp < -250) {
+            scaled_x = simd_f128_mul(scaled_x, _simd_f128_pow10_int(-250));
+            shift_exp += 250;
+        }
+        scaled_x = simd_f128_mul(scaled_x, _simd_f128_pow10_int(shift_exp));
         
         double s_hi, s_lo;
         _simd_f128_extract_internal(scaled_x, &s_hi, &s_lo);
