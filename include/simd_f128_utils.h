@@ -1,4 +1,6 @@
-// updated 2026-05-23
+// updated 2026-06-12
+// spdx-license-identifier: mit
+// copyright (c) 2026 jirawat siripuk
 
 #ifndef SIMD_F128_UTILS_H
 #define SIMD_F128_UTILS_H
@@ -157,4 +159,4 @@ SIMD_F128_INLINE simd_f128 simd_f128_max(simd_f128 a, simd_f128 b) {
     return (simd_f128_cmp(a, b) >= 0) ? a : b;
 }
 
-#endif // simd_f128_utils_h
+#endif // SIMD_F128_UTILS_H
