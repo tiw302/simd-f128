@@ -6,7 +6,15 @@
 #include "../include/simd_f128_utils.h"
 #include "../include/simd_f128_math.h"
 
-/* core arithmetic */
+//  ██████  ██████  ██████  ███████ 
+// ██      ██    ██ ██   ██ ██      
+// ██      ██    ██ ██████  █████   
+// ██      ██    ██ ██   ██ ██      
+//  ██████  ██████  ██   ██ ███████ 
+//
+// >>core arithmetic
+
+// benchmark: double-double addition
 static void BM_SimdF128_Add(benchmark::State& state) {
     simd_f128 a = simd_f128_from_double(1.0000001);
     simd_f128 b = simd_f128_from_double(2.0000002);
@@ -17,6 +25,7 @@ static void BM_SimdF128_Add(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Add);
 
+// benchmark: double-double multiplication
 static void BM_SimdF128_Mul(benchmark::State& state) {
     simd_f128 a = simd_f128_from_double(1.0000001);
     simd_f128 b = simd_f128_from_double(1.0000002);
@@ -27,6 +36,7 @@ static void BM_SimdF128_Mul(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Mul);
 
+// benchmark: double-double division
 static void BM_SimdF128_Div(benchmark::State& state) {
     simd_f128 a = simd_f128_from_double(3.14159);
     simd_f128 b = simd_f128_from_double(2.71828);
@@ -39,6 +49,7 @@ static void BM_SimdF128_Div(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Div);
 
+// benchmark: double-double square root
 static void BM_SimdF128_Sqrt(benchmark::State& state) {
     simd_f128 a = simd_f128_from_double(2.0);
     for (auto _ : state) {
@@ -49,7 +60,15 @@ static void BM_SimdF128_Sqrt(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Sqrt);
 
-/* math functions */
+// ███    ███  █████  ████████ ██   ██ 
+// ████  ████ ██   ██    ██    ██   ██ 
+// ██ ████ ██ ███████    ██    ███████ 
+// ██  ██  ██ ██   ██    ██    ██   ██ 
+// ██      ██ ██   ██    ██    ██   ██ 
+//
+// >>math functions
+
+// benchmark: exponential function (e^x)
 static void BM_SimdF128_Exp(benchmark::State& state) {
     simd_f128 x = simd_f128_from_double(0.5);
     for (auto _ : state) {
@@ -58,6 +77,7 @@ static void BM_SimdF128_Exp(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Exp);
 
+// benchmark: natural logarithm (ln x)
 static void BM_SimdF128_Log(benchmark::State& state) {
     simd_f128 x = simd_f128_from_double(2.0);
     for (auto _ : state) {
@@ -66,6 +86,7 @@ static void BM_SimdF128_Log(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Log);
 
+// benchmark: sine function
 static void BM_SimdF128_Sin(benchmark::State& state) {
     simd_f128 x = simd_f128_from_double(1.0);
     for (auto _ : state) {
@@ -74,6 +95,7 @@ static void BM_SimdF128_Sin(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Sin);
 
+// benchmark: cosine function
 static void BM_SimdF128_Cos(benchmark::State& state) {
     simd_f128 x = simd_f128_from_double(1.0);
     for (auto _ : state) {
@@ -82,6 +104,7 @@ static void BM_SimdF128_Cos(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Cos);
 
+// benchmark: arc tangent function
 static void BM_SimdF128_Atan(benchmark::State& state) {
     simd_f128 x = simd_f128_from_double(0.5);
     for (auto _ : state) {
@@ -90,6 +113,7 @@ static void BM_SimdF128_Atan(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Atan);
 
+// benchmark: power function (base^exp)
 static void BM_SimdF128_Pow(benchmark::State& state) {
     simd_f128 b = simd_f128_from_double(2.0);
     simd_f128 e = simd_f128_from_double(10.0);
@@ -99,7 +123,15 @@ static void BM_SimdF128_Pow(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Pow);
 
-/* new math functions */
+// ███    ██ ███████ ██     ██ 
+// ████   ██ ██      ██     ██ 
+// ██ ██  ██ █████   ██  █  ██ 
+// ██  ██ ██ ██      ██ ███ ██ 
+// ██   ████ ███████  ███ ███  
+//
+// >>new math functions
+
+// benchmark: tangent function
 static void BM_SimdF128_Tan(benchmark::State& state) {
     simd_f128 x = simd_f128_from_double(1.0);
     for (auto _ : state) {
@@ -108,6 +140,7 @@ static void BM_SimdF128_Tan(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Tan);
 
+// benchmark: hyperbolic sine
 static void BM_SimdF128_Sinh(benchmark::State& state) {
     simd_f128 x = simd_f128_from_double(1.0);
     for (auto _ : state) {
@@ -116,6 +149,7 @@ static void BM_SimdF128_Sinh(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Sinh);
 
+// benchmark: hyperbolic cosine
 static void BM_SimdF128_Cosh(benchmark::State& state) {
     simd_f128 x = simd_f128_from_double(1.0);
     for (auto _ : state) {
@@ -124,6 +158,7 @@ static void BM_SimdF128_Cosh(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Cosh);
 
+// benchmark: hyperbolic tangent
 static void BM_SimdF128_Tanh(benchmark::State& state) {
     simd_f128 x = simd_f128_from_double(1.0);
     for (auto _ : state) {
@@ -132,7 +167,15 @@ static void BM_SimdF128_Tanh(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_Tanh);
 
-/* string formatting and parsing */
+// ██  ██████  
+// ██ ██    ██ 
+// ██ ██    ██ 
+// ██ ██    ██ 
+// ██  ██████  
+//
+// >>string formatting and parsing
+
+// benchmark: format double-double to string
 static void BM_SimdF128_ToString(benchmark::State& state) {
     simd_f128 x = SIMD_F128_PI;
     char buf[128];
@@ -143,6 +186,7 @@ static void BM_SimdF128_ToString(benchmark::State& state) {
 }
 BENCHMARK(BM_SimdF128_ToString);
 
+// benchmark: parse string to double-double
 static void BM_SimdF128_FromString(benchmark::State& state) {
     const char* str = "3.1415926535897932384626433832795";
     for (auto _ : state) {
