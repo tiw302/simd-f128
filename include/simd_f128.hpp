@@ -1,5 +1,6 @@
-// updated 2026-06-06
-
+// updated 2026-06-12
+// spdx-license-identifier: mit
+// copyright (c) 2026 jirawat siripuk
 #ifndef SIMD_F128_HPP
 #define SIMD_F128_HPP
 
@@ -29,27 +30,33 @@ public:
     // raw double-double simd register data
     simd_f128 data;
 
-    // constructors
-    // default constructor initializes value to 0.0
+    /* constructors:
+     * default constructor initializes value to 0.0.
+     * from double constructor loads a standard 64-bit float into the high part.
+     * from raw type constructor wraps an existing simd_f128 struct/register. */
     SIMD_F128_DEVICE float128() { data = simd_f128_from_double(0.0); }
-    // constructor from standard double
     SIMD_F128_DEVICE float128(double d) { data = simd_f128_from_double(d); }
-    // constructor from raw simd_f128 type
     SIMD_F128_DEVICE float128(simd_f128 d) : data(d) {}
 
-    // extract high and low double components
+    /* extraction helper:
+     * unpacks the internal 128-bit register into two standard 64-bit doubles.
+     * hi contains the primary magnitude, lo contains the accumulated error. */
     SIMD_F128_DEVICE void extract(double& hi, double& lo) const {
         simd_f128_extract(data, &hi, &lo);
     }
 
-    // operator overloading for arithmetic operations
+    /* arithmetic operator overloading:
+     * maps standard c++ mathematical operators to the underlying simd c api.
+     * division follows strict ieee-754 semantics regarding division by zero,
+     * returning inf or nan directly rather than throwing c++ exceptions, 
+     * ensuring safe usage in tightly optimized computational loops. */
     SIMD_F128_DEVICE float128 operator+(const float128& b) const { return float128(simd_f128_add(data, b.data)); }
     SIMD_F128_DEVICE float128 operator-(const float128& b) const { return float128(simd_f128_sub(data, b.data)); }
     SIMD_F128_DEVICE float128 operator*(const float128& b) const { return float128(simd_f128_mul(data, b.data)); }
-    // division: standard ieee-754 logic handles division by zero (returns inf/nan), no c++ exceptions thrown
     SIMD_F128_DEVICE float128 operator/(const float128& b) const { return float128(simd_f128_div(data, b.data)); }
 
-    // compound assignment operators
+    /* compound assignment operators:
+     * mutates the current object by applying the requested operation. */
     SIMD_F128_DEVICE float128& operator+=(const float128& b) { data = simd_f128_add(data, b.data); return *this; }
     SIMD_F128_DEVICE float128& operator-=(const float128& b) { data = simd_f128_sub(data, b.data); return *this; }
     SIMD_F128_DEVICE float128& operator*=(const float128& b) { data = simd_f128_mul(data, b.data); return *this; }
@@ -88,8 +95,13 @@ inline std::istream& operator>>(std::istream& is, float128& val) {
     return is;
 }
 
-// user-defined literal suffix for float128 constants (e.g. 1.234_f128)
+// user-defined literal suffix for float128 constants (e.g. "1.234"_f128)
 inline float128 operator""_f128(const char* str, std::size_t) {
+    return float128(simd_f128_from_string(str));
+}
+
+// raw numeric literal suffix for float128 constants (e.g. 1.234_f128 without quotes)
+inline float128 operator""_f128(const char* str) {
     return float128(simd_f128_from_string(str));
 }
 
