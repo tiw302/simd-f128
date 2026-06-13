@@ -1,4 +1,6 @@
-// updated 2026-06-06
+// updated 2026-06-12
+// spdx-license-identifier: mit
+// copyright (c) 2026 jirawat siripuk
 
 #ifndef SIMD_F128_H
 #define SIMD_F128_H
@@ -133,11 +135,19 @@ extern "C" {
     #define SIMD_F128_INLINE SIMD_F128_DEVICE static inline __attribute__((always_inline))
 #endif
 
-// initialization
+/* initialization routines:
+ * from_double creates a 128-bit number from a standard 64-bit double by
+ * placing it in the high component and zeroing the low component.
+ * from_hi_lo allows precise manual construction of a double-double. */
 SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d);
 SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo);
 
-// arithmetic
+/* core arithmetic operations:
+ * arithmetic on double-doubles is complex. addition and subtraction utilize
+ * knuth's two-sum algorithm to meticulously track and preserve rounding errors.
+ * multiplication uses hardware fma (fused multiply-accumulate) where available,
+ * or falls back to dekker's split. division relies on a custom newton-raphson
+ * or direct division iteration depending on the architecture. */
 SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b);
 SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b);
@@ -184,6 +194,38 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
 // ██      ██ ██   ██    ██    ██   ██
 //
 // >>math helpers
+
+    // dekker's split method to estimate the roundoff error of a double product.
+    // used as a fallback when hardware fma instruction (fp_fast_fma) is not present.
+    SIMD_F128_INLINE double simd_f128_exact_mul_err(double a, double b, double p) {
+#ifdef FP_FAST_FMA
+        // use hardware fma if compiler flags detect fast hardware capability
+        return fma(a, b, -p);
+#else
+        // prevent overflow in split for huge numbers by reciprocal scaling
+        if (__builtin_expect(fabs(a) > 6.7e299 && fabs(b) < 1.0, 0)) {
+            a *= 3.7252902984619140625e-09; // 2^-28
+            b *= 268435456.0;               // 2^28
+        } else if (__builtin_expect(fabs(b) > 6.7e299 && fabs(a) < 1.0, 0)) {
+            b *= 3.7252902984619140625e-09;
+            a *= 268435456.0;
+        }
+
+        // split double value into high and low half-words
+        double c, ahi, alo, bhi, blo;
+
+        c = 134217729.0 * a;
+        ahi = c - (c - a);
+        alo = a - ahi;
+
+        c = 134217729.0 * b;
+        bhi = c - (c - b);
+        blo = b - bhi;
+
+        // compute product error using dekker's formula
+        return ((ahi * bhi - p) + ahi * blo + alo * bhi) + alo * blo;
+#endif
+    }
 
 #if defined(SIMD_F128_USE_AVX2)
 
@@ -254,10 +296,14 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         // therefore, fma(a, b, - (a * b)) computes the exact roundoff error.
         __m128d ahi = _mm_unpacklo_pd(a, a);
         __m128d bhi = _mm_unpacklo_pd(b, b);
-        
         __m128d p = _mm_mul_sd(ahi, bhi);
+
+        // overflow guard: return early on infinite product to avoid nan propagation
+        if (__builtin_expect(isinf(_mm_cvtsd_f64(p)), 0))
+            return _mm_unpacklo_pd(p, _mm_setzero_pd());
+
         __m128d e = _mm_fmsub_sd(ahi, bhi, p);
-        
+
         // integrate the cross-terms from the low parts
         __m128d alo = _mm_unpackhi_pd(a, a);
         __m128d blo = _mm_unpackhi_pd(b, b);
@@ -373,7 +419,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         // knuth's two-sum algorithm to compute roundoff error e
         double v = s - ahi;
         double e = (ahi - (s - v)) + (bhi - v);
-        
+
         // accumulate low parts and error, then normalize
         double t = alo + blo + e;
         double final_hi = s + t;
@@ -404,15 +450,19 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         simd_f128_extract(a, &ahi, &alo);
         simd_f128_extract(b, &bhi, &blo);
 
-        // compute primary product and get exact error using fma
+        // compute primary product and get exact error using dekker's fallback
         double p = ahi * bhi;
-        double e = fma(ahi, bhi, -p);
-        e += fma(ahi, blo, alo * bhi);
+
+        if (__builtin_expect(isinf(p), 0))
+            return _mm_set_pd(0.0, p);
+
+        double e = simd_f128_exact_mul_err(ahi, bhi, p);
+        e += (ahi * blo + alo * bhi);
 
         // normalize the final hi/lo parts
         double final_hi = p + e;
         double final_lo = e - (final_hi - p);
-        
+
         return _mm_set_pd(final_lo, final_hi);
     }
 
@@ -431,7 +481,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         // division using initial quotient estimation and remainder tracking
         double q1 = ahi / bhi;
         double p1 = q1 * bhi;
-        double p2 = fma(q1, bhi, -p1) + q1 * blo;
+        double p2 = simd_f128_exact_mul_err(q1, bhi, p1) + q1 * blo;
 
         double s = ahi - p1;
         double v = s - ahi;
@@ -462,10 +512,10 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         double y = 1.0 / sqrt(xhi);
 
         double z = xhi * y;
-        double zlo = fma(xhi, y, -z) + xlo * y;
+        double zlo = simd_f128_exact_mul_err(xhi, y, z) + xlo * y;
 
         double est = z * z;
-        double estlo = fma(z, z, -est) + 2.0 * z * zlo;
+        double estlo = simd_f128_exact_mul_err(z, z, est) + 2.0 * z * zlo;
         double err = (xhi - est) - estlo + xlo;
 
         double final_hi = z + 0.5 * err * y;
@@ -505,7 +555,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         // knuth's two-sum algorithm
         double v = s - ahi;
         double e = (ahi - (s - v)) + (bhi - v);
-        
+
         double t = alo + blo + e;
         double final_hi = s + t;
         double final_lo = t - (final_hi - s);
@@ -537,12 +587,15 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
 
         // double multiplication with error correction
         double p = ahi * bhi;
-        double e = fma(ahi, bhi, -p);
-        e += fma(ahi, blo, alo * bhi);
+        if (__builtin_expect(isinf(p), 0))
+            return wasm_f64x2_make(p, 0.0);
+
+        double e = simd_f128_exact_mul_err(ahi, bhi, p);
+        e += (ahi * blo + alo * bhi);
 
         double final_hi = p + e;
         double final_lo = e - (final_hi - p);
-        
+
         return wasm_f64x2_make(final_hi, final_lo);
     }
 
@@ -561,7 +614,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         // compute initial quotient and exact remainder
         double q1 = ahi / bhi;
         double p1 = q1 * bhi;
-        double p2 = fma(q1, bhi, -p1) + q1 * blo;
+        double p2 = simd_f128_exact_mul_err(q1, bhi, p1) + q1 * blo;
 
         double s = ahi - p1;
         double v = s - ahi;
@@ -592,10 +645,10 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         double y = 1.0 / sqrt(xhi);
 
         double z = xhi * y;
-        double zlo = fma(xhi, y, -z) + xlo * y;
+        double zlo = simd_f128_exact_mul_err(xhi, y, z) + xlo * y;
 
         double est = z * z;
-        double estlo = fma(z, z, -est) + 2.0 * z * zlo;
+        double estlo = simd_f128_exact_mul_err(z, z, est) + 2.0 * z * zlo;
         double err = (xhi - est) - estlo + xlo;
 
         double final_hi = z + 0.5 * err * y;
@@ -641,7 +694,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         // knuth's two-sum algorithm
         double v = s - ahi;
         double e = (ahi - (s - v)) + (bhi - v);
-        
+
         double t = alo + blo + e;
         double final_hi = s + t;
         double final_lo = t - (final_hi - s);
@@ -673,18 +726,22 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
     }
 
     SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
-        double ahi = vgetq_lane_f64(a, 0);
-        double alo = vgetq_lane_f64(a, 1);
-        double bhi = vgetq_lane_f64(b, 0);
-        double blo = vgetq_lane_f64(b, 1);
+        double xhi = vgetq_lane_f64(a, 0);
+        double xlo = vgetq_lane_f64(a, 1);
+        double yhi = vgetq_lane_f64(b, 0);
+        double ylo = vgetq_lane_f64(b, 1);
 
-        // double multiplication with error term
-        double p = ahi * bhi;
-        double e = fma(ahi, bhi, -p);
-        e += fma(ahi, blo, alo * bhi);
+        double z = xhi * yhi;
+        if (__builtin_expect(isinf(z), 0)) {
+            float64x2_t r_res = vdupq_n_f64(0.0);
+            return vsetq_lane_f64(z, r_res, 0);
+        }
 
-        double final_hi = p + e;
-        double final_lo = e - (final_hi - p);
+        double e = simd_f128_exact_mul_err(xhi, yhi, z);
+        e += (xhi * ylo + xlo * yhi);
+
+        double final_hi = z + e;
+        double final_lo = e - (final_hi - z);
 
         float64x2_t r = vdupq_n_f64(final_lo);
         return vsetq_lane_f64(final_hi, r, 0);
@@ -707,7 +764,7 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         // compute initial quotient and refine via division remainder
         double q1 = ahi / bhi;
         double p1 = q1 * bhi;
-        double p2 = fma(q1, bhi, -p1) + q1 * blo;
+        double p2 = simd_f128_exact_mul_err(q1, bhi, p1) + q1 * blo;
 
         double s = ahi - p1;
         double v = s - ahi;
@@ -740,10 +797,10 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         double y = 1.0 / sqrt(xhi);
 
         double z = xhi * y;
-        double zlo = fma(xhi, y, -z) + xlo * y;
+        double zlo = simd_f128_exact_mul_err(xhi, y, z) + xlo * y;
 
         double est = z * z;
-        double estlo = fma(z, z, -est) + 2.0 * z * zlo;
+        double estlo = simd_f128_exact_mul_err(z, z, est) + 2.0 * z * zlo;
         double err = (xhi - est) - estlo + xlo;
 
         double final_hi = z + 0.5 * err * y;
@@ -784,12 +841,12 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         // knuth's two-sum algorithm to compute sum roundoff error e
         double v = s - a.hi;
         double e = (a.hi - (s - v)) + (b.hi - v);
-        
+
         // combine low components and sum roundoff error, then normalize
         double t = a.lo + b.lo + e;
         double final_hi = s + t;
         double final_lo = t - (final_hi - s);
-        
+
         simd_f128 res = {final_hi, final_lo};
         return res;
     }
@@ -809,36 +866,21 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         return res;
     }
 
-    // dekker's split method to estimate the roundoff error of a double product.
-    // used as a fallback when hardware fma instruction (fp_fast_fma) is not present.
-    SIMD_F128_INLINE double simd_f128_exact_mul_err(double a, double b, double p) {
-#ifdef FP_FAST_FMA
-        // use hardware fma if compiler flags detect fast hardware capability
-        return fma(a, b, -p);
-#else
-        // split double value into high and low half-words
-        double c, ahi, alo, bhi, blo;
-        c = 134217729.0 * a;
-        ahi = c - (c - a);
-        alo = a - ahi;
-        c = 134217729.0 * b;
-        bhi = c - (c - b);
-        blo = b - bhi;
-        // compute product error using dekker's formula
-        return ((ahi * bhi - p) + ahi * blo + alo * bhi) + alo * blo;
-#endif
-    }
-
     SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
         // scalar double-double multiplication:
         // compute base product, estimate its exact error, add cross-terms, and normalize
         double p = a.hi * b.hi;
+        if (__builtin_expect(isinf(p), 0)) {
+            simd_f128 res = {p, 0.0};
+            return res;
+        }
+
         double e = simd_f128_exact_mul_err(a.hi, b.hi, p);
         e += (a.hi * b.lo + a.lo * b.hi);
-        
+
         double final_hi = p + e;
         double final_lo = e - (final_hi - p);
-        
+
         simd_f128 res = {final_hi, final_lo};
         return res;
     }
@@ -909,5 +951,5 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         return simd_f128_div(one, simd_f128_sqrt(x));
     }
 
-#endif // simd_f128_implementation
-#endif // simd_f128_h
+#endif // SIMD_F128_IMPLEMENTATION
+#endif // SIMD_F128_H
