@@ -357,6 +357,14 @@ impl PartialOrd for Float128 {
     }
 }
 
+// default initialization.
+// returns a new Float128 initialized to 0.0.
+impl Default for Float128 {
+    fn default() -> Self {
+        Float128::new(0.0)
+    }
+}
+
 // string parsing via ffi.
 // we safely allocate a null-terminated c_string in rust memory space first.
 // this prevents the c-core from reading uninitialized rust memory, preventing segfaults.
@@ -394,6 +402,14 @@ impl std::fmt::Display for Float128 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_default() {
+        let a = Float128::default();
+        let (hi, lo) = a.extract();
+        assert_eq!(hi, 0.0);
+        assert_eq!(lo, 0.0);
+    }
 
     #[test]
     fn test_addition() {
