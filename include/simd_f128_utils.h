@@ -132,11 +132,11 @@ SIMD_F128_INLINE simd_f128 simd_f128_abs(simd_f128 x) {
     
     // absolute value logic:
     // negate both components if hi is negative.
-    // if hi is 0.0 (could be -0.0), check the sign of the lo component.
-    if (hi < 0.0 || (hi == 0.0 && lo < 0.0)) {
-        return simd_f128_neg(x);
-    }
-    return x;
+    // if hi is positive, keep signs.
+    // if hi is zero (could be -0.0), force positive zero and absolute value of lo.
+    if (hi > 0.0) return x;
+    if (hi < 0.0) return simd_f128_neg(x);
+    return simd_f128_from_hi_lo(0.0, fabs(lo));
 }
 
 SIMD_F128_INLINE simd_f128 simd_f128_min(simd_f128 a, simd_f128 b) {
