@@ -225,6 +225,15 @@ SIMD_F128_INLINE void simd_f128_sincos(simd_f128 x, simd_f128* s, simd_f128* c) 
         return;
     }
 
+    // prevent overflow for huge inputs where long long cast overflows.
+    // at this scale we fallback to standard double precision range reduction using fmod.
+    if (__builtin_expect(fabs(hi) > 9e18, 0)) {
+        double reduced = fmod(hi, 2.0 * 3.14159265358979323846);
+        if (reduced < 0.0) reduced += 2.0 * 3.14159265358979323846;
+        x = simd_f128_from_double(reduced);
+        simd_f128_extract(x, &hi, &lo);
+    }
+
     // range reduction: x = k * (pi/2) + r, where r in [-pi/4, pi/4]
     // we use a double-double multiplication by 2/pi to prevent precision loss for large inputs
     simd_f128 x_scaled = simd_f128_mul(x, SIMD_F128_TWO_OVER_PI);
@@ -282,15 +291,11 @@ SIMD_F128_INLINE simd_f128 simd_f128_cos(simd_f128 x) {
     return c;
 }
 
-SIMD_F128_INLINE simd_f128 simd_f128_atan(simd_f128 x) {
+SIMD_F128_INLINE simd_f128 _simd_f128_atan_near_zero(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
 
-    // check for nan and inf boundary cases
-    if (isnan(hi)) return simd_f128_from_double(NAN);
-    if (isinf(hi)) return (hi > 0.0) ? SIMD_F128_PI_OVER_2 : simd_f128_neg(SIMD_F128_PI_OVER_2);
-
-    // newton-raphson for atan: y_{n+1} = y_n + cos(y_n) * (x * cos(y_n) - sin(y_n))
+    // newton-raphson for atan on [-1, 1]: y_{n+1} = y_n + cos(y_n) * (x * cos(y_n) - sin(y_n))
     // start with standard double atan(hi) as the initial guess
     simd_f128 y = simd_f128_from_double(atan(hi));
     
@@ -302,6 +307,28 @@ SIMD_F128_INLINE simd_f128 simd_f128_atan(simd_f128 x) {
         y = simd_f128_add(y, simd_f128_mul(cy, term));
     }
     return y;
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_atan(simd_f128 x) {
+    double hi, lo;
+    simd_f128_extract(x, &hi, &lo);
+
+    // check for nan and inf boundary cases
+    if (isnan(hi)) return simd_f128_from_double(NAN);
+    if (isinf(hi)) return (hi > 0.0) ? SIMD_F128_PI_OVER_2 : simd_f128_neg(SIMD_F128_PI_OVER_2);
+
+    // if |x| > 1, use identity: atan(x) = sign(x) * (pi/2 - atan(1/|x|))
+    // this avoids instability in newton-raphson on flat asymptotes
+    if (fabs(hi) > 1.0) {
+        simd_f128 one = simd_f128_from_double(1.0);
+        simd_f128 abs_x = (hi > 0.0) ? x : simd_f128_neg(x);
+        simd_f128 inv_x = simd_f128_div(one, abs_x);
+        simd_f128 atan_inv = _simd_f128_atan_near_zero(inv_x);
+        simd_f128 res = simd_f128_sub(SIMD_F128_PI_OVER_2, atan_inv);
+        return (hi > 0.0) ? res : simd_f128_neg(res);
+    }
+
+    return _simd_f128_atan_near_zero(x);
 }
 
 SIMD_F128_INLINE simd_f128 simd_f128_atan2(simd_f128 y, simd_f128 x) {
@@ -345,22 +372,38 @@ SIMD_F128_INLINE simd_f128 simd_f128_asin(simd_f128 x) {
     if (hi == 1.0 && lo == 0.0) return simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(0.5));
     if (hi == -1.0 && lo == 0.0) return simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(-0.5));
 
-    // newton-raphson for asin: y_{n+1} = y_n + (x - sin(y_n)) / cos(y_n)
-    // start with standard double asin(hi) as the initial guess
-    simd_f128 y = simd_f128_from_double(asin(hi));
-    
-    // 1 iteration of newton-raphson is sufficient for 106-bit precision
-    simd_f128 sy, cy;
-    simd_f128_sincos(y, &sy, &cy);
-    y = simd_f128_add(y, simd_f128_div(simd_f128_sub(x, sy), cy));
-    
-    return y;
+    // compute asin using stable identity: asin(x) = atan(x / sqrt(1 - x^2))
+    // this avoids cancellation issues in newton-raphson near boundaries
+    simd_f128 one = simd_f128_from_double(1.0);
+    simd_f128 denom = simd_f128_sqrt(simd_f128_sub(one, simd_f128_mul(x, x)));
+    return simd_f128_atan(simd_f128_div(x, denom));
 }
 
 SIMD_F128_INLINE simd_f128 simd_f128_acos(simd_f128 x) {
-    // acos(x) = pi/2 - asin(x)
-    simd_f128 piover2 = simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(0.5));
-    return simd_f128_sub(piover2, simd_f128_asin(x));
+    double hi, lo;
+    simd_f128_extract(x, &hi, &lo);
+    
+    // check boundaries for domain of arccos [-1, 1]
+    if (isnan(hi) || isinf(hi) || hi > 1.0 || hi < -1.0 || (hi == 1.0 && lo > 0.0) || (hi == -1.0 && lo < 0.0)) {
+        return simd_f128_from_double(NAN);
+    }
+    if (hi == 1.0 && lo == 0.0) return simd_f128_from_double(0.0);
+    if (hi == -1.0 && lo == 0.0) return SIMD_F128_PI;
+    if (hi == 0.0 && lo == 0.0) return simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(0.5));
+
+    // compute acos using stable identity:
+    // acos(x) = atan(sqrt(1 - x^2) / x) for x > 0
+    // acos(x) = pi - acos(-x) for x < 0
+    // this avoids cancellation issues near endpoints
+    simd_f128 one = simd_f128_from_double(1.0);
+    simd_f128 num = simd_f128_sqrt(simd_f128_sub(one, simd_f128_mul(x, x)));
+    
+    if (hi > 0.0 || (hi == 0.0 && lo > 0.0)) {
+        return simd_f128_atan(simd_f128_div(num, x));
+    } else {
+        simd_f128 neg_x = simd_f128_neg(x);
+        return simd_f128_sub(SIMD_F128_PI, simd_f128_atan(simd_f128_div(num, neg_x)));
+    }
 }
 
 SIMD_F128_INLINE simd_f128 simd_f128_floor(simd_f128 x) {
