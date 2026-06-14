@@ -77,6 +77,45 @@ int main() {
     simd_f128_to_string(buf, sizeof(buf), atan2_2);
     printf("atan2(-0.0, -0.0)= %s\n", buf);
 
+    // 7. division by infinity finite cases
+    printf("\n--- [7] division by infinity ---\n");
+    simd_f128 one_val = simd_f128_from_double(1.5);
+    simd_f128 inf_val = simd_f128_from_double(INFINITY);
+    simd_f128 div_inf = simd_f128_div(one_val, inf_val);
+    simd_f128_to_string(buf, sizeof(buf), div_inf);
+    printf("1.5 / infinity   = %s (expect 0.0)\n", buf);
+
+    // 8. abs negative zero handling
+    printf("\n--- [8] abs negative zero ---\n");
+    simd_f128 abs_neg_zero = simd_f128_abs(neg_zero);
+    double abs_hi, abs_lo;
+    simd_f128_extract(abs_neg_zero, &abs_hi, &abs_lo);
+    printf("abs(-0.0) hi     = %f (expect 0.0, not -0.0)\n", abs_hi);
+    printf("abs(-0.0) signbit= %d (expect 0)\n", signbit(abs_hi));
+
+    // 9. asin/acos endpoint precision check
+    printf("\n--- [9] asin/acos endpoint precision ---\n");
+    simd_f128 near_one = simd_f128_sub(simd_f128_from_double(1.0), simd_f128_from_double(1e-15));
+    simd_f128 asin_near_one = simd_f128_asin(near_one);
+    simd_f128_to_string(buf, sizeof(buf), asin_near_one);
+    printf("asin(1 - 1e-15)  = %s\n", buf);
+    simd_f128 acos_near_one = simd_f128_acos(near_one);
+    simd_f128_to_string(buf, sizeof(buf), acos_near_one);
+    printf("acos(1 - 1e-15)  = %s\n", buf);
+
+    // 10. atan range reduction check
+    printf("\n--- [10] atan range reduction ---\n");
+    simd_f128 huge_atan_val = simd_f128_from_double(1e15);
+    simd_f128 atan_huge = simd_f128_atan(huge_atan_val);
+    simd_f128_to_string(buf, sizeof(buf), atan_huge);
+    printf("atan(1e15)       = %s\n", buf);
+
+    // 11. parser subnormal string check
+    printf("\n--- [11] parser subnormal scientific notation ---\n");
+    simd_f128 subnormal_parsed = simd_f128_from_string("1.5e-320");
+    simd_f128_to_string(buf, sizeof(buf), subnormal_parsed);
+    printf("1.5e-320 parsed  = %s (expect non-nan, non-zero subnormal)\n", buf);
+
     printf("\n--- All tests executed smoothly without exceptions! ---\n");
     return 0;
 }
