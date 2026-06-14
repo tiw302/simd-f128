@@ -30,6 +30,27 @@ obj/
 /mandelbrot_core
 /precision_demo
 
+# ignore compiled executables (without extensions)
+/tests/test_*
+/tests/basic_arithmetic
+/tests/mandelbrot_core
+/tests/precision_demo
+/examples/test_*
+/examples/example_*
+/examples/basic_arithmetic
+/examples/mandelbrot_core
+/examples/precision_demo
+
+# do NOT ignore source code files!
+!/tests/*.c
+!/tests/*.cpp
+!/tests/*.py
+!/tests/*.js
+!/examples/*.c
+!/examples/*.cpp
+!/examples/*.py
+!/examples/*.js
+
 # environment & secrets (security)
 .env
 .env.*
