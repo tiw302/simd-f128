@@ -1,6 +1,14 @@
-// updated 2026-06-12
+// updated 2026-06-14
 // spdx-license-identifier: mit
 // copyright (c) 2026 jirawat siripuk
+
+/*
+ *       /\_/\
+ *      ( -.- )  <-- "precision: 31 digits. developer sanity: 0 digits."
+ *     ==  Y  ==
+ *      (  .  )
+ *      (  .  )
+ */
 
 #ifndef SIMD_F128_H
 #define SIMD_F128_H
