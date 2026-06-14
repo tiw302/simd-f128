@@ -942,21 +942,20 @@ simd_f128 simd_f128_from_string(const char* str) {
             str++;
         }
         
-        // compute exponent scaling factor using binary exponentiation (exponentiation by squaring)
-        simd_f128 exp_mult = simd_f128_from_double(1.0);
-        simd_f128 base = ten;
+        // apply exponent scaling in chunks of 300 to prevent intermediate overflow/underflow
         int e = exp_val;
-        while (e > 0) {
-            if (e & 1) exp_mult = simd_f128_mul(exp_mult, base);
-            base = simd_f128_mul(base, base);
-            e >>= 1;
-        }
-        
-        // apply the computed scaling factor
         if (exp_neg) {
-            res = simd_f128_div(res, exp_mult);
+            while (e > 300) {
+                res = simd_f128_div(res, _simd_f128_pow10_int(300));
+                e -= 300;
+            }
+            res = simd_f128_div(res, _simd_f128_pow10_int(e));
         } else {
-            res = simd_f128_mul(res, exp_mult);
+            while (e > 300) {
+                res = simd_f128_mul(res, _simd_f128_pow10_int(300));
+                e -= 300;
+            }
+            res = simd_f128_mul(res, _simd_f128_pow10_int(e));
         }
     }
 
