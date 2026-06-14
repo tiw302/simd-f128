@@ -1,4 +1,6 @@
-// updated 2026-06-06
+// updated 2026-06-12
+// spdx-license-identifier: mit
+// copyright (c) 2026 jirawat siripuk
 
 #define SIMD_F128_IMPLEMENTATION
 #include "../include/simd_f128.h"
