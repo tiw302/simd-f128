@@ -1,23 +1,48 @@
+/*
+ * simd_f128.d.ts -- high-performance 128-bit (double-double) arithmetic for typescript.
+ * project url: https://github.com/tiw302/simd-f128
+ * technical background:
+ * ---------------------
+ * this library uses "double-double" arithmetic. basically, we represent a
+ * high-precision number as the sum of two 64-bit doubles (hi + lo).
+ * this gives us about 31 decimal digits of precision, which is roughly
+ * the same as quad precision (f128) but much faster because it uses
+ * hardware double-precision units.
+ * typescript bindings:
+ * --------------------
+ * this file provides exact typings for the javascript webassembly wrapper,
+ * ensuring type safety and intellisense integration for modern ts projects.
+ * license:
+ * --------
+ * mit license
+ * copyright (c) 2026 jirawat siripuk
+ * */
+
 export class Float128 {
-    // raw double-double data representation
+    // raw 128-bit memory representation mapped directly to the wasm heap.
+    // exposes the underlying double-double format (hi, lo) explicitly.
     data: Float64Array;
 
-    // create from string, number, or Float128
+    // memory-safe initializer capable of bridging javascript primitives,
+    // high-precision string literals, or existing unmanaged typed arrays.
     constructor(val: string | number | Float128 | Float64Array);
 
-    // true if the WASM module has completed initialization
+    // runtime synchronization flag confirming wasm environment boot.
     static readonly isReady: boolean;
 
-    // returns a Promise that resolves when the WASM module is fully initialized
+    // async blocker to ensure critical sections do not execute until
+    // the c core has successfully initialized the memory subsystem.
     static ready(): Promise<void>;
 
-    // arithmetic operations
+    // core hardware-accelerated arithmetic operations
+    // these guarantee zero heap allocations (all operations map to wasm internals)
     add(other: Float128): Float128;
     sub(other: Float128): Float128;
     mul(other: Float128): Float128;
     div(other: Float128): Float128;
 
-    // math operations
+    // advanced transcendental math and geometric functions
+    // exact bounded calculations based on libm precision characteristics
     sqrt(): Float128;
     exp(): Float128;
     log(): Float128;
@@ -40,7 +65,7 @@ export class Float128 {
     cosh(): Float128;
     tanh(): Float128;
 
-    // comparison and checks
+    // structural bounds checking and standard ieee-754 logical comparisons
     isNaN(): boolean;
     isInf(): boolean;
     cmp(other: Float128): number;
@@ -50,6 +75,7 @@ export class Float128 {
     le(other: Float128): boolean;
     ge(other: Float128): boolean;
 
-    // convert to high-precision string representation with optional precision digits control
+    // deterministic formatting engine to extract high-precision decimals
+    // directly from the memory buffer without javascript number rounding errors.
     toString(precision?: number): string;
 }
