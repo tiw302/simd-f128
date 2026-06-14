@@ -1,6 +1,6 @@
 [package]
 name = "simd-f128"
-version = "1.3.2"
+version = "1.3.3"
 edition = "2021"
 description = "High-performance cross-platform 128-bit arithmetic for SIMD applications"
 license = "MIT"
