@@ -114,16 +114,16 @@ SIMD_F128_INLINE simd_f128x4 simd_f128x4_sqr(simd_f128x4 a) {
 // compute absolute values of all four double-double elements in parallel
 SIMD_F128_INLINE simd_f128x4 simd_f128x4_abs(simd_f128x4 a) {
     __m256d zero = _mm256_setzero_pd();
-    __m256d neg_hi_mask = _mm256_cmp_pd(a.hi, zero, _CMP_LT_OQ);
-    __m256d eq_hi_mask = _mm256_cmp_pd(a.hi, zero, _CMP_EQ_OQ);
-    __m256d neg_lo_mask = _mm256_cmp_pd(a.lo, zero, _CMP_LT_OQ);
-    __m256d neg_zero_mask = _mm256_and_pd(eq_hi_mask, neg_lo_mask);
-    __m256d final_mask = _mm256_or_pd(neg_hi_mask, neg_zero_mask);
-    __m256d sign_mask = _mm256_and_pd(final_mask, _mm256_set1_pd(-0.0));
+    __m256d sign_hi = _mm256_and_pd(a.hi, _mm256_set1_pd(-0.0));
+    __m256d eq_zero = _mm256_cmp_pd(a.hi, zero, _CMP_EQ_OQ);
+    __m256d abs_lo = _mm256_andnot_pd(_mm256_set1_pd(-0.0), a.lo);
+    
+    __m256d normal_hi = _mm256_xor_pd(a.hi, sign_hi);
+    __m256d normal_lo = _mm256_xor_pd(a.lo, sign_hi);
     
     simd_f128x4 res;
-    res.hi = _mm256_xor_pd(a.hi, sign_mask);
-    res.lo = _mm256_xor_pd(a.lo, sign_mask);
+    res.hi = _mm256_blendv_pd(normal_hi, zero, eq_zero);
+    res.lo = _mm256_blendv_pd(normal_lo, abs_lo, eq_zero);
     return res;
 }
 
@@ -237,13 +237,7 @@ SIMD_F128_INLINE simd_f128x4 simd_f128x4_sqr(simd_f128x4 a) {
 SIMD_F128_INLINE simd_f128x4 simd_f128x4_abs(simd_f128x4 a) {
     simd_f128x4 res;
     for (int i = 0; i < 4; i++) {
-        double hi, lo;
-        simd_f128_extract(a.val[i], &hi, &lo);
-        if (hi < 0.0 || (hi == 0.0 && lo < 0.0)) {
-            res.val[i] = simd_f128_neg(a.val[i]);
-        } else {
-            res.val[i] = a.val[i];
-        }
+        res.val[i] = simd_f128_abs(a.val[i]);
     }
     return res;
 }
