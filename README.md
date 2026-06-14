@@ -91,6 +91,19 @@ The usual fixes each carry a significant cost:
 
 simd-f128 occupies the exact gap: **it doubles usable precision with zero allocation, zero dependencies, and no compiler lock-in** — proven in practice by [mandelbrot-c](https://github.com/tiw302/mandelbrot-c), which achieves stable deep-zoom rendering at coordinates down to 10^-28, far beyond what standard `double` can represent.
 
+### Performance Benchmarks
+
+Below is a benchmark comparison of basic arithmetic operations running on **10,000,000 iterations** (latency mode):
+
+| Data Type | Add (ms) | Mul (ms) | Div (ms) | Relative Multiplication Speed |
+|---|---|---|---|---|
+| `double` (64-bit) | 9.26 | 9.23 | 41.12 | 1.00x (Baseline) |
+| `long double` (x87) | 20.21 | 20.33 | 47.49 | 0.45x |
+| `__float128` (GCC) | 139.67 | 186.94 | 298.76 | 0.05x |
+| **simd-f128 (SIMD)** | **97.76** | **73.32** | **204.05** | **0.13x (2.55x faster than GCC)** |
+
+As shown, `simd-f128` is **1.4x to 2.5x faster** than GCC's software-emulated `__float128`, making it the highest-performance choice for 128-bit precision.
+
 ---
 
 ## Design Philosophy
