@@ -39,27 +39,50 @@
             <input type="text" id="inputB" value="2.7182818284590452353602874713527">
             <br>
             <div id="validationWarning" class="warning-box" style="display: none;"></div>
-            <button id="calcBtn">Calculate 128-bit Result</button>
+            <button id="calcBtn">Calculate Result</button>
             
             <div class="result-container">
                 <div class="result-header">
                     <div class="result-title">simd-f128 WASM (128-bit)</div>
                     <button id="btnCopy" class="btn-small">Copy</button>
                 </div>
-                <div class="result" id="resultBox">Loading WASM Module...</div>
+                <div class="result" id="resultSimdBox">Loading WASM Module...</div>
                 
                 <div class="result-title js-title">Standard JavaScript (64-bit)</div>
                 <div class="result js-result" id="jsResultBox">...</div>
             </div>
         </div>
 
+        <div class="demo-box" style="margin-top: 20px;">
+            <div class="result-header">
+                <div class="result-title">Performance Benchmark (1M Ops)</div>
+                <button id="benchBtn" class="btn-small">Run Benchmark</button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
+                <div>
+                    <div style="font-size: 0.85rem; color: #666; margin-bottom: 5px;">WASM (SIMD)</div>
+                    <div class="result" id="wasmSimdTime" style="text-align: center; padding: 10px;">-</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.85rem; color: #666; margin-bottom: 5px;">WASM (Scalar)</div>
+                    <div class="result" id="wasmScalarTime" style="text-align: center; padding: 10px;">-</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.85rem; color: #666; margin-bottom: 5px;">JS Math (64-bit)</div>
+                    <div class="result" id="jsTime" style="text-align: center; padding: 10px;">-</div>
+                </div>
+            </div>
+        </div>
+
         <div class="footer-links">
             <a href="https://github.com/tiw302/simd-f128">GitHub Repository</a> | 
-            <a href="https://github.com/tiw302/simd-f128/blob/master/docs/index.md" target="_blank" rel="noopener noreferrer">API Documentation</a>
+            <a href="https://tiw302.github.io/simd-f128/">Documentation</a>
         </div>
     </div>
 
-    <script src="simd_f128_wasm.js"></script>
+    <script src="simd_f128_wasm_simd.js"></script>
+    <script src="simd_f128_wasm_scalar.js"></script>
     <script src="app.js"></script>
 </body>
 
