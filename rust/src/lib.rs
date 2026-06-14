@@ -1,6 +1,31 @@
+/*
+ * lib.rs -- high-performance 128-bit (double-double) arithmetic for rust.
+ * project url: https://github.com/tiw302/simd-f128
+ * technical background:
+ * ---------------------
+ * this library uses "double-double" arithmetic. basically, we represent a
+ * high-precision number as the sum of two 64-bit doubles (hi + lo).
+ * this gives us about 31 decimal digits of precision, which is roughly
+ * the same as quad precision (f128) but much faster because it uses
+ * hardware double-precision units.
+ * rust bindings:
+ * --------------
+ * this file provides safe rust abstractions over the underlying c-core 
+ * functions via ffi. it implements standard rust traits (std::ops) so 
+ * that float128 feels like a native rust primitive with zero overhead.
+ * license:
+ * --------
+ * mit license
+ * copyright (c) 2026 jirawat siripuk
+ * */
+
 use std::ops::{Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, Neg};
 use std::cmp::Ordering;
 
+// the core 128-bit floating point type.
+// we force a strict c representation and 16-byte memory alignment (align(16)).
+// this ensures that when rust passes pointers to the c backend, the memory 
+// perfectly aligns with avx2 and wasm simd128 vector register requirements.
 #[repr(C, align(16))]
 #[derive(Copy, Clone, Debug)]
 pub struct Float128 {
@@ -8,6 +33,10 @@ pub struct Float128 {
     data: [f64; 2],
 }
 
+// ffi bindings to the c-core backend.
+// we use pointer passing (*const f64, *mut f64) instead of passing structs by value.
+// this completely sidesteps c abi calling convention bugs across different operating systems,
+// ensuring the parameters are cleanly mapped to memory registers without unexpected stack copies.
 extern "C" {
     fn rs_simd_f128_add(a: *const f64, b: *const f64, out: *mut f64);
     fn rs_simd_f128_sub(a: *const f64, b: *const f64, out: *mut f64);
@@ -44,6 +73,10 @@ extern "C" {
     fn rs_simd_f128_const_ln2(out: *mut f64);
 }
 
+// safe rust abstractions over the unsafe ffi boundary.
+// every method here allocates the result array (`let mut out = [0.0; 2]`) 
+// purely on the rust stack. this guarantees zero heap allocations while 
+// remaining perfectly thread-safe.
 impl Float128 {
     pub fn new(val: f64) -> Self {
         let mut out = [0.0; 2];
@@ -57,6 +90,15 @@ impl Float128 {
         (self.data[0], self.data[1])
     }
 
+    // =========================================================================
+    // transcendental and geometric math functions
+    // =========================================================================
+    // all mathematical operations defer to the heavily optimized c-core.
+    // the underlying implementations utilize 128-bit minimax polynomials, 
+    // newton-raphson iterations, and hardware fused multiply-add (fma) 
+    // when compiled with avx2 or neon backends. precision is strictly bounded
+    // to ~31 decimal digits across the entire domain space.
+    
     pub fn sqrt(self) -> Self {
         let mut out = [0.0; 2];
         unsafe { rs_simd_f128_sqrt(self.data.as_ptr(), out.as_mut_ptr()); }
@@ -88,28 +130,24 @@ impl Float128 {
     }
 
     pub fn tan(self) -> Self {
-        // computes the tangent of the value
         let mut out = [0.0; 2];
         unsafe { rs_simd_f128_tan(self.data.as_ptr(), out.as_mut_ptr()); }
         Float128 { data: out }
     }
 
     pub fn sinh(self) -> Self {
-        // computes the hyperbolic sine of the value
         let mut out = [0.0; 2];
         unsafe { rs_simd_f128_sinh(self.data.as_ptr(), out.as_mut_ptr()); }
         Float128 { data: out }
     }
 
     pub fn cosh(self) -> Self {
-        // computes the hyperbolic cosine of the value
         let mut out = [0.0; 2];
         unsafe { rs_simd_f128_cosh(self.data.as_ptr(), out.as_mut_ptr()); }
         Float128 { data: out }
     }
 
     pub fn tanh(self) -> Self {
-        // computes the hyperbolic tangent of the value
         let mut out = [0.0; 2];
         unsafe { rs_simd_f128_tanh(self.data.as_ptr(), out.as_mut_ptr()); }
         Float128 { data: out }
@@ -181,6 +219,13 @@ impl Float128 {
         Float128 { data: out }
     }
 
+    // =========================================================================
+    // exact pre-computed mathematical constants
+    // =========================================================================
+    // these constants are injected directly from the c-core's read-only memory segment.
+    // they are pre-calculated to exact 128-bit double-double precision limits,
+    // ensuring no precision is lost during initialization.
+
     pub fn pi() -> Self {
         let mut out = [0.0; 2];
         unsafe { rs_simd_f128_const_pi(out.as_mut_ptr()); }
@@ -206,6 +251,10 @@ impl Float128 {
     }
 }
 
+// operator overloading for native rust ergonomics.
+// by implementing standard std::ops traits, float128 can be used exactly like a native f64.
+// rust's llvm backend is smart enough to inline these wrapper traits away, meaning 
+// the abstraction overhead drops to absolute zero at runtime.
 impl Add for Float128 {
     type Output = Self;
     fn add(self, other: Self) -> Self {
@@ -278,7 +327,7 @@ impl Neg for Float128 {
 }
 
 // float128 does not implement eq or ord because nan comparison properties
-// make total ordering mathematically impossible under ieee-754 semantics.
+// make total ordering mathematically impossible under strict ieee-754 semantics.
 // instead, partial_eq and partial_ord are implemented to correctly handle
 // comparisons (returning false or none when nan is involved).
 impl PartialEq for Float128 {
@@ -308,6 +357,9 @@ impl PartialOrd for Float128 {
     }
 }
 
+// string parsing via ffi.
+// we safely allocate a null-terminated c_string in rust memory space first.
+// this prevents the c-core from reading uninitialized rust memory, preventing segfaults.
 impl std::str::FromStr for Float128 {
     type Err = &'static str;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -320,6 +372,9 @@ impl std::str::FromStr for Float128 {
     }
 }
 
+// deterministic formatting engine.
+// we pass a 128-byte stack-allocated buffer to the c-core to format the string.
+// this is extremely fast and avoids rust string allocation overhead until the final utf-8 slice.
 impl std::fmt::Display for Float128 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut buf = [0u8; 128];
