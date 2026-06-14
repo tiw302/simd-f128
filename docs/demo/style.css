@@ -170,3 +170,12 @@ button#calcBtn:hover {
 .warning-box a.fix-link:hover {
     color: #101113;
 }
+
+.diff-digit {
+    color: #d9534f;
+    font-weight: bold;
+    background-color: #f9f2f4;
+    padding: 0 2px;
+    border-radius: 3px;
+    border-bottom: 1px dashed #d9534f;
+}
