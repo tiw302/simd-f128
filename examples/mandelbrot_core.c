@@ -6,7 +6,8 @@
 int main() {
     printf("--- mandelbrot core loop (128-bit precision) ---\n\n");
 
-    // deep zoom coord (standard 64-bit double fails here)
+    // target deep zoom coordinates where standard 64-bit double precision is 
+    // completely exhausted (causing severe blockiness and structural failure)
     simd_f128 cx = simd_f128_from_double(-0.7436438870371587);
     simd_f128 cy = simd_f128_from_double( 0.1318259042053119);
 
@@ -22,14 +23,17 @@ int main() {
         simd_f128 zx2 = simd_f128_mul(zx, zx);
         simd_f128 zy2 = simd_f128_mul(zy, zy);
 
-        // check if we hit the boundary
+        // check escape condition (mag^2 > 4.0). using squared magnitude 
+        // avoids an expensive square root operation per iteration.
         simd_f128 mag2 = simd_f128_add(zx2, zy2);
 
         double mag2_hi, mag2_lo;
         simd_f128_extract(mag2, &mag2_hi, &mag2_lo);
         if (mag2_hi > 4.0) break;
 
-        // z = z^2 + c
+        // expand z = z^2 + c into real and imaginary components:
+        // zx_new = zx^2 - zy^2 + cx
+        // zy_new = 2 * zx * zy + cy
         simd_f128 new_zx = simd_f128_add(simd_f128_sub(zx2, zy2), cx);
         simd_f128 new_zy = simd_f128_add(simd_f128_mul(two, simd_f128_mul(zx, zy)), cy);
 
