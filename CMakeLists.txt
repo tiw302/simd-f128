@@ -1,3 +1,12 @@
+# =========================================================================
+# CMakeLists.txt -- build orchestration for simd-f128
+# project url: https://github.com/tiw302/simd-f128
+#
+# this file handles the compilation of tests, benchmarks, and examples.
+# since the core library is header-only, there is no main library binary
+# to compile. target `simd_f128` is exposed as an INTERFACE library.
+# =========================================================================
+
 cmake_minimum_required(VERSION 3.10)
 project(simd_f128 VERSION 1.2.4 LANGUAGES C CXX)
 
@@ -7,12 +16,12 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# -----------------------------------------------------------------------
+# =========================================================================
 # backend selection
+# =========================================================================
 # the library auto-detects the backend via preprocessor macros.
 # these options allow explicit opt-in on platforms where auto-detection
 # might not fire (e.g. cross-compilation without the right -march flag).
-# -----------------------------------------------------------------------
 option(SIMD_F128_AVX2    "Enable AVX2 backend (Intel/AMD Haswell+)"           OFF)
 option(SIMD_F128_SSE2    "Enable SSE2 backend explicitly"                     OFF)
 option(SIMD_F128_WASM    "Enable WASM SIMD128 backend (Emscripten -msimd128)" OFF)
@@ -41,7 +50,9 @@ else()
     endif()
 endif()
 
-# sanitizers (asan/ubsan) option
+# =========================================================================
+# sanitizers & runtime checks (asan/ubsan)
+# =========================================================================
 option(SIMD_F128_ENABLE_SANITY "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 if(SIMD_F128_ENABLE_SANITY)
     if(MSVC)
@@ -52,7 +63,9 @@ if(SIMD_F128_ENABLE_SANITY)
     endif()
 endif()
 
-# library target (header-only)
+# =========================================================================
+# library target declaration (header-only)
+# =========================================================================
 add_library(simd_f128 INTERFACE)
 add_library(simd_f128::simd_f128 ALIAS simd_f128)
 
@@ -61,6 +74,9 @@ target_include_directories(simd_f128 INTERFACE
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+# =========================================================================
+# installation & export rules
+# =========================================================================
 include(GNUInstallDirs)
 
 install(DIRECTORY include/
@@ -101,7 +117,9 @@ if(SIMD_F128_INSTALL_EXAMPLES)
             DESTINATION ${CMAKE_INSTALL_DATADIR}/simd_f128/examples)
 endif()
 
+# =========================================================================
 # examples
+# =========================================================================
 add_executable(example_basic      examples/basic_arithmetic.c)
 add_executable(example_precision  examples/precision_demo.c)
 add_executable(example_mandelbrot examples/mandelbrot_core.c)
@@ -110,7 +128,9 @@ target_link_libraries(example_basic      PRIVATE simd_f128)
 target_link_libraries(example_precision  PRIVATE simd_f128)
 target_link_libraries(example_mandelbrot PRIVATE simd_f128)
 
-# tests
+# =========================================================================
+# unit testing suite
+# =========================================================================
 enable_testing()
 add_executable(test_arithmetic tests/test_arithmetic.c)
 target_link_libraries(test_arithmetic PRIVATE simd_f128)
@@ -120,7 +140,18 @@ add_executable(test_arithmetic_cpp tests/test_arithmetic_cpp.cpp)
 target_link_libraries(test_arithmetic_cpp PRIVATE simd_f128)
 add_test(NAME arithmetic_test_cpp COMMAND test_arithmetic_cpp)
 
-# benchmarks
+# =========================================================================
+# custom comparison benchmark
+# =========================================================================
+add_executable(bench_compare benchmarks/bench_compare.c)
+target_link_libraries(bench_compare PRIVATE simd_f128)
+if(NOT WIN32)
+    target_link_libraries(bench_compare PRIVATE m)
+endif()
+
+# =========================================================================
+# performance benchmarks (google benchmark)
+# =========================================================================
 option(SIMD_F128_BUILD_BENCHMARKS "Build benchmarks using Google Benchmark" OFF)
 
 if(SIMD_F128_BUILD_BENCHMARKS)
