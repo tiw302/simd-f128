@@ -5,7 +5,7 @@
 #include "../include/simd_f128_io.h"
 
 int main() {
-    printf("--- simd-fp basic arithmetic ---\n\n");
+    printf("--- simd-f128 basic arithmetic ---\n\n");
 
     // the library provides pre-computed high-precision mathematical constants.
     // these constants utilize the full 128-bit space (31 decimal digits), 

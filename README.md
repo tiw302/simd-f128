@@ -547,12 +547,12 @@ Test project /simd-f128/build
 
 ~/Public/simd-f128 master* ⇡
 ❯ ./build/example_precision
---- precision comparison: double vs simd-fp ---
+--- precision comparison: double vs simd-f128 ---
 
 [double]  1.0 + 1e-17 = 1.00000000000000000000
           precision lost: yes
 
-[simd-fp] 1.0 + 1e-17 = 1.00000000000000001000000000000000
+[simd-f128] 1.0 + 1e-17 = 1.00000000000000001000000000000000
           precision lost: no
 
 
