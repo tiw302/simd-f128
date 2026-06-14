@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/tiw302/simd-f128/master/assets/images/logo.webp" width="400" alt="simd-f128 Logo">
   <br>
-  <b>High-performance cross-platform 128-bit arithmetic for SIMD applications.</b>
+  <b>High-performance, zero-allocation 128-bit floating-point arithmetic powered by hardware SIMD.</b>
 </p>
 
 # simd-f128
@@ -30,7 +30,7 @@
 | Architecture | Platform | Verified Backend |
 | :--- | :--- | :--- |
 | **x86_64 (Modern)** | Linux / Windows | **AVX2** (Vectorized) |
-| **x86_64 (Legacy)** | Linux | **SSE2** (Emulated SIMD) |
+| **x86_64 (Legacy)** | Linux / Windows | **SSE2** (Vectorized) |
 | **ARM64 (Apple)** | macOS (M1/M2/M3) | **NEON** (Vectorized) |
 | **ARM64 (Android)** | Mobile | **NEON** (Vectorized) |
 | **ARMv7 (Android)** | Mobile | **Scalar** C11 |
@@ -43,22 +43,33 @@
 
 ## Table of Contents
 
-| Introduction | Setup & Build | Components | Resources | Community |
-|---|---|---|---|---|
-| [Overview](#introduction) | [Requirements](#requirements) | [Core Engine](#simd_f128h-core) | [API Docs](#api-reference) | [CI Status](#platform-support--ci-status) |
-| [Why?](#why-simd-f128) | [Toolchains](#verified-toolchains) | [Constants](#simd_f128_constsh) | [Math Theory](#double-double-arithmetic) | [Contributing](#contributing) |
-| [Philosophy](#design-philosophy) | [Installation](#build-and-installation) | [I/O Utilities](#simd_f128_ioh) | [Examples](#examples) | [License](#license) |
-| | | [Math Functions](#simd_f128_mathh) | [Limitations & Technical Notes](#double-double-arithmetic) | |
-| | | [Utilities & Comparisons](#simd_f128_utilsh) | | |
-| | | [C++ Wrapper](#simd_f128hpp) | | |
+- [Introduction](#introduction)
+  - [Why simd-f128?](#why-simd-f128)
+  - [Design Philosophy](#design-philosophy)
+- [Requirements & Toolchains](#requirements)
+- [Build and Installation](#build-and-installation)
+- [Library Components](#library-components)
+  - [simd_f128.h (Core)](#simd_f128h-core)
+  - [simd_f128_consts.h](#simd_f128_constsh)
+  - [simd_f128_io.h](#simd_f128_ioh)
+  - [simd_f128_math.h](#simd_f128_mathh)
+  - [simd_f128_utils.h](#simd_f128_utilsh)
+  - [simd_f128.hpp (C++)](#simd_f128hpp)
+- [API Reference](#api-reference)
+- [Performance & Benchmarks](#performance--benchmarks)
+- [Double-Double Arithmetic](#double-double-arithmetic)
+- [Examples](#examples)
+- [Platform Support & CI Status](#platform-support--ci-status)
+- [Language Bindings](#language-bindings)
+- [Project Structure](#project-structure)
 
 ---
 
 ## Introduction
 
-**simd-f128** is a professional-grade, header-only C library for **128-bit (Double-Double)** floating-point arithmetic. It targets the precision gap between standard 64-bit IEEE 754 doubles and heavyweight arbitrary-precision libraries, providing approximately 31-32 decimal digits of accuracy with zero heap allocation overhead.
+**simd-f128** is a professional-grade, header-only C library for **128-bit (Double-Double)** floating-point arithmetic, featuring automatic hardware SIMD acceleration (AVX2, NEON, WASM-SIMD). It explicitly targets the precision gap between standard 64-bit IEEE 754 doubles and heavyweight arbitrary-precision libraries like GMP.
 
-Designed for demanding workloads such as fractal rendering, physical simulations, and orbital mechanics — where double precision falls short but `libquadmath` or GMP would be excessive.
+By delivering **31-32 decimal digits of accuracy** with **zero heap allocation overhead**, `simd-f128` is purpose-built for demanding workloads—such as fractal rendering, physical simulations, and orbital mechanics. While the core engine is pure C11, it provides seamless native bindings for **C++, Python, WebAssembly, and Rust**, allowing developers across multiple ecosystems to easily overcome the limits of standard double precision.
 
 ---
 
@@ -68,15 +79,15 @@ Ever zoomed into a Mandelbrot set and watched the detail dissolve into grey mush
 
 The usual fixes each carry a significant cost:
 
-| Option | Precision | Allocation | Portability | Complexity |
+| Option | Precision | Performance | Allocation | Portability |
 |---|---|---|---|---|
-| `double` | ~15 digits | None | Universal | None |
-| `long double` | 18-19 digits (x87) | None | Compiler-dependent | Low |
-| `__float128` (GCC) | ~33 digits | None | **GCC/Clang only** | Medium |
-| GMP / MPFR | Arbitrary | **Heap** | Portable | High |
-| [x] **simd-f128** | **~31 digits** | **None** | **Universal** | **Low** |
+| `double` | ~15 digits | Native Hardware | None | Universal |
+| `long double` | 18-19 digits (x87) | Fast | None | Compiler-dependent |
+| `__float128` (GCC) | ~33 digits | Emulated (Slow) | None | GCC/Clang only |
+| GMP / MPFR | Arbitrary | Very Slow | **Heap** | Portable |
+| **simd-f128** | **~31 digits** | **Hardware SIMD (Fast)**| **None** | **Universal** |
 
-`__float128` gets close on precision but locks you into GCC/Clang and is noticeably slower in tight loops. GMP/MPFR are powerful but heap-allocating inside a render loop is a non-starter.
+`__float128` gets close on precision but locks you into GCC/Clang and is noticeably slower due to software emulation. GMP/MPFR are powerful but heap-allocating inside a render loop is a non-starter.
 
 simd-f128 occupies the exact gap: **it doubles usable precision with zero allocation, zero dependencies, and no compiler lock-in** — proven in practice by [mandelbrot-c](https://github.com/tiw302/mandelbrot-c), which achieves stable deep-zoom rendering at coordinates down to 10^-28, far beyond what standard `double` can represent.
 
@@ -88,7 +99,7 @@ The library is built around three constraints that were never relaxed during dev
 
 **Zero allocation.** Every operation executes entirely in CPU registers. There are no calls to `malloc`, no temporary buffers, and no GC pressure. This makes simd-f128 suitable for use inside tight render loops, interrupt handlers, and embedded firmware where heap allocation is prohibited.
 
-**No configuration required.** The correct SIMD backend — AVX2, NEON, WASM-SIMD, or scalar — is selected automatically at compile time based on the target architecture. Passing the wrong flag produces a compile error immediately rather than silently degrading precision at runtime.
+**No configuration required.** The correct SIMD backend — AVX2, SSE2, NEON, WASM-SIMD, or scalar — is selected automatically at compile time based on the target architecture. If a specific hardware SIMD instruction set is not detected by the compiler, it seamlessly and safely falls back to a highly portable scalar implementation.
 
 **Standard C foundation.** The library is built entirely on IEEE 754 `double` arithmetic and C11 standard library functions. It does not rely on compiler extensions, non-standard intrinsics outside of guarded `#ifdef` blocks, or platform-specific ABI assumptions. The scalar fallback compiles and produces correct results on any C99-compliant toolchain.
 
@@ -99,7 +110,7 @@ The library is built around three constraints that were never relaxed during dev
 **Double-Double vs IEEE 754 128-bit:**
 Please note that `simd-f128` uses **Double-Double arithmetic** (an unevaluated sum of two standard 64-bit `double` values) to achieve approximately 31 decimal digits of precision. It is **not** a strictly compliant IEEE 754 `binary128` implementation.
 
-While this approach offers massive performance benefits and is perfect for deeply zooming into fractals (like in [mandelbrot-c](https://github.com/tiw302/mandelbrot-c), it is susceptible to **Catastrophic Cancellation** in specific scenarios (e.g., subtracting two nearly identical values). If you are building highly sensitive physics simulations or rigorous numerical analysis tools where IEEE 754 edge-case compliance is strictly required, a heavier library like GMP/MPFR or compiler-specific `__float128` may be more appropriate.
+While this approach offers massive performance benefits and is perfect for deeply zooming into fractals (like in [mandelbrot-c](https://github.com/tiw302/mandelbrot-c)), it is susceptible to **Catastrophic Cancellation** in specific scenarios (e.g., subtracting two nearly identical values). If you are building highly sensitive physics simulations or rigorous numerical analysis tools where IEEE 754 edge-case compliance is strictly required, a heavier library like GMP/MPFR or compiler-specific `__float128` may be more appropriate.
 
 ---
 
@@ -120,14 +131,14 @@ The following toolchains are tested on every commit via CI. All others fall back
 
 | Toolchain | Version | Platform | Backend |
 |---|---|---|---|
-| GCC | 11+ | Linux x86_64 | Scalar, AVX2 |
+| GCC | 11+ | Linux x86_64 | Scalar, SSE2, AVX2 |
 | GCC (aarch64-linux-gnu) | 11+ | Linux ARM64 (QEMU) | NEON |
 | GCC (arm-linux-gnueabihf) | 11+ | Linux ARMv7 (QEMU) | Scalar + VFPv4 |
 | GCC (riscv64-linux-gnu) | 11+ | Linux RISC-V64 (QEMU) | Scalar |
 | Clang | 14+ | macOS Apple Silicon | NEON |
-| Clang | 14+ | macOS Intel | Scalar, AVX2 |
-| MSVC | 2022 | Windows x64 | Scalar |
-| Emscripten | 3.0+ | WASM (Node.js) | WASM-SIMD, Scalar |
+| Clang | 14+ | macOS Intel | Scalar, SSE2, AVX2 |
+| MSVC | 2022 | Windows x64 | SSE2, AVX2 |
+| Emscripten | 3.0+ | WASM (Node.js/Web) | WASM-SIMD, Scalar |
 
 ---
 
@@ -215,7 +226,9 @@ ctest --test-dir build
 
 ---
 
-## simd_f128.h (Core)
+## Library Components
+
+### simd_f128.h (Core)
 
 The central engine of the library. Implements the Double-Double type and all fundamental arithmetic operations. All functions are `static inline` - no separate compilation unit is needed beyond the `SIMD_F128_IMPLEMENTATION` guard.
 
@@ -223,8 +236,8 @@ The central engine of the library. Implements the Double-Double type and all fun
 
 - **~106-bit mantissa** - roughly 31-32 decimal digits of precision.
 - **Zero heap allocation** - all operations execute directly in CPU registers, suitable for tight inner loops.
-- **Automatic SIMD dispatch** - selects AVX2 (`__m128d`) on Intel/AMD, NEON (`float64x2_t`) on ARM64/Apple Silicon, WASM-SIMD (`v128_t`) on the web, or falls back to scalar C99.
-- **Branchless implementation** - consistent execution time, no pipeline stalls.
+- **Automatic SIMD dispatch** - selects AVX2/SSE2 (`__m128d`) on Intel/AMD, NEON (`float64x2_t`) on ARM64/Apple Silicon, WASM-SIMD (`v128_t`) on the web, or falls back to scalar C99.
+- **Branch-free fast paths** - minimal branching (restricted to `Inf`/`NaN` guards) ensures consistent execution time and avoids pipeline stalls in the hot path.
 - **Strict IEEE 754 foundation** - built on standard `double`, fully compatible with existing hardware.
 
 ```c
@@ -247,7 +260,7 @@ int main() {
 
 ---
 
-## simd_f128_consts.h
+### simd_f128_consts.h
 
 Pre-computed, high-precision mathematical constants stored as Double-Double pairs. Each constant captures the full ~106-bit mantissa, avoiding the precision loss inherent in standard 64-bit initialisers.
 
@@ -267,7 +280,7 @@ int main() {
 
 ---
 
-## simd_f128_io.h
+### simd_f128_io.h
 
 Handles conversion between the internal Double-Double representation and human-readable decimal strings. Standard `printf` formatting cannot faithfully render 128-bit values; this header uses an iterative high-precision extraction algorithm to produce up to 32 correct decimal places.
 
@@ -277,7 +290,8 @@ Handles conversion between the internal Double-Double representation and human-r
 #include <simd_f128_io.h>
 
 int main() {
-    simd_f128 val = simd_f128_from_double(3.141592653589793);
+    // parsing from string maintains the full 31-digit precision
+    simd_f128 val = simd_f128_from_string("3.1415926535897932384626433832795");
 
     // direct console output
     simd_f128_print(val);
@@ -292,17 +306,17 @@ int main() {
 
 ---
 
-## simd_f128_math.h
+### simd_f128_math.h
 
 Advanced mathematical functions built on top of the core Double-Double primitives. All functions are `static inline` and require no additional compilation unit.
 
 **Algorithms used:**
 
-- **`exp`** — range reduction to $N=16$ intervals followed by a 12-degree Chebyshev minimax polynomial, then exact scaling via `ldexp` and a 16-entry lookup table. Handles overflow (`> 709.78`) and underflow explicitly.
-- **`log`** — seeds from the standard `double` `log()`, then refines with 1 iteration of Halley's method (cubic convergence), which is mathematically sufficient to recover all 31-32 digits due to cubic convergence.
+- **`exp`** — range reduction to $N=16$ intervals followed by a high-degree Chebyshev minimax polynomial, then exact scaling via `ldexp` and a 16-entry lookup table. Handles overflow (`> 709.78`) and underflow explicitly.
+- **`log`** — seeds from the standard `double` `log()`, then refines with 1 iteration of Halley's method, which is mathematically sufficient to recover all 31-32 digits due to cubic convergence.
 - **`pow`** — computed as `exp(exp * log(base))`. Supports base-zero inputs and propagates `NaN` according to IEEE-754.
-- **`sin`** — range-reduces to quadrant ($[-\pi/4, \pi/4]$) then evaluates a 11-degree Chebyshev minimax polynomial.
-- **`cos`** — range-reduces to quadrant ($[-\pi/4, \pi/4]$) then evaluates a 11-degree Chebyshev minimax polynomial.
+- **`sin`** — range-reduces to quadrant ($[-\pi/4, \pi/4]$) then evaluates a highly-tuned Chebyshev minimax polynomial.
+- **`cos`** — range-reduces to quadrant ($[-\pi/4, \pi/4]$) then evaluates a highly-tuned Chebyshev minimax polynomial.
 - **`sincos`** — computes both sine and cosine simultaneously, saving redundant Range Reduction and polynomial evaluation steps.
 
 ```c
@@ -340,7 +354,7 @@ int main() {
 
 ---
 
-## simd_f128_utils.h
+### simd_f128_utils.h
 
 Comparison operators and utility functions. All are `static inline` and work with any SIMD backend.
 
@@ -371,7 +385,7 @@ int main() {
 
 ---
 
-## simd_f128.hpp
+### simd_f128.hpp
 
 A modern C++ wrapper that makes `simd_f128` feel like a native arithmetic type. Include this single header in C++ projects — it pulls in all other headers automatically.
 
@@ -540,9 +554,59 @@ final |z| components:
   zy = 0.35443468442007221298624089031401
 ```
 
-### Benchmark: Raw Speed (Google Benchmark)
+## Performance & Benchmarks
 
-Because `simd-f128` operations are purely CPU-register bound, they are extremely fast. A single `simd_f128_mul` completes in ~10 nanoseconds, and advanced math functions run in the ~170-490ns range.
+Because `simd-f128` operations are purely CPU-register bound, they are extremely fast. 
+
+### 1. Comparative Speed vs `__float128`
+
+While raw nanoseconds are interesting, a direct comparison against `__float128` demonstrates the massive advantage of hardware SIMD over software emulation. The test simulates loop-carried dependency latency (e.g., `a = a + b`) simulating tight inner-loops in numerical algorithms. Tests run for 10,000,000 operations.
+
+| Data Type | Add (ms) | Mul (ms) | Div (ms) |
+|---|---|---|---|
+| `double` (64-bit) | 9.24 | 9.23 | 41.83 |
+| `long double` (x87) | 20.70 | 20.66 | 48.49 |
+| `__float128` (GCC) | 153.37 | 193.23 | 325.37 |
+| **`simd-f128` (AVX2)** | **99.44** | **74.46** | **207.98** |
+
+<details>
+<summary><b>View raw console output from bench_compare</b></summary>
+
+```console
+$ ./build/benchmarks/bench_compare
+
+simd-f128 Manual Benchmark Comparison
+Iterations: 10000000 operations per test (latency mode)
+
+| Data Type          | Add (ms) | Mul (ms) | Div (ms) |
+|--------------------|----------|----------|----------|
+|--------------------|----------|----------|----------|
+| double (64-bit)    |     9.24 |     9.23 |    41.83 |
+| long double (x87)  |    20.70 |    20.66 |    48.49 |
+| __float128 (GCC)   |   153.37 |   193.23 |   325.37 |
+| simd-f128 (SIMD)   |    99.44 |    74.46 |   207.98 |
+```
+
+</details>
+
+**Analysis:**
+`simd-f128` on AVX2 decisively outperforms GCC's software-emulated `__float128`. Specifically, **multiplication is 2.59x faster**, addition is 1.54x faster, and division is 1.56x faster. This is achieved through the aggressive use of Hardware FMA (Fused Multiply-Add), which rapidly resolves Dekker's split algorithms natively in silicon without relying on slower branching software emulation.
+
+### 2. WebAssembly (In-Browser) Benchmarks
+
+The library ships with dual WebAssembly modules to maximise both performance and compatibility. The benchmarks below reflect 1,000,000 continuous `simd_f128_mul` operations running entirely inside the V8 JavaScript engine (Chrome).
+
+| Module Type | Time (ms) | Notes |
+|---|---|---|
+| **WASM-SIMD128** | ~295 ms | Native 128-bit SIMD processing inside the browser. |
+| **WASM-Scalar** | ~481 ms | Fallback for older browsers without SIMD support. |
+| Native JS `Number` | ~1.5 ms | Native 64-bit precision (loss of 15 digits of precision). |
+
+**Takeaway:** `WASM-SIMD128` achieves a **~1.6x speedup** over scalar WASM inside the browser. While native JS `Number` is incredibly fast due to JIT compilation of single hardware instructions, it completely fails to preserve precision past 15 digits. `simd-f128` enables software running in the browser to maintain 32-digit precision with highly acceptable latency for real-time visualization and mathematical processing.
+
+### 3. Raw Speed (Google Benchmark)
+
+A single `simd_f128_mul` completes in ~10 nanoseconds, and advanced math functions run in the ~170-490ns range.
 
 ```console
 Run on (12 X 3266.69 MHz CPU s)
@@ -581,7 +645,7 @@ This non-overlapping constraint provides ~106 bits of mantissa — approximately
 - **Addition: TwoSum (Knuth)** — An error-free transformation (EFT) for addition that captures the exact rounding residual.
 - **Multiplication: TwoProd (Dekker)** — Exploits hardware FMA (Fused Multiply-Add) where available. On platforms lacking FMA, it seamlessly falls back to **Veltkamp's Split** to divide 53-bit mantissas into 26-bit halves, calculating the exact error product natively without precision loss.
 - **Division: Newton-Raphson Iteration** — Approximates the reciprocal $1/b_{hi}$ and refines it quadratically. Includes rigorous guards against `NaN` propagation during division-by-zero scenarios.
-- **Square Root: Fast Inverse Square Root (`rsqrt`)** — A heavily optimized 128-bit variant of the famous algorithm used in 3D physics engines. Computes $1/\sqrt{x}$ directly via Newton-Raphson to save CPU cycles in deep-zoom Mandelbrot escapes.
+- **Square Root: Newton-Raphson with Residual Correction** — Uses the hardware `sqrt` instruction to generate a perfect 53-bit initial guess, followed by a Newton-Raphson iteration with residual correction to accurately recover the full ~106-bit mantissa.
 - **Normalisation** — Every arithmetic operation rigidly re-establishes the non-overlapping property before returning.
 
 No memory allocation is required. The entire number lives in two registers.
@@ -665,17 +729,39 @@ Every commit is tested across all backends via GitHub Actions. The table below m
 
 ---
 
+## Language Bindings
+
+`simd-f128` is designed to provide 128-bit precision not just to C/C++, but to higher-level ecosystems.
+
+### Python
+Using `pybind11`, the library is exposed as a native CPython extension, bringing 31-digit precision directly into Python scripts.
+```python
+import simd_f128 as f128
+
+a = f128.from_string("3.14159265358979323846")
+b = f128.from_double(2.0)
+print((a * b).to_string())
+```
+
+### JavaScript / WebAssembly
+Compiled via Emscripten, the JS bindings automatically select between `WASM-SIMD128` and `WASM-Scalar` depending on the user's browser support, providing 31-digit precision directly in the browser or Node.js.
+
+### Rust
+A fully memory-safe Rust wrapper (via `cc` and `bindgen`), exposing the C functions safely through idiomatic Rust structs and operator overloads.
+
+---
+
 ## Project Structure
 
 ```text
 .
 ├── assets/images/        # Logo and documentation media
+├── benchmarks/           # Performance benchmarks (Google Benchmark & Native)
 ├── examples/             # Runnable usage examples
 │   ├── basic_arithmetic.c
 │   ├── precision_demo.c
 │   └── mandelbrot_core.c
-├── tests/                # Arithmetic unit tests
-│   └── test_arithmetic.c
+├── tests/                # Arithmetic unit tests (C and C++)
 ├── .github/workflows/    # CI pipelines (linux, macos, windows, wasm, mobile)
 ├── include/              # Core library and headers
 │   ├── simd_f128.h           # Double-Double arithmetic engine
@@ -684,6 +770,9 @@ Every commit is tested across all backends via GitHub Actions. The table below m
 │   ├── simd_f128_math.h      # Advanced mathematical functions (exp, log, sin, cos, pow)
 │   ├── simd_f128_utils.h     # Comparison and utility functions (cmp, abs, min, max)
 │   └── simd_f128.hpp         # Modern C++ wrapper with operator overloading
+├── js/                   # JavaScript bindings and WebAssembly module
+├── python/               # Python bindings (pybind11)
+├── rust/                 # Rust bindings (FFI via cc)
 ├── CMakeLists.txt        # Cross-platform build configuration
 └── LICENSE               # MIT License
 ```
@@ -695,6 +784,26 @@ Every commit is tested across all backends via GitHub Actions. The table below m
 | Project | Description |
 |---|---|
 | [mandelbrot-c](https://github.com/tiw302/mandelbrot-c) | Deep-zoom Mandelbrot renderer in C, using simd-f128 for 128-bit precision coordinates |
+
+
+
+## Development Methodology & AI Assistance
+
+Building a memory-safe, mathematically robust SIMD library requires managing incredibly complex edge cases—from vectorized bit-manipulation to IEEE 754 catastrophic cancellation bounds.
+
+To achieve this level of stability and performance, this project was architected and rigorously verified in collaboration with **Advanced Agentic AI**. AI was specifically utilized to:
+
+- Stress-test the Double-Double arithmetic engine against extreme floating-point edge cases (subnormals, infinities, NaN propagation).
+- Assist in planning the memory layout and cross-platform SIMD abstraction (AVX2, NEON, WASM).
+- Automate the generation of robust cross-platform CI/CD pipelines (Linux, macOS, Windows, Mobile, WebAssembly).
+
+However, **human agency remains at the core of this project**. Every single line of code generated or suggested was manually inspected, audited, and strictly verified. The core architecture, mathematical algorithms, and memory design were meticulously human-planned. This hybrid approach—combining human architectural vision with AI-driven debugging and verification—allowed us to push the boundaries of performance and reliability in a modern C library without compromising accuracy or code ownership.
+
+---
+
+## Author's Note
+
+I'm just a kid building projects as a hobby. Thank you for showing interest in my little library! It really means a lot to me. :)
 
 ---
 
