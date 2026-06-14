@@ -1,8 +1,25 @@
 fn main() {
     /*
-     * we don't have a single .c file since simd-f128 is header-only!
-     * so we will compile a simple C wrapper file to instantiate the inline functions.
-     */
+     * build.rs -- rust build script for simd-f128.
+     * project url: https://github.com/tiw302/simd-f128
+     * technical background:
+     * ---------------------
+     * this library uses "double-double" arithmetic. basically, we represent a
+     * high-precision number as the sum of two 64-bit doubles (hi + lo).
+     * this gives us about 31 decimal digits of precision, which is roughly
+     * the same as quad precision (f128) but much faster because it uses
+     * hardware double-precision units.
+     * build system:
+     * -------------
+     * since the core c library is header-only, this build script dynamically 
+     * generates a simple c wrapper file (`simd_f128_wrapper.c`) at compile time.
+     * it also detects the target cpu features (avx2, fma, sse2) and passes the 
+     * appropriate compilation flags (`-mavx2`, `-mfma`) to the `cc` compiler.
+     * license:
+     * --------
+     * mit license
+     * copyright (c) 2026 jirawat siripuk
+     * */
     
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let wrapper_path = format!("{}/simd_f128_wrapper.c", out_dir);
@@ -19,7 +36,12 @@ fn main() {
 "#, parent_dir);
 
     let wrapper_code = r#"
-// expose some c wrappers using pointer arrays to bypass __m128d abi issues
+// =========================================================================
+// ffi wrapper generation
+// =========================================================================
+// we expose c wrappers using simple double arrays (double*) to completely
+// bypass platform-specific abi issues with passing __m128d simd vectors 
+// by value across the rust/c boundary.
 static inline simd_f128 arr_to_simd(const double* v) {
     return simd_f128_from_hi_lo(v[0], v[1]);
 }
@@ -67,6 +89,13 @@ void rs_simd_f128_const_ln2(double* out) { simd_to_arr(SIMD_F128_LN2, out); }
 
     std::fs::write(&wrapper_path, full_code).unwrap();
 
+    // =========================================================================
+    // cross-language compiler feature alignment
+    // =========================================================================
+    // we query rust's target cpu features (passed down dynamically by cargo) 
+    // and inject the exact same instruction set flags (avx2, fma, sse2) into 
+    // the c compiler. this ensures the generated c-core perfectly matches 
+    // the rust binary's capabilities, unlocking hardware-level simd optimizations.
     let mut build = cc::Build::new();
     build.file(wrapper_path).flag_if_supported("-O3");
 
