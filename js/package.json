@@ -1,11 +1,11 @@
 {
   "name": "@tiw302/simd-f128",
   "version": "1.2.4",
-  "description": "High-performance cross-platform 128-bit arithmetic for JavaScript using WASM",
+  "description": "high-performance cross-platform 128-bit arithmetic for javascript using wasm",
   "main": "simd_f128.js",
   "types": "simd_f128.d.ts",
   "scripts": {
-    "build": "./build_wasm.sh"
+    "build": "node build.js"
   },
   "author": "jirawat siripuk",
   "license": "MIT"
