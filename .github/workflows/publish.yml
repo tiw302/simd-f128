@@ -60,8 +60,7 @@ jobs:
         run: |
           source emsdk/emsdk_env.sh
           cd js
-          chmod +x build_wasm.sh
-          ./build_wasm.sh
+          node build.js
           
       - name: Publish to NPM
         run: |
