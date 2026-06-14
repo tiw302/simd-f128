@@ -84,9 +84,11 @@ PYBIND11_MODULE(simd_f128, m) {
         .def(py::self + py::self)
         .def(py::self - py::self)
         .def(py::self * py::self)
+        .def(py::self / py::self)
         .def(py::self += py::self)
         .def(py::self -= py::self)
-        .def(py::self *= py::self);
+        .def(py::self *= py::self)
+        .def(py::self /= py::self);
 
     // ███    ███  █████  ████████ ██   ██
     // ████  ████ ██   ██    ██    ██   ██
