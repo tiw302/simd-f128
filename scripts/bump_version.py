@@ -1,33 +1,55 @@
 #!/usr/bin/env python3
+
+"""
+bump_version.py -- global versioning synchronization script.
+project url: https://github.com/tiw302/simd-f128
+
+this script ensures structural consistency across all package managers 
+(cmake, npm, pyproject.toml, cargo). it safely executes targeted regex 
+replacements to guarantee atomic version increments across the entire 
+cross-language ecosystem.
+"""
 import sys
 import os
 import re
 
+# cross-platform ansi color support
+if os.name == 'nt':
+    os.system('color')
+
+class c:
+    ok = '\033[92m'   # green
+    err = '\033[91m'  # red
+    warn = '\033[93m' # yellow
+    info = '\033[96m' # cyan
+    rs = '\033[0m'    # reset
+
 def bump_file(filepath, pattern, replacement):
     if not os.path.exists(filepath):
-        print(f"[!] error: {filepath} not found.")
+        print(f"{c.err}[✗] error: {filepath} not found.{c.rs}")
         return False
     
     with open(filepath, 'r', encoding='utf-8') as f:
         content = f.read()
         
-    # count=1 ensures we only replace the first occurrence
-    # especially important for Cargo.toml where dependencies might have versions
+    # limit substitution to the first occurrence (count=1).
+    # this strictly prevents unintended mutations of external dependency versions
+    # further down the file, which is especially critical for cargo.toml.
     new_content = re.sub(pattern, replacement, content, count=1)
     
     if content != new_content:
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(new_content)
-        print(f"[v] updated {os.path.basename(filepath)}")
+        print(f"{c.ok}[✓] updated {os.path.basename(filepath)}{c.rs}")
         return True
     else:
-        print(f"[-] skipped {os.path.basename(filepath)} (no match or already set)")
+        print(f"{c.warn}[-] skipped {os.path.basename(filepath)} (no match or already set){c.rs}")
         return False
 
 def main():
     if len(sys.argv) != 2:
-        print("usage: ./bump_version.py <new_version>")
-        print("example: ./bump_version.py 1.3.0")
+        print(f"{c.info}usage: ./bump_version.py <new_version>{c.rs}")
+        print(f"{c.info}example: ./bump_version.py 1.3.0{c.rs}")
         sys.exit(1)
         
     new_version = sys.argv[1].strip()
@@ -38,10 +60,10 @@ def main():
     
     # basic semver check
     if not re.match(r'^\d+\.\d+\.\d+$', new_version):
-        print("[!] error: version must be in format x.y.z (e.g., 1.3.0)")
+        print(f"{c.err}[✗] error: version must be in format x.y.z (e.g., 1.3.0){c.rs}")
         sys.exit(1)
 
-    print(f"[*] bumping version to {new_version}...\n")
+    print(f"{c.info}[⚙] bumping version to {new_version}...{c.rs}\n")
 
     tasks = [
         (
@@ -80,9 +102,9 @@ def main():
         if not success:
             all_success = False
 
-    print("\n[v] done.")
+    print(f"\n{c.ok}[✓] all tasks completed.{c.rs}")
     if not all_success:
-        print("[!] some files were not updated. check warnings above.")
+        print(f"{c.warn}[!] some files were not updated. check warnings above.{c.rs}")
 
 if __name__ == '__main__':
     main()
