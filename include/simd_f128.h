@@ -330,6 +330,15 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
             return _mm_set_pd(0.0, inf_val);
         }
 
+        // check division by infinity
+        if (__builtin_expect(isinf(bhi), 0)) {
+            if (isinf(ahi) || isnan(ahi) || isnan(bhi)) {
+                return _mm_set_pd(0.0, NAN);
+            }
+            double sign = (signbit(ahi) ^ signbit(bhi)) ? -0.0 : 0.0;
+            return _mm_set_pd(0.0, sign);
+        }
+
         // double-precision division:
         // compute initial quotient guess q1, then compute the exact product q1 * b
         double q1 = ahi / bhi;
@@ -478,6 +487,15 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
             return _mm_set_pd(0.0, inf_val);
         }
 
+        // check division by infinity
+        if (__builtin_expect(isinf(bhi), 0)) {
+            if (isinf(ahi) || isnan(ahi) || isnan(bhi)) {
+                return _mm_set_pd(0.0, NAN);
+            }
+            double sign = (signbit(ahi) ^ signbit(bhi)) ? -0.0 : 0.0;
+            return _mm_set_pd(0.0, sign);
+        }
+
         // division using initial quotient estimation and remainder tracking
         double q1 = ahi / bhi;
         double p1 = q1 * bhi;
@@ -609,6 +627,15 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
             double inf_val = ahi / bhi;
             if (ahi == 0.0) inf_val = NAN;
             return wasm_f64x2_make(inf_val, 0.0);
+        }
+
+        // check division by infinity
+        if (__builtin_expect(isinf(bhi), 0)) {
+            if (isinf(ahi) || isnan(ahi) || isnan(bhi)) {
+                return wasm_f64x2_make(NAN, 0.0);
+            }
+            double sign = (signbit(ahi) ^ signbit(bhi)) ? -0.0 : 0.0;
+            return wasm_f64x2_make(sign, 0.0);
         }
 
         // compute initial quotient and exact remainder
@@ -761,6 +788,16 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
             return vsetq_lane_f64(inf_val, r_res, 0);
         }
 
+        // check division by infinity
+        if (__builtin_expect(isinf(bhi), 0)) {
+            float64x2_t r_res = vdupq_n_f64(0.0);
+            if (isinf(ahi) || isnan(ahi) || isnan(bhi)) {
+                return vsetq_lane_f64(NAN, r_res, 0);
+            }
+            double sign = (signbit(ahi) ^ signbit(bhi)) ? -0.0 : 0.0;
+            return vsetq_lane_f64(sign, r_res, 0);
+        }
+
         // compute initial quotient and refine via division remainder
         double q1 = ahi / bhi;
         double p1 = q1 * bhi;
@@ -891,6 +928,17 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
             double inf_val = a.hi / b.hi;
             if (a.hi == 0.0) inf_val = NAN;
             simd_f128 res = {inf_val, 0.0};
+            return res;
+        }
+
+        // check division by infinity
+        if (__builtin_expect(isinf(b.hi), 0)) {
+            if (isinf(a.hi) || isnan(a.hi) || isnan(b.hi)) {
+                simd_f128 res = {NAN, 0.0};
+                return res;
+            }
+            double sign = (signbit(a.hi) ^ signbit(b.hi)) ? -0.0 : 0.0;
+            simd_f128 res = {sign, 0.0};
             return res;
         }
 
