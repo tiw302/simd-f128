@@ -68,8 +68,8 @@ def main():
     tasks = [
         (
             "CMakeLists.txt",
-            r'project\(simd-fp VERSION \d+\.\d+\.\d+ LANGUAGES C CXX\)',
-            f'project(simd-fp VERSION {new_version} LANGUAGES C CXX)'
+            r'project\(simd_f128 VERSION \d+\.\d+\.\d+ LANGUAGES C CXX\)',
+            f'project(simd_f128 VERSION {new_version} LANGUAGES C CXX)'
         ),
         (
             "js/package.json",
@@ -101,6 +101,17 @@ def main():
         success = bump_file(filepath, pattern, replacement)
         if not success:
             all_success = False
+
+    # synchronize cargo lockfile if cargo toml was updated
+    cargo_toml = os.path.join(root_dir, "rust/Cargo.toml")
+    if os.path.exists(cargo_toml):
+        import subprocess
+        print(f"\n{c.info}[⚙] synchronizing rust/Cargo.lock...{c.rs}")
+        try:
+            subprocess.run(["cargo", "check", "--manifest-path", cargo_toml], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print(f"{c.ok}[✓] synchronized Cargo.lock{c.rs}")
+        except Exception as e:
+            print(f"{c.warn}[-] failed to run cargo check: {e}{c.rs}")
 
     print(f"\n{c.ok}[✓] all tasks completed.{c.rs}")
     if not all_success:
