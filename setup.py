@@ -34,7 +34,7 @@ ext_modules = [
 
 setup(
     name='simd-f128',
-    version='1.2.4',
+    version='1.3.0',
     description="High-performance 128-bit Double-Double arithmetic",
     ext_modules=ext_modules,
     packages=[],
