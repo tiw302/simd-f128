@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/tiw302/simd-f128/master/assets/images/logo.webp" width="400" alt="simd-f128 Logo">
+  <img src="https://raw.githubusercontent.com/tiw302/simd-f128/master/assets/images/logo.png" width="400" alt="simd-f128 Logo">
   <br>
   <b>High-performance, zero-allocation 128-bit floating-point arithmetic powered by hardware SIMD.</b>
 </p>
