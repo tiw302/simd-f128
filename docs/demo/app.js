@@ -1,10 +1,15 @@
-// wait for the emscripten wasm module to initialize
-Module.onRuntimeInitialized = () => {
-    document.getElementById('resultBox').innerText = "Ready. Press Calculate.";
-    document.getElementById('jsResultBox').innerText = "Ready. Press Calculate.";
-};
+let simdModule = null;
+let scalarModule = null;
 
-// Constants loader
+Promise.all([
+    ModuleSimd().then(m => simdModule = m),
+    ModuleScalar().then(m => scalarModule = m)
+]).then(() => {
+    document.getElementById('resultSimdBox').innerText = "Ready. Press Calculate or Benchmark.";
+    document.getElementById('resultScalarBox').innerText = "Ready. Press Calculate or Benchmark.";
+    document.getElementById('jsResultBox').innerText = "Ready. Press Calculate or Benchmark.";
+});
+
 const inputA = document.getElementById('inputA');
 const warnBox = document.getElementById('validationWarning');
 const opSelect = document.getElementById('operator');
@@ -17,7 +22,6 @@ function checkValidation() {
     const numA = Number(valA);
     const numB = Number(valB);
     
-    // clear warning by default
     warnBox.style.display = 'none';
     warnBox.innerHTML = '';
 
@@ -92,7 +96,6 @@ document.getElementById('btnLoadE').addEventListener('click', () => {
 inputA.addEventListener('input', checkValidation);
 inputB.addEventListener('input', checkValidation);
 
-// Toggle inputB display based on operator
 function updateUnaryState() {
     const unaryOps = ['exp', 'log', 'sin', 'cos', 'sqrt', 'atan', 'asin', 'acos'];
     const isUnary = unaryOps.includes(opSelect.value);
@@ -102,117 +105,141 @@ function updateUnaryState() {
 opSelect.addEventListener('change', updateUnaryState);
 updateUnaryState();
 
-document.getElementById('calcBtn').addEventListener('click', () => {
-    try {
-        checkValidation();
-        if (warnBox.style.display === 'block') {
-            document.getElementById('resultBox').innerText = warnBox.textContent.replace('Set to 0.5', '').replace('Set to 2.71828...', '').replace('Set to 2.0', '').replace('⚠️ ', '').trim();
-            document.getElementById('jsResultBox').innerText = "NaN";
-            return;
-        }
+function calcWasm(Module, valA, valB, op) {
+    const ptrA = Module._malloc(16);
+    const ptrB = Module._malloc(16);
+    const ptrOut = Module._malloc(16);
+    const ptrBuf = Module._malloc(128);
 
-        const valA = inputA.value;
-        const valB = inputB.value;
-        const op = opSelect.value;
+    Module.ccall('simd_f128_wasm_from_string', 'null', ['string', 'number'], [valA, ptrA]);
+    Module.ccall('simd_f128_wasm_from_string', 'null', ['string', 'number'], [valB, ptrB]);
 
-        // 1. Calculate Standard JS 64-bit Result
-        let jsRes = 0;
-        const numA = Number(valA);
-        const numB = Number(valB);
-        if (op === 'add') jsRes = numA + numB;
-        if (op === 'sub') jsRes = numA - numB;
-        if (op === 'mul') jsRes = numA * numB;
-        if (op === 'div') jsRes = numA / numB;
-        if (op === 'exp') jsRes = Math.exp(numA);
-        if (op === 'log') jsRes = Math.log(numA);
-        if (op === 'sin') jsRes = Math.sin(numA);
-        if (op === 'cos') jsRes = Math.cos(numA);
-        if (op === 'sqrt') jsRes = Math.sqrt(numA);
-        if (op === 'pow') jsRes = Math.pow(numA, numB);
-        if (op === 'atan') jsRes = Math.atan(numA);
-        if (op === 'atan2') jsRes = Math.atan2(numA, numB);
-        if (op === 'asin') jsRes = Math.asin(numA);
-        if (op === 'acos') jsRes = Math.acos(numA);
-        
-        // Show up to 20 digits to demonstrate standard precision limit
-        document.getElementById('jsResultBox').innerText = jsRes.toPrecision(21);
+    const a_hi = Module.getValue(ptrA, 'double');
+    const a_lo = Module.getValue(ptrA + 8, 'double');
+    const b_hi = Module.getValue(ptrB, 'double');
+    const b_lo = Module.getValue(ptrB + 8, 'double');
 
-        // 2. Calculate simd-f128 WASM Result
-        const ptrA = Module._malloc(16);
-        const ptrB = Module._malloc(16);
-        const ptrBuf = Module._malloc(128);
+    const unaryOps = ['exp', 'log', 'sin', 'cos', 'sqrt', 'atan', 'asin', 'acos'];
+    const isUnary = unaryOps.includes(op);
 
-        Module.ccall('simd_f128_wasm_from_string', 'null', ['string', 'number'], [valA, ptrA]);
-        Module.ccall('simd_f128_wasm_from_string', 'null', ['string', 'number'], [valB, ptrB]);
-
-        const a_hi = Module.getValue(ptrA, 'double');
-        const a_lo = Module.getValue(ptrA + 8, 'double');
-        const b_hi = Module.getValue(ptrB, 'double');
-        const b_lo = Module.getValue(ptrB + 8, 'double');
-
-        let res_hi = 0;
-        let res_lo = 0;
-
-        if (op === 'add') {
-            res_hi = Module.ccall('simd_f128_wasm_add', 'number', ['number', 'number', 'number', 'number'], [a_hi, a_lo, b_hi, b_lo]);
-            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
-        } else if (op === 'sub') {
-            res_hi = Module.ccall('simd_f128_wasm_sub', 'number', ['number', 'number', 'number', 'number'], [a_hi, a_lo, b_hi, b_lo]);
-            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
-        } else if (op === 'mul') {
-            res_hi = Module.ccall('simd_f128_wasm_mul', 'number', ['number', 'number', 'number', 'number'], [a_hi, a_lo, b_hi, b_lo]);
-            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
-        } else if (op === 'div') {
-            res_hi = Module.ccall('simd_f128_wasm_div', 'number', ['number', 'number', 'number', 'number'], [a_hi, a_lo, b_hi, b_lo]);
-            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
-        } else if (op === 'exp') {
-            res_hi = Module.ccall('simd_f128_wasm_exp', 'number', ['number', 'number'], [a_hi, a_lo]);
-            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
-        } else if (op === 'log') {
-            res_hi = Module.ccall('simd_f128_wasm_log', 'number', ['number', 'number'], [a_hi, a_lo]);
-            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
-        } else if (op === 'sin') {
-            res_hi = Module.ccall('simd_f128_wasm_sin', 'number', ['number', 'number'], [a_hi, a_lo]);
-            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
-        } else if (op === 'cos') {
-            res_hi = Module.ccall('simd_f128_wasm_cos', 'number', ['number', 'number'], [a_hi, a_lo]);
-            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
-        } else if (op === 'sqrt') {
-            res_hi = Module.ccall('simd_f128_wasm_sqrt', 'number', ['number', 'number'], [a_hi, a_lo]);
-            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
-        } else if (op === 'pow') {
-            res_hi = Module.ccall('simd_f128_wasm_pow', 'number', ['number', 'number', 'number', 'number'], [a_hi, a_lo, b_hi, b_lo]);
-            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
-        } else if (op === 'atan') {
-            res_hi = Module.ccall('simd_f128_wasm_atan', 'number', ['number', 'number'], [a_hi, a_lo]);
-            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
-        } else if (op === 'atan2') {
-            res_hi = Module.ccall('simd_f128_wasm_atan2', 'number', ['number', 'number', 'number', 'number'], [a_hi, a_lo, b_hi, b_lo]);
-            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
-        } else if (op === 'asin') {
-            res_hi = Module.ccall('simd_f128_wasm_asin', 'number', ['number', 'number'], [a_hi, a_lo]);
-            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
-        } else if (op === 'acos') {
-            res_hi = Module.ccall('simd_f128_wasm_acos', 'number', ['number', 'number'], [a_hi, a_lo]);
-            res_lo = Module.ccall('simd_f128_wasm_get_low', 'number', [], []);
-        }
-
-        Module.ccall('simd_f128_wasm_to_string', 'null', ['number', 'number', 'number', 'number'], [res_hi, res_lo, ptrBuf, 128]);
-
-        const resStr = Module.UTF8ToString(ptrBuf);
-        document.getElementById('resultBox').innerText = resStr;
-
-        Module._free(ptrA);
-        Module._free(ptrB);
-        Module._free(ptrBuf);
-    } catch (e) {
-        document.getElementById('resultBox').innerText = "Error: WASM module not ready or invalid input.";
+    const rawFuncName = '_simd_f128_wasm_' + op;
+    if (isUnary) {
+        Module[rawFuncName](a_hi, a_lo, ptrOut);
+    } else {
+        Module[rawFuncName](a_hi, a_lo, b_hi, b_lo, ptrOut);
     }
-});
 
-// Copy to Clipboard
+    const res_hi = Module.getValue(ptrOut, 'double');
+    const res_lo = Module.getValue(ptrOut + 8, 'double');
+
+    Module.ccall('simd_f128_wasm_to_string', 'null', ['number', 'number', 'number', 'number'], [res_hi, res_lo, ptrBuf, 128]);
+    const resStr = Module.UTF8ToString(ptrBuf);
+
+    Module._free(ptrA);
+    Module._free(ptrB);
+    Module._free(ptrOut);
+    Module._free(ptrBuf);
+    return resStr;
+}
+
+function doCalculation(isBenchmark) {
+    if (!simdModule || !scalarModule) return;
+    checkValidation();
+    if (warnBox.style.display === 'block') {
+        document.getElementById('resultSimdBox').innerText = warnBox.textContent.replace('Set to 0.5', '').replace('Set to 2.71828...', '').replace('Set to 2.0', '').replace('⚠️ ', '').trim();
+        document.getElementById('jsResultBox').innerText = "NaN";
+        return;
+    }
+
+    const valA = inputA.value;
+    const valB = inputB.value;
+    const op = opSelect.value;
+    const numA = Number(valA);
+    const numB = Number(valB);
+    
+    let iterations = isBenchmark ? 100000 : 1;
+    if (isBenchmark) {
+        document.getElementById('wasmSimdTime').innerText = "Running...";
+        document.getElementById('wasmScalarTime').innerText = "Running...";
+        document.getElementById('jsTime').innerText = "Running...";
+    }
+
+    setTimeout(() => {
+        // JS 64-bit
+        const t0_js = performance.now();
+        let jsRes = 0;
+        for (let i = 0; i < iterations; i++) {
+            if (op === 'add') jsRes = numA + numB;
+            else if (op === 'sub') jsRes = numA - numB;
+            else if (op === 'mul') jsRes = numA * numB;
+            else if (op === 'div') jsRes = numA / numB;
+            else if (op === 'exp') jsRes = Math.exp(numA);
+            else if (op === 'log') jsRes = Math.log(numA);
+            else if (op === 'sin') jsRes = Math.sin(numA);
+            else if (op === 'cos') jsRes = Math.cos(numA);
+            else if (op === 'sqrt') jsRes = Math.sqrt(numA);
+            else if (op === 'pow') jsRes = Math.pow(numA, numB);
+            else if (op === 'atan') jsRes = Math.atan(numA);
+            else if (op === 'atan2') jsRes = Math.atan2(numA, numB);
+            else if (op === 'asin') jsRes = Math.asin(numA);
+            else if (op === 'acos') jsRes = Math.acos(numA);
+        }
+        const t1_js = performance.now();
+        const jsTimeStr = (t1_js - t0_js).toFixed(1);
+        const jsStr = jsRes.toPrecision(21);
+
+        // SIMD
+        let simdResStr = "";
+        const t0_simd = performance.now();
+        for (let i = 0; i < iterations; i++) {
+            simdResStr = calcWasm(simdModule, valA, valB, op);
+        }
+        const t1_simd = performance.now();
+        const simdTimeStr = (t1_simd - t0_simd).toFixed(1);
+
+        if (isBenchmark) {
+            // Scalar Benchmark (only run if benchmark requested)
+            const t0_scalar = performance.now();
+            for (let i = 0; i < iterations; i++) {
+                calcWasm(scalarModule, valA, valB, op);
+            }
+            const t1_scalar = performance.now();
+            const scalarTimeStr = (t1_scalar - t0_scalar).toFixed(1);
+            
+            document.getElementById('wasmSimdTime').innerText = `${simdTimeStr} ms`;
+            document.getElementById('wasmScalarTime').innerText = `${scalarTimeStr} ms`;
+            document.getElementById('jsTime').innerText = `${jsTimeStr} ms`;
+        } else {
+            // Single Calculation Result Update
+            document.getElementById('resultSimdBox').innerText = simdResStr;
+            
+            // Diff Visualizer
+            let htmlJsStr = "";
+            let isDiff = false;
+            for (let i = 0; i < jsStr.length; i++) {
+                if (!isDiff && (i >= simdResStr.length || simdResStr[i] !== jsStr[i])) {
+                    isDiff = true;
+                    htmlJsStr += '<span class="diff-digit">';
+                }
+                htmlJsStr += jsStr[i];
+            }
+            if (isDiff) htmlJsStr += '</span>';
+            document.getElementById('jsResultBox').innerHTML = htmlJsStr;
+            
+            // Reset benchmark boxes
+            document.getElementById('wasmSimdTime').innerText = "-";
+            document.getElementById('wasmScalarTime').innerText = "-";
+            document.getElementById('jsTime').innerText = "-";
+        }
+
+    }, 10);
+}
+
+document.getElementById('calcBtn').addEventListener('click', () => { doCalculation(false); });
+document.getElementById('benchBtn').addEventListener('click', () => { doCalculation(true); });
+
 document.getElementById('btnCopy').addEventListener('click', () => {
-    const resultText = document.getElementById('resultBox').innerText;
+    const resultText = document.getElementById('resultSimdBox').innerText;
     if (resultText && !resultText.startsWith('Error') && !resultText.startsWith('Loading')) {
         navigator.clipboard.writeText(resultText).then(() => {
             const btn = document.getElementById('btnCopy');
