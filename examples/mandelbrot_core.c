@@ -14,8 +14,6 @@ int main() {
     simd_f128 zx = simd_f128_from_double(0.0);
     simd_f128 zy = simd_f128_from_double(0.0);
 
-    simd_f128 two      = simd_f128_from_double(2.0);
-
     const int max_iter = 500;
     int iter = 0;
 
@@ -35,7 +33,9 @@ int main() {
         // zx_new = zx^2 - zy^2 + cx
         // zy_new = 2 * zx * zy + cy
         simd_f128 new_zx = simd_f128_add(simd_f128_sub(zx2, zy2), cx);
-        simd_f128 new_zy = simd_f128_add(simd_f128_mul(two, simd_f128_mul(zx, zy)), cy);
+        // multiply by 2 is implemented via addition for speed
+        simd_f128 zx_zy = simd_f128_mul(zx, zy);
+        simd_f128 new_zy = simd_f128_add(simd_f128_add(zx_zy, zx_zy), cy);
 
         zx = new_zx;
         zy = new_zy;
