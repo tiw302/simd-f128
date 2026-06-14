@@ -12,11 +12,23 @@
 
 #define ITERATIONS 10000000
 
+#ifdef _WIN32
+#include <windows.h>
 static double get_time(void) {
+    // high-resolution performance counter for windows
+    LARGE_INTEGER count, freq;
+    QueryPerformanceCounter(&count);
+    QueryPerformanceFrequency(&freq);
+    return (double)count.QuadPart / (double)freq.QuadPart;
+}
+#else
+static double get_time(void) {
+    // monotonic clock for posix systems
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
 }
+#endif
 
 // prevent compiler from optimizing away the loop
 volatile double g_sink_double;
