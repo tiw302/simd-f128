@@ -21,7 +21,7 @@ function checkValidation() {
     const op = opSelect.value;
     const numA = Number(valA);
     const numB = Number(valB);
-    
+
     warnBox.style.display = 'none';
     warnBox.innerHTML = '';
 
@@ -49,7 +49,7 @@ function checkValidation() {
     if ((op === 'asin' || op === 'acos') && (numA < -1 || numA > 1)) {
         warnBox.innerHTML = `⚠️ Domain Error: A must be between -1.0 and 1.0 for ${op}. <a class="fix-link" id="btnFixAsin">Set to 0.5</a>`;
         warnBox.style.display = 'block';
-        
+
         document.getElementById('btnFixAsin').addEventListener('click', (e) => {
             e.preventDefault();
             inputA.value = "0.5";
@@ -61,7 +61,7 @@ function checkValidation() {
     if (op === 'log' && numA <= 0) {
         warnBox.innerHTML = `⚠️ Domain Error: A must be greater than 0 for log. <a class="fix-link" id="btnFixLog">Set to 2.71828...</a>`;
         warnBox.style.display = 'block';
-        
+
         document.getElementById('btnFixLog').addEventListener('click', (e) => {
             e.preventDefault();
             inputA.value = "2.7182818284590452353602874713527";
@@ -73,7 +73,7 @@ function checkValidation() {
     if (op === 'sqrt' && numA < 0) {
         warnBox.innerHTML = `⚠️ Domain Error: A must be non-negative for sqrt. <a class="fix-link" id="btnFixSqrt">Set to 2.0</a>`;
         warnBox.style.display = 'block';
-        
+
         document.getElementById('btnFixSqrt').addEventListener('click', (e) => {
             e.preventDefault();
             inputA.value = "2.0";
@@ -91,6 +91,47 @@ document.getElementById('btnLoadPi').addEventListener('click', () => {
 document.getElementById('btnLoadE').addEventListener('click', () => {
     inputA.value = "2.7182818284590452353602874713527";
     checkValidation();
+});
+
+function generateRandomHighPrecisionString(min, max) {
+    const val = min + Math.random() * (max - min);
+    const isNegative = val < 0;
+    const absVal = Math.abs(val);
+    const intPart = Math.floor(absVal);
+    let fracPart = "";
+    for (let i = 0; i < 30; i++) {
+        fracPart += Math.floor(Math.random() * 10);
+    }
+    return (isNegative ? "-" : "") + intPart + "." + fracPart;
+}
+
+document.getElementById('btnRandom').addEventListener('click', () => {
+    const op = opSelect.value;
+    let minA = -100, maxA = 100;
+    let minB = -100, maxB = 100;
+
+    if (op === 'asin' || op === 'acos') {
+        minA = -1;
+        maxA = 1;
+    } else if (op === 'log') {
+        minA = 0.01;
+        maxA = 100;
+    } else if (op === 'sqrt') {
+        minA = 0;
+        maxA = 100;
+    }
+
+    inputA.value = generateRandomHighPrecisionString(minA, maxA);
+
+    if (inputB.style.display !== 'none') {
+        if (op === 'div') {
+            minB = 0.1;
+        }
+        inputB.value = generateRandomHighPrecisionString(minB, maxB);
+    }
+
+    checkValidation();
+    doCalculation(false);
 });
 
 inputA.addEventListener('input', checkValidation);
@@ -156,7 +197,7 @@ function doCalculation(isBenchmark) {
     const op = opSelect.value;
     const numA = Number(valA);
     const numB = Number(valB);
-    
+
     let iterations = isBenchmark ? 100000 : 1;
     if (isBenchmark) {
         document.getElementById('wasmSimdTime').innerText = "Running...";
@@ -165,7 +206,7 @@ function doCalculation(isBenchmark) {
     }
 
     setTimeout(() => {
-        // JS 64-bit
+        // js 64-bit
         const t0_js = performance.now();
         let jsRes = 0;
         for (let i = 0; i < iterations; i++) {
@@ -188,7 +229,7 @@ function doCalculation(isBenchmark) {
         const jsTimeStr = (t1_js - t0_js).toFixed(1);
         const jsStr = jsRes.toPrecision(21);
 
-        // SIMD
+        // simd
         let simdResStr = "";
         const t0_simd = performance.now();
         for (let i = 0; i < iterations; i++) {
@@ -198,22 +239,22 @@ function doCalculation(isBenchmark) {
         const simdTimeStr = (t1_simd - t0_simd).toFixed(1);
 
         if (isBenchmark) {
-            // Scalar Benchmark (only run if benchmark requested)
+            // scalar Benchmark (only run if benchmark requested)
             const t0_scalar = performance.now();
             for (let i = 0; i < iterations; i++) {
                 calcWasm(scalarModule, valA, valB, op);
             }
             const t1_scalar = performance.now();
             const scalarTimeStr = (t1_scalar - t0_scalar).toFixed(1);
-            
+
             document.getElementById('wasmSimdTime').innerText = `${simdTimeStr} ms`;
             document.getElementById('wasmScalarTime').innerText = `${scalarTimeStr} ms`;
             document.getElementById('jsTime').innerText = `${jsTimeStr} ms`;
         } else {
-            // Single Calculation Result Update
+            // single Calculation Result Update
             document.getElementById('resultSimdBox').innerText = simdResStr;
-            
-            // Diff Visualizer
+
+            // diff Visualizer
             let htmlJsStr = "";
             let isDiff = false;
             for (let i = 0; i < jsStr.length; i++) {
@@ -225,8 +266,8 @@ function doCalculation(isBenchmark) {
             }
             if (isDiff) htmlJsStr += '</span>';
             document.getElementById('jsResultBox').innerHTML = htmlJsStr;
-            
-            // Reset benchmark boxes
+
+            // reset benchmark boxes
             document.getElementById('wasmSimdTime').innerText = "-";
             document.getElementById('wasmScalarTime').innerText = "-";
             document.getElementById('jsTime').innerText = "-";
