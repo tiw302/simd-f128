@@ -569,7 +569,7 @@ final |z| components:
 
 ## Performance & Benchmarks
 
-Because `simd-f128` operations are purely CPU-register bound, they are extremely fast. 
+Because `simd-f128` operations are purely CPU-register bound, they are extremely fast.
 
 ### 1. Comparative Speed vs `__float128`
 
@@ -747,7 +747,9 @@ Every commit is tested across all backends via GitHub Actions. The table below m
 `simd-f128` is designed to provide 128-bit precision not just to C/C++, but to higher-level ecosystems.
 
 ### Python
+
 Using `pybind11`, the library is exposed as a native CPython extension, bringing 31-digit precision directly into Python scripts.
+
 ```python
 import simd_f128 as f128
 
@@ -757,9 +759,11 @@ print((a * b).to_string())
 ```
 
 ### JavaScript / WebAssembly
+
 Compiled via Emscripten, the JS bindings automatically select between `WASM-SIMD128` and `WASM-Scalar` depending on the user's browser support, providing 31-digit precision directly in the browser or Node.js.
 
 ### Rust
+
 A fully memory-safe Rust wrapper (via `cc` and `bindgen`), exposing the C functions safely through idiomatic Rust structs and operator overloads.
 
 ---
@@ -798,19 +802,19 @@ A fully memory-safe Rust wrapper (via `cc` and `bindgen`), exposing the C functi
 |---|---|
 | [mandelbrot-c](https://github.com/tiw302/mandelbrot-c) | Deep-zoom Mandelbrot renderer in C, using simd-f128 for 128-bit precision coordinates |
 
-
+---
 
 ## Development Methodology & AI Assistance
 
-Building a memory-safe, mathematically robust SIMD library requires managing incredibly complex edge cases—from vectorized bit-manipulation to IEEE 754 catastrophic cancellation bounds.
+Building a high-performance, header-only Double-Double (128-bit) floating-point library from scratch involves handling incredibly complex edge cases—from vectorized SIMD alignment to IEEE 754 catastrophic cancellation and precision loss bounds.
 
-To achieve this level of stability and performance, this project was architected and rigorously verified in collaboration with **Advanced Agentic AI**. AI was specifically utilized to:
+To achieve this level of stability and performance within a short timeframe, this project was architected and rigorously verified in collaboration with **Advanced Agentic AI**. AI was specifically utilized to:
 
-- Stress-test the Double-Double arithmetic engine against extreme floating-point edge cases (subnormals, infinities, NaN propagation).
-- Assist in planning the memory layout and cross-platform SIMD abstraction (AVX2, NEON, WASM).
-- Automate the generation of robust cross-platform CI/CD pipelines (Linux, macOS, Windows, Mobile, WebAssembly).
+- Stress-test the arithmetic core and transcendental functions (such as `sin`, `exp`, `log`, `pow`) against extreme floating-point edge cases (including subnormals, underflow/overflow thresholds, and NaN propagation).
+- Assist in optimizing cross-platform SIMD intrinsics (AVX2, NEON, WASM-SIMD128) and ensuring strict adherence to zero-heap-allocation constraints.
+- Automate the generation of robust cross-platform CI/CD pipelines and verification suites (covering C, C++, Rust, Python, and WebAssembly).
 
-However, **human agency remains at the core of this project**. Every single line of code generated or suggested was manually inspected, audited, and strictly verified. The core architecture, mathematical algorithms, and memory design were meticulously human-planned. This hybrid approach—combining human architectural vision with AI-driven debugging and verification—allowed us to push the boundaries of performance and reliability in a modern C library without compromising accuracy or code ownership.
+However, **human agency remains at the core of this project**. Every single line of code generated or suggested was manually inspected, audited, and strictly verified. The core architecture, mathematical algorithms, and memory constraints were meticulously human-planned. This hybrid approach—combining human architectural vision with AI-driven debugging and verification—allowed us to push the boundaries of performance and reliability in a modern C library without compromising mathematical rigor or code ownership.
 
 ---
 
