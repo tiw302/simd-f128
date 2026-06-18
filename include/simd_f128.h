@@ -78,7 +78,7 @@
 #endif
 
 // msvc doesn't support gcc builtins like __builtin_expect, so we define a fallback macro
-#if defined(_MSC_VER) && !defined(__clang__)
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__builtin_expect)
 #define __builtin_expect(x, y) (x)
 #endif
 
@@ -164,7 +164,12 @@ SIMD_F128_INLINE simd_f128 simd_f128_div(simd_f128 a, simd_f128 b);
 SIMD_F128_INLINE simd_f128 simd_f128_sqrt(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_rsqrt(simd_f128 x);
 
+#ifdef __cplusplus
+}
+#endif
+
 // extraction
+// moved here to avoid odr issues in the c++ api section
 SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
 #if defined(SIMD_F128_USE_AVX2) || defined(SIMD_F128_USE_SSE2)
     *hi = _mm_cvtsd_f64(x);
@@ -181,9 +186,6 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
 #endif
 }
 
-#ifdef __cplusplus
-}
-#endif
 
 // ██ ███    ███ ██████  ██
 // ██ ████  ████ ██   ██ ██
@@ -332,9 +334,10 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         simd_f128_extract(b, &bhi, &blo);
 
         // check for division by zero to follow ieee-754 sign rules
-        if (bhi == 0.0) {
+        // check both hi and lo to handle subnormals correctly
+        if (bhi == 0.0 && blo == 0.0) {
             double inf_val = ahi / bhi;
-            if (ahi == 0.0) inf_val = NAN;
+            if (ahi == 0.0 && alo == 0.0) inf_val = NAN;
             return _mm_set_pd(0.0, inf_val);
         }
 
@@ -489,9 +492,10 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         simd_f128_extract(b, &bhi, &blo);
 
         // check for division by zero
-        if (bhi == 0.0) {
+        // check both hi and lo to handle subnormals correctly
+        if (bhi == 0.0 && blo == 0.0) {
             double inf_val = ahi / bhi;
-            if (ahi == 0.0) inf_val = NAN;
+            if (ahi == 0.0 && alo == 0.0) inf_val = NAN;
             return _mm_set_pd(0.0, inf_val);
         }
 
@@ -631,9 +635,10 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         simd_f128_extract(b, &bhi, &blo);
 
         // check for division by zero
-        if (bhi == 0.0) {
+        // check both hi and lo to handle subnormals correctly
+        if (bhi == 0.0 && blo == 0.0) {
             double inf_val = ahi / bhi;
-            if (ahi == 0.0) inf_val = NAN;
+            if (ahi == 0.0 && alo == 0.0) inf_val = NAN;
             return wasm_f64x2_make(inf_val, 0.0);
         }
 
@@ -789,9 +794,10 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         double blo = vgetq_lane_f64(b, 1);
 
         // division by zero check
-        if (bhi == 0.0) {
+        // check both hi and lo to handle subnormals correctly
+        if (bhi == 0.0 && blo == 0.0) {
             double inf_val = ahi / bhi;
-            if (ahi == 0.0) inf_val = NAN;
+            if (ahi == 0.0 && alo == 0.0) inf_val = NAN;
             float64x2_t r_res = vdupq_n_f64(0.0);
             return vsetq_lane_f64(inf_val, r_res, 0);
         }
@@ -932,9 +938,10 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
 
     SIMD_F128_INLINE simd_f128 simd_f128_div(simd_f128 a, simd_f128 b) {
         // check division by zero
-        if (b.hi == 0.0) {
+        // check both hi and lo to handle subnormals correctly
+        if (b.hi == 0.0 && b.lo == 0.0) {
             double inf_val = a.hi / b.hi;
-            if (a.hi == 0.0) inf_val = NAN;
+            if (a.hi == 0.0 && a.lo == 0.0) inf_val = NAN;
             simd_f128 res = {inf_val, 0.0};
             return res;
         }
@@ -1007,5 +1014,5 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
         return simd_f128_div(one, simd_f128_sqrt(x));
     }
 
-#endif // SIMD_F128_IMPLEMENTATION
-#endif // SIMD_F128_H
+#endif // simd_f128_implementation
+#endif // simd_f128_h
