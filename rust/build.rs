@@ -28,7 +28,6 @@ fn main() {
     let parent_dir = manifest_dir.parent().unwrap().to_str().unwrap().replace("\\", "/");
     
     let includes = format!(r#"
-#define SIMD_F128_IMPLEMENTATION
 #include "{0}/include/simd_f128.h"
 #include "{0}/include/simd_f128_io.h"
 #include "{0}/include/simd_f128_math.h"
@@ -97,7 +96,9 @@ void rs_simd_f128_const_ln2(double* out) { simd_to_arr(SIMD_F128_LN2, out); }
     // the c compiler. this ensures the generated c-core perfectly matches 
     // the rust binary's capabilities, unlocking hardware-level simd optimizations.
     let mut build = cc::Build::new();
-    build.file(wrapper_path).flag_if_supported("-O3");
+    build.file(wrapper_path)
+         .define("SIMD_F128_IMPLEMENTATION", None)
+         .flag_if_supported("-O3");
 
     let target_features = std::env::var("CARGO_CFG_TARGET_FEATURE").unwrap_or_default();
     if target_features.contains("avx2") {
