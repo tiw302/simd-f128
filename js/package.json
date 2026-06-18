@@ -1,6 +1,6 @@
 {
   "name": "@tiw302/simd-f128",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "description": "high-performance cross-platform 128-bit arithmetic for javascript using wasm",
   "main": "simd_f128.js",
   "types": "simd_f128.d.ts",
