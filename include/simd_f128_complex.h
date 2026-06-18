@@ -7,6 +7,7 @@
 
 #include "simd_f128.h"
 #include "simd_f128_math.h"
+#include "simd_f128_utils.h"
 
 
 //  ██████  ██████  ███    ███ ██████  ██      ███████ ██   ██ 
@@ -56,12 +57,20 @@ SIMD_F128_INLINE simd_f128_complex simd_f128_complex_mul(simd_f128_complex a, si
     return res;
 }
 
-// divide two complex numbers: (a * conj(b)) / |b|^2
+// divide two complex numbers using smith's algorithm to avoid overflow
 SIMD_F128_INLINE simd_f128_complex simd_f128_complex_div(simd_f128_complex a, simd_f128_complex b) {
-    simd_f128 d = simd_f128_add(simd_f128_mul(b.real, b.real), simd_f128_mul(b.imag, b.imag));
     simd_f128_complex res;
-    res.real = simd_f128_div(simd_f128_add(simd_f128_mul(a.real, b.real), simd_f128_mul(a.imag, b.imag)), d);
-    res.imag = simd_f128_div(simd_f128_sub(simd_f128_mul(a.imag, b.real), simd_f128_mul(a.real, b.imag)), d);
+    if (simd_f128_gt(simd_f128_abs(b.real), simd_f128_abs(b.imag))) {
+        simd_f128 r = simd_f128_div(b.imag, b.real);
+        simd_f128 den = simd_f128_add(b.real, simd_f128_mul(r, b.imag));
+        res.real = simd_f128_div(simd_f128_add(a.real, simd_f128_mul(a.imag, r)), den);
+        res.imag = simd_f128_div(simd_f128_sub(a.imag, simd_f128_mul(a.real, r)), den);
+    } else {
+        simd_f128 r = simd_f128_div(b.real, b.imag);
+        simd_f128 den = simd_f128_add(b.imag, simd_f128_mul(r, b.real));
+        res.real = simd_f128_div(simd_f128_add(simd_f128_mul(a.real, r), a.imag), den);
+        res.imag = simd_f128_div(simd_f128_sub(simd_f128_mul(a.imag, r), a.real), den);
+    }
     return res;
 }
 
@@ -93,4 +102,4 @@ SIMD_F128_INLINE simd_f128_complex simd_f128_complex_conj(simd_f128_complex a) {
 }
 #endif
 
-#endif // SIMD_F128_COMPLEX_H
+#endif // simd_f128_complex_h
