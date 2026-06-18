@@ -8,7 +8,7 @@
 # =========================================================================
 
 cmake_minimum_required(VERSION 3.10)
-project(simd_f128 VERSION 1.3.5 LANGUAGES C CXX)
+project(simd_f128 VERSION 1.4.0 LANGUAGES C CXX)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
