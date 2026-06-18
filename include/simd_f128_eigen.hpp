@@ -73,4 +73,4 @@ namespace numext {
 
 } // namespace Eigen
 
-#endif // SIMD_F128_EIGEN_HPP
+#endif // simd_f128_eigen_hpp
