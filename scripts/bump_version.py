@@ -113,6 +113,16 @@ def main():
         except Exception as e:
             print(f"{c.warn}[-] failed to run cargo check: {e}{c.rs}")
 
+    # synchronize npm lockfile if package.json was updated
+    js_dir = os.path.join(root_dir, "js")
+    if os.path.exists(os.path.join(js_dir, "package.json")):
+        print(f"\n{c.info}[⚙] synchronizing js/package-lock.json...{c.rs}")
+        try:
+            subprocess.run(["npm", "install"], cwd=js_dir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print(f"{c.ok}[✓] synchronized package-lock.json{c.rs}")
+        except Exception as e:
+            print(f"{c.warn}[-] failed to run npm install: {e}{c.rs}")
+
     print(f"\n{c.ok}[✓] all tasks completed.{c.rs}")
     if not all_success:
         print(f"{c.warn}[!] some files were not updated. check warnings above.{c.rs}")
