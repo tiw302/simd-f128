@@ -65,4 +65,4 @@ SIMD_F128_INLINE void simd_f128_array_div(const simd_f128* SIMD_F128_RESTRICT a,
 }
 #endif
 
-#endif // SIMD_F128_ARRAY_H
+#endif // simd_f128_array_h
