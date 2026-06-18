@@ -470,12 +470,22 @@ int main() {
     // log of negative infinity
     CHECK("log(-inf) is NaN", simd_f128_isnan(simd_f128_log(neg_inf_val)));
 
+    // log of subnormal
+    simd_f128 subnormal_f128 = simd_f128_from_hi_lo(1e-310, 0.0);
+    double log_sub_hi, log_sub_lo;
+    simd_f128_extract(simd_f128_log(subnormal_f128), &log_sub_hi, &log_sub_lo);
+    CHECK("log(1e-310) < -700.0", log_sub_hi < -700.0);
+
     // pow fixes
     simd_f128 zero_f128 = simd_f128_from_double(0.0);
     simd_f128 pow_0_0 = simd_f128_pow(zero_f128, zero_f128);
     double pow_0_0_hi, pow_0_0_lo;
     simd_f128_extract(pow_0_0, &pow_0_0_hi, &pow_0_0_lo);
     CHECK("pow(0, 0) == 1.0", pow_0_0_hi == 1.0);
+
+    // 0.0 / 0.0
+    simd_f128 zero_zero_div = simd_f128_div(zero_f128, zero_f128);
+    CHECK("0.0 / 0.0 is NaN", simd_f128_isnan(zero_zero_div));
 
     simd_f128 neg_two = simd_f128_from_double(-2.0);
     simd_f128 three_f128 = simd_f128_from_double(3.0);
