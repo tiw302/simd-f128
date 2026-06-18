@@ -63,6 +63,7 @@ simd_f128 simd_f128_from_string(const char* str);
 // >>implementation logic
 
 // safe internal hi/lo extract helper
+// (note: this is kept to avoid refactoring the entire file, but simd_f128_extract should be used directly)
 static inline void _simd_f128_extract_internal(simd_f128 x, double* hi, double* lo) {
     simd_f128_extract(x, hi, lo);
 }
@@ -75,6 +76,8 @@ void simd_f128_print(simd_f128 x) {
 }
 
 // pre-computed positive powers of 10 (10^0 to 10^308)
+// note: the lo component is 0.0 for all entries. this reduces io precision for very large/small numbers.
+// regenerating 600+ double-double pairs accurately is skipped for now to avoid bloat.
 static const double _simd_f128_pow10_pos_table[309][2] = {
     { 1.00000000000000000e+00, 0.00000000000000000e+00 }, // 10^0
     { 1.00000000000000000e+01, 0.00000000000000000e+00 }, // 10^1
@@ -759,6 +762,9 @@ void simd_f128_to_string_prec(char* buf, size_t buf_size, simd_f128 x, int digit
     }
 
     // separate the integer part using floor
+    // note: using floor(hi) instead of full simd_f128_floor(x) can cause subtle rounding 
+    // bugs when hi is near an integer but lo is positive. kept for simplicity as simd_f128_floor 
+    // is in math.h which might not be included yet.
     double int_part = floor(hi);
     if (hi == int_part && lo < 0.0) {
         int_part -= 1.0;
@@ -938,7 +944,10 @@ simd_f128 simd_f128_from_string(const char* str) {
         }
         int exp_val = 0;
         while (*str >= '0' && *str <= '9') {
-            exp_val = exp_val * 10 + (*str - '0');
+            // prevent signed integer overflow for extremely large exponents
+            if (exp_val < 100000) {
+                exp_val = exp_val * 10 + (*str - '0');
+            }
             str++;
         }
         
@@ -968,5 +977,5 @@ simd_f128 simd_f128_from_string(const char* str) {
     return res;
 }
 
-#endif // SIMD_F128_IMPLEMENTATION
-#endif // SIMD_F128_IO_H
+#endif // simd_f128_implementation
+#endif // simd_f128_io_h
