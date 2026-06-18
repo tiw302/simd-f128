@@ -185,4 +185,4 @@ inline f128::complex128 conj(const f128::complex128& a) { return f128::conj(a); 
 
 } // namespace std
 
-#endif // SIMD_F128_COMPLEX_HPP
+#endif // simd_f128_complex_hpp
