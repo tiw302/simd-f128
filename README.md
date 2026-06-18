@@ -326,11 +326,12 @@ Advanced mathematical functions built on top of the core Double-Double primitive
 **Algorithms used:**
 
 - **`exp`** — range reduction to $N=16$ intervals followed by a high-degree Chebyshev minimax polynomial, then exact scaling via `ldexp` and a 16-entry lookup table. Handles overflow (`> 709.78`) and underflow explicitly.
-- **`log`** — seeds from the standard `double` `log()`, then refines with 1 iteration of Halley's method, which is mathematically sufficient to recover all 31-32 digits due to cubic convergence.
-- **`pow`** — computed as `exp(exp * log(base))`. Supports base-zero inputs and propagates `NaN` according to IEEE-754.
+- **`log`** — seeds from the standard `double` `log()`, then refines with 1-2 iterations of Halley's method (2 iterations for subnormal inputs), which is mathematically sufficient to recover all 31-32 digits due to cubic convergence.
+- **`pow`** — computed as `exp(exp * log(base))`. Fully protected against integer overflow during exponent parity checks. Supports base-zero inputs and propagates `NaN` according to IEEE-754.
 - **`sin`** — range-reduces to quadrant ($[-\pi/4, \pi/4]$) then evaluates a highly-tuned Chebyshev minimax polynomial.
 - **`cos`** — range-reduces to quadrant ($[-\pi/4, \pi/4]$) then evaluates a highly-tuned Chebyshev minimax polynomial.
 - **`sincos`** — computes both sine and cosine simultaneously, saving redundant Range Reduction and polynomial evaluation steps.
+- **`sinh` / `tanh`** — evaluate via Taylor series near zero to prevent catastrophic cancellation, falling back to exponential formulations for larger inputs.
 
 ```c
 #define SIMD_F128_IMPLEMENTATION
