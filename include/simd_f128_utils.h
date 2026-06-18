@@ -69,10 +69,13 @@ SIMD_F128_INLINE int simd_f128_cmp(simd_f128 a, simd_f128 b) {
     simd_f128_extract(a, &ahi, &alo);
     simd_f128_extract(b, &bhi, &blo);
 
+    // check for nan explicitly, since standard double comparison with nan is false.
+    // we return a distinct value (-2) to signal unordered if someone relies on cmp directly.
+    if (isnan(ahi) || isnan(bhi) || isnan(alo) || isnan(blo)) return -2;
+
     // double-double comparison logic:
     // compare the hi components first. if they are different, we can immediately return.
     // if the hi components are equal, we compare the lo components (residual error).
-    // if either operand is nan, comparison is invalid so we fall through to return 0.
     if (ahi < bhi) return -1;
     if (ahi > bhi) return 1;
     if (alo < blo) return -1;
@@ -159,4 +162,4 @@ SIMD_F128_INLINE simd_f128 simd_f128_max(simd_f128 a, simd_f128 b) {
     return (simd_f128_cmp(a, b) >= 0) ? a : b;
 }
 
-#endif // SIMD_F128_UTILS_H
+#endif // simd_f128_utils_h
