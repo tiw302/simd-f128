@@ -6,6 +6,7 @@
 #define SIMD_F128_VECTOR_H
 
 #include "simd_f128.h"
+#include "simd_f128_utils.h"
 
 // ██████  ███████ ██████  ███████ ███████  ██████ ████████ 
 // ██   ██ ██      ██   ██ ██      ██      ██         ██    
@@ -24,6 +25,10 @@ extern "C" {
 /*
  * simd_f128x4 processes four double-doubles simultaneously.
  * this is the pinnacle of parallel performance on x86_64.
+ *
+ * warning: pure vectorized operations here may propagate nan and inf
+ * differently than the scalar or standard inline functions, since
+ * branches are omitted in favor of blend masks for performance.
  */
 typedef struct {
     __m256d hi;
@@ -258,10 +263,10 @@ SIMD_F128_INLINE simd_f128x4 simd_f128x4_sqrt(simd_f128x4 a) {
     return res;
 }
 
-#endif // SIMD_F128_USE_AVX2
+#endif // simd_f128_use_avx2
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // SIMD_F128_VECTOR_H
+#endif // simd_f128_vector_h
