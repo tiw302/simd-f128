@@ -152,11 +152,12 @@ SIMD_F128_INLINE simd_f128 simd_f128_log(simd_f128 x) {
     if (isinf(hi)) return simd_f128_from_double(INFINITY);
 
     // solve ln(x) - y = 0 using halley's method (third-order convergence)
-    // formula: y_{n+1} = y_n + 2 * (x - e^{y_n}) / (x + e^{y_n})
     // we use standard double log(hi) as the initial guess
     simd_f128 y = simd_f128_from_double(log(hi));
     
-    // one halley iteration is sufficient for 106-bit precision
+    // one halley iteration is sufficient for 106-bit precision in normal cases.
+    // however, for subnormal inputs, the initial log(hi) guess might be extremely poor.
+    // we do a second iteration if the first correction is too large.
     {
         simd_f128 ey = simd_f128_exp(y);
         simd_f128 num = simd_f128_sub(x, ey);
@@ -164,6 +165,16 @@ SIMD_F128_INLINE simd_f128 simd_f128_log(simd_f128 x) {
         // delta = 2 * (x - e^y) / (x + e^y)
         simd_f128 delta = simd_f128_mul(simd_f128_from_double(2.0), simd_f128_div(num, den));
         y = simd_f128_add(y, delta);
+
+        double dhi, dlo;
+        simd_f128_extract(delta, &dhi, &dlo);
+        if (fabs(dhi) > 1e-3) {
+            ey = simd_f128_exp(y);
+            num = simd_f128_sub(x, ey);
+            den = simd_f128_add(x, ey);
+            delta = simd_f128_mul(simd_f128_from_double(2.0), simd_f128_div(num, den));
+            y = simd_f128_add(y, delta);
+        }
     }
     return y;
 }
@@ -180,7 +191,10 @@ SIMD_F128_INLINE simd_f128 simd_f128_pow(simd_f128 base, simd_f128 exp) {
     // 0^exp depends on the sign of the exponent and base
     if (bhi == 0.0 && blo == 0.0) {
         double rounded_e = round(ehi);
-        int is_odd = (ehi == rounded_e && elo == 0.0 && ((long long)rounded_e) % 2 != 0);
+        int is_odd = 0;
+        if (ehi == rounded_e && elo == 0.0 && fabs(rounded_e) <= 9.0e18) {
+            is_odd = ((long long)rounded_e) % 2 != 0;
+        }
         int is_neg_base = signbit(bhi);
         if (ehi < 0.0) {
             if (is_neg_base && is_odd) {
@@ -197,7 +211,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_pow(simd_f128 base, simd_f128 exp) {
     // handle negative base cases with integer exponents
     if (bhi < 0.0 || (bhi == 0.0 && blo < 0.0)) {
         double rounded_e = round(ehi);
-        if (ehi == rounded_e && elo == 0.0) {
+        if (ehi == rounded_e && elo == 0.0 && fabs(rounded_e) <= 9.0e18) {
             long long e_int = (long long)rounded_e;
             simd_f128 abs_base = simd_f128_abs(base);
             simd_f128 res = simd_f128_exp(simd_f128_mul(exp, simd_f128_log(abs_base)));
@@ -228,8 +242,9 @@ SIMD_F128_INLINE void simd_f128_sincos(simd_f128 x, simd_f128* s, simd_f128* c) 
     // prevent overflow for huge inputs where long long cast overflows.
     // at this scale we fallback to standard double precision range reduction using fmod.
     if (__builtin_expect(fabs(hi) > 9e18, 0)) {
-        double reduced = fmod(hi, 2.0 * 3.14159265358979323846);
-        if (reduced < 0.0) reduced += 2.0 * 3.14159265358979323846;
+        double two_pi = 2.0 * _simd_f128_pi_raw[0];
+        double reduced = fmod(hi, two_pi);
+        if (reduced < 0.0) reduced += two_pi;
         x = simd_f128_from_double(reduced);
         simd_f128_extract(x, &hi, &lo);
     }
@@ -483,6 +498,18 @@ SIMD_F128_INLINE simd_f128 simd_f128_sinh(simd_f128 x) {
     simd_f128_extract(x, &hi, &lo);
     if (isnan(hi)) return x;
     if (isinf(hi)) return x; // sinh(±inf) = ±inf
+
+    // taylor series fallback for small x to avoid catastrophic cancellation
+    // sinh(x) ~ x + x^3/6 + x^5/120
+    if (fabs(hi) < 1e-4) {
+        simd_f128 x2 = simd_f128_mul(x, x);
+        simd_f128 x3 = simd_f128_mul(x2, x);
+        simd_f128 x5 = simd_f128_mul(x3, x2);
+        simd_f128 term2 = simd_f128_div(x3, simd_f128_from_double(6.0));
+        simd_f128 term3 = simd_f128_div(x5, simd_f128_from_double(120.0));
+        return simd_f128_add(simd_f128_add(x, term2), term3);
+    }
+
     simd_f128 ex = simd_f128_exp(x);
     simd_f128 emx = simd_f128_div(simd_f128_from_double(1.0), ex);
     return simd_f128_mul(simd_f128_sub(ex, emx), simd_f128_from_double(0.5));
@@ -505,9 +532,21 @@ SIMD_F128_INLINE simd_f128 simd_f128_tanh(simd_f128 x) {
     simd_f128_extract(x, &hi, &lo);
     if (isnan(hi)) return x;
     if (isinf(hi)) return simd_f128_from_double(hi > 0.0 ? 1.0 : -1.0); // tanh(±inf) = ±1.0
+
+    // taylor series fallback for small x to avoid catastrophic cancellation
+    // tanh(x) ~ x - x^3/3 + 2x^5/15
+    if (fabs(hi) < 1e-4) {
+        simd_f128 x2 = simd_f128_mul(x, x);
+        simd_f128 x3 = simd_f128_mul(x2, x);
+        simd_f128 x5 = simd_f128_mul(x3, x2);
+        simd_f128 term2 = simd_f128_div(x3, simd_f128_from_double(-3.0));
+        simd_f128 term3 = simd_f128_mul(x5, simd_f128_from_double(2.0 / 15.0));
+        return simd_f128_add(simd_f128_add(x, term2), term3);
+    }
+
     simd_f128 ex = simd_f128_exp(x);
     simd_f128 emx = simd_f128_div(simd_f128_from_double(1.0), ex);
     return simd_f128_div(simd_f128_sub(ex, emx), simd_f128_add(ex, emx));
 }
 
-#endif // SIMD_F128_MATH_H
+#endif // simd_f128_math_h
