@@ -1,67 +1,101 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/tiw302/simd-f128/master/assets/images/logo.png" width="400" alt="simd-f128 Logo">
-  <br>
-  <b>High-performance, zero-allocation 128-bit floating-point arithmetic powered by hardware SIMD.</b>
-</p>
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/tiw302/simd-f128/master/assets/images/logo.png" width="600" alt="simd-f128 Logo">
+
+**High-performance, zero-allocation 128-bit floating-point arithmetic powered by hardware SIMD.**
+
+[![Linux](https://img.shields.io/github/actions/workflow/status/tiw302/simd-f128/linux.yml?label=Linux%20Build&logo=github&logoColor=white)](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml) [![macOS](https://img.shields.io/github/actions/workflow/status/tiw302/simd-f128/macos.yml?label=macOS%20Build&logo=github&logoColor=white)](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml) [![Windows](https://img.shields.io/github/actions/workflow/status/tiw302/simd-f128/windows.yml?label=Windows%20Build&logo=github&logoColor=white)](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml) [![Rust](https://img.shields.io/github/actions/workflow/status/tiw302/simd-f128/rust.yml?label=Rust%20Bindings&logo=github&logoColor=white)](https://github.com/tiw302/simd-f128/actions/workflows/rust.yml) [![WASM](https://img.shields.io/github/actions/workflow/status/tiw302/simd-f128/wasm.yml?label=WebAssembly%20Build&logo=github&logoColor=white)](https://github.com/tiw302/simd-f128/actions/workflows/wasm.yml) [![Mobile](https://img.shields.io/github/actions/workflow/status/tiw302/simd-f128/mobile.yml?label=Mobile%20Build&logo=github&logoColor=white)](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml)
+
+[![PyPI](https://img.shields.io/pypi/v/simd-f128.svg?logo=pypi&logoColor=white)](https://pypi.org/project/simd-f128/) [![NPM](https://img.shields.io/npm/v/@tiw302/simd-f128.svg?logo=npm&logoColor=white)](https://www.npmjs.com/package/@tiw302/simd-f128) [![Crates.io](https://img.shields.io/crates/v/simd-f128.svg?logo=rust&logoColor=white)](https://crates.io/crates/simd-f128)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?logo=opensourceinitiative&logoColor=white)](https://opensource.org/licenses/MIT)
+[![Language](https://img.shields.io/badge/Language-C11-00599C.svg?logo=c&logoColor=white)](https://en.wikipedia.org/wiki/C11_(C_standard_revision))
+[![Language](https://img.shields.io/badge/Language-C%2B%2B11-f34b7d.svg?logo=cplusplus&logoColor=white)](https://en.wikipedia.org/wiki/C%2B%2B11)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Web%20%7C%20Mobile-lightgrey.svg?logo=linux&logoColor=white)](#verified-compatibility--1717-ci-jobs-passing)
+[![SIMD](https://img.shields.io/badge/SIMD-AVX2%20%7C%20SSE2%20%7C%20NEON%20%7C%20WASM--SIMD-FF6B35.svg?logo=intel&logoColor=white)](#verified-compatibility--1717-ci-jobs-passing)
+![GitHub repo size](https://img.shields.io/github/repo-size/tiw302/simd-f128?logo=github&logoColor=white)
+[![Last Commit](https://img.shields.io/github/last-commit/tiw302/simd-f128.svg?logo=github&logoColor=white)](https://github.com/tiw302/simd-f128/commits/master)
+
+</div>
 
 # simd-f128
-
-[![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
-[![macOS](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
-[![Windows](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
-[![WASM](https://github.com/tiw302/simd-f128/actions/workflows/wasm.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
-[![Mobile](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions)
-[![PyPI](https://img.shields.io/pypi/v/simd-f128.svg)](https://pypi.org/project/simd-f128/)
-[![NPM](https://img.shields.io/npm/v/@tiw302/simd-f128.svg)](https://www.npmjs.com/package/@tiw302/simd-f128)
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Language](https://img.shields.io/badge/Language-C11-00599C.svg)](https://en.wikipedia.org/wiki/C11_(C_standard_revision))
-[![Language](https://img.shields.io/badge/Language-C%2B%2B11-f34b7d.svg)](https://en.wikipedia.org/wiki/C%2B%2B11)
-[![Header-Only](https://img.shields.io/badge/Library-Header--Only-brightgreen.svg)](#installation)
-[![Zero-Allocation](https://img.shields.io/badge/Memory-Zero--Allocation-orange.svg)](#design-philosophy)
-[![No-Dependencies](https://img.shields.io/badge/Dependencies-None-blueviolet.svg)](#introduction)
-[![Last Commit](https://img.shields.io/github/last-commit/tiw302/simd-f128.svg)](https://github.com/tiw302/simd-f128/commits/master)
 
 **[Read the Official Documentation: docs/index.md](https://tiw302.github.io/simd-f128/)**<br>
 **[Try the Live WebAssembly Demo: https://tiw302.github.io/simd-f128/demo/](https://tiw302.github.io/simd-f128/demo/)**
 
-> **Verified Compatibility — 11/11 Platforms Passing**
+> **Verified Compatibility — 17/17 CI Jobs Passing**
 
-| Architecture | Platform | Verified Backend |
-| :--- | :--- | :--- |
-| **x86_64 (Modern)** | Linux / Windows | **AVX2** (Vectorized) |
-| **x86_64 (Legacy)** | Linux / Windows | **SSE2** (Vectorized) |
-| **ARM64 (Apple)** | macOS (M1/M2/M3) | **NEON** (Vectorized) |
-| **ARM64 (Android)** | Mobile | **NEON** (Vectorized) |
-| **ARMv7 (Android)** | Mobile | **Scalar** C11 |
-| **WebAssembly** | Chrome / Node.js | **WASM-SIMD128** |
-| **WebAssembly** | Universal Web | **WASM Scalar** |
-| **RISC-V64** | Linux (QEMU) | **Scalar** C11 |
-| **General Desktop** | Linux / Windows | **Scalar** C11 Fallback |
+| Architecture | Platform | CI Workflow | Backend |
+| :--- | :--- | :--- | :--- |
+| **x86_64** | Linux | `linux.yml` | **Scalar** |
+| **x86_64** | Linux | `linux.yml` | **SSE2** (Vectorized) |
+| **x86_64** | Linux | `linux.yml` | **AVX2** (Vectorized) |
+| **x86_64** | Windows (MSVC) | `windows.yml` | **Scalar** |
+| **x86_64** | Windows (MSVC) | `windows.yml` | **AVX2** (Vectorized) |
+| **x86_64** | macOS Intel (`macos-13`) | `macos.yml` | **Scalar** |
+| **x86_64** | macOS Intel (`macos-13`) | `macos.yml` | **AVX2** (Vectorized) |
+| **ARM64 (Apple)** | macOS (M-series) | `macos.yml` | **NEON** (Vectorized) |
+| **ARM64** | Linux/Android (QEMU) | `mobile.yml` | **NEON** (Vectorized) |
+| **ARMv7** | Linux/Android (QEMU) | `mobile.yml` | **Scalar** + VFPv4 |
+| **RISC-V64** | Linux (QEMU) | `linux.yml` | **Scalar** C11 |
+| **WebAssembly** | Node.js | `wasm.yml` | **WASM-SIMD128** |
+| **WebAssembly** | Node.js | `wasm.yml` | **WASM Scalar** |
+| **Python bindings** | Linux | `linux.yml` | Python 3.10 extension |
+| **Rust bindings** | Linux | `rust.yml` | FFI via `cc` |
+| **Rust bindings** | Windows | `rust.yml` | FFI via `cc` |
+| **Rust bindings** | macOS | `rust.yml` | FFI via `cc` |
 
 ---
 
 ## Table of Contents
 
-- [Introduction](#introduction)
+- [simd-f128](#simd-f128)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Who is this for?](#who-is-this-for)
   - [Why simd-f128?](#why-simd-f128)
+    - [Performance Benchmarks](#performance-benchmarks)
   - [Design Philosophy](#design-philosophy)
-- [Requirements & Toolchains](#requirements)
-- [Build and Installation](#build-and-installation)
-- [Library Components](#library-components)
-  - [simd_f128.h (Core)](#simd_f128h-core)
-  - [simd_f128_consts.h](#simd_f128_constsh)
-  - [simd_f128_io.h](#simd_f128_ioh)
-  - [simd_f128_math.h](#simd_f128_mathh)
-  - [simd_f128_utils.h](#simd_f128_utilsh)
-  - [simd_f128.hpp (C++)](#simd_f128hpp)
-- [API Reference](#api-reference)
-- [Performance & Benchmarks](#performance--benchmarks)
-- [Double-Double Arithmetic](#double-double-arithmetic)
-- [Examples](#examples)
-- [Platform Support & CI Status](#platform-support--ci-status)
-- [Language Bindings](#language-bindings)
-- [Project Structure](#project-structure)
+    - [Limitations \& Technical Notes](#limitations--technical-notes)
+  - [Requirements](#requirements)
+  - [Verified Toolchains](#verified-toolchains)
+  - [Build and Installation](#build-and-installation)
+    - [Python (PyPI)](#python-pypi)
+    - [JavaScript / Node.js (NPM)](#javascript--nodejs-npm)
+    - [C/C++ (Header Only)](#cc-header-only)
+    - [CMake](#cmake)
+  - [Library Components](#library-components)
+    - [Quick include pattern](#quick-include-pattern)
+  - [API Reference](#api-reference)
+    - [simd\_f128.h](#simd_f128h)
+    - [simd\_f128\_consts.h](#simd_f128_constsh)
+    - [simd\_f128\_io.h](#simd_f128_ioh)
+    - [simd\_f128\_math.h](#simd_f128_mathh)
+    - [simd\_f128\_utils.h](#simd_f128_utilsh)
+    - [simd\_f128.hpp (C++ only)](#simd_f128hpp-c-only)
+    - [Precision Demonstration \& Test Results](#precision-demonstration--test-results)
+  - [Performance \& Benchmarks](#performance--benchmarks)
+    - [1. Comparative Speed vs `__float128`](#1-comparative-speed-vs-__float128)
+    - [2. WebAssembly (In-Browser) Benchmarks](#2-webassembly-in-browser-benchmarks)
+    - [3. Raw Speed (Google Benchmark)](#3-raw-speed-google-benchmark)
+  - [Double-Double Arithmetic](#double-double-arithmetic)
+  - [Examples](#examples)
+    - [C (`examples/c/`)](#c-examplesc)
+    - [C++ (`examples/cpp/`)](#c-examplescpp)
+    - [Python (`examples/python/`)](#python-examplespython)
+    - [JavaScript (`examples/js/`)](#javascript-examplesjs)
+    - [Rust (`examples/rust/`)](#rust-examplesrust)
+  - [Platform Support \& CI Status](#platform-support--ci-status)
+  - [Language Bindings](#language-bindings)
+    - [Python](#python)
+    - [JavaScript / WebAssembly](#javascript--webassembly)
+    - [Rust](#rust)
+  - [Project Structure](#project-structure)
+  - [Used By](#used-by)
+  - [Development Methodology \& AI Assistance](#development-methodology--ai-assistance)
+  - [Author's Note](#authors-note)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ---
 
@@ -70,6 +104,24 @@
 **simd-f128** is a professional-grade, header-only C library for **128-bit (Double-Double)** floating-point arithmetic, featuring automatic hardware SIMD acceleration (AVX2, NEON, WASM-SIMD). It explicitly targets the precision gap between standard 64-bit IEEE 754 doubles and heavyweight arbitrary-precision libraries like GMP.
 
 By delivering **31-32 decimal digits of accuracy** with **zero heap allocation overhead**, `simd-f128` is purpose-built for demanding workloads—such as fractal rendering, physical simulations, and orbital mechanics. While the core engine is pure C11, it provides seamless native bindings for **C++, Python, WebAssembly, and Rust**, allowing developers across multiple ecosystems to easily overcome the limits of standard double precision.
+
+---
+
+## Who is this for?
+
+**simd-f128 is a good fit if you are:**
+
+- a **graphics / demo-scene developer** pushing Mandelbrot or Julia-set renders past the 64-bit precision wall (~10⁻¹⁴ zoom) and need stable coordinates without GMP overhead
+- a **numerical / scientific computing developer** whose simulations accumulate floating-point error over long time steps — orbital mechanics, n-body, RK4 integrators — and need more mantissa without rewriting in Python/Julia
+- a **game / engine developer** doing high-precision physics or world-space transforms where `double` cancellation becomes visible at large coordinates
+- a **web developer or data scientist** who needs more than 15 significant digits in the browser or in a Python script, and wants a compiled WASM/extension rather than a pure-JS BigDecimal library
+- a **C/C++ library author** who needs a drop-in 128-bit scalar type that is header-only, zero-allocation, and works on every CI target without compiler flags
+
+**simd-f128 is probably not what you need if:**
+
+- you need arbitrary precision (thousands of digits) → use GMP/MPFR
+- you need strict IEEE 754 `binary128` compliance for standards-conformant output → use GCC `__float128` or a software quad library
+- you are subtracting two nearly-equal values in a numerically sensitive inner loop without knowing about catastrophic cancellation → compensated summation (Kahan) or a different algorithm is the real fix
 
 ---
 
@@ -97,12 +149,12 @@ Below is a benchmark comparison of basic arithmetic operations running on **10,0
 
 | Data Type | Add (ms) | Mul (ms) | Div (ms) | Relative Multiplication Speed |
 |---|---|---|---|---|
-| `double` (64-bit) | 9.26 | 9.23 | 41.12 | 1.00x (Baseline) |
-| `long double` (x87) | 20.21 | 20.33 | 47.49 | 0.45x |
-| `__float128` (GCC) | 139.67 | 186.94 | 298.76 | 0.05x |
-| **simd-f128 (SIMD)** | **97.76** | **73.32** | **204.05** | **0.13x (2.55x faster than GCC)** |
+| `double` (64-bit) | 8.80 | 8.07 | 33.06 | 1.00x (Baseline) |
+| `long double` (x87) | 16.66 | 17.28 | 38.58 | 0.47x |
+| `__float128` (GCC) | 152.31 | 189.81 | 276.00 | 0.04x |
+| **simd-f128 (SIMD)** | **73.60** | **56.15** | **159.70** | **0.14x (3.38x faster than GCC)** |
 
-As shown, `simd-f128` is **1.4x to 2.5x faster** than GCC's software-emulated `__float128`, making it the highest-performance choice for 128-bit precision.
+As shown, `simd-f128` is **1.7x to 3.3x faster** than GCC's software-emulated `__float128`, making it the highest-performance choice for 128-bit precision.
 
 ---
 
@@ -140,8 +192,6 @@ While this approach offers massive performance benefits and is perfect for deepl
 
 ## Verified Toolchains
 
-The following toolchains are tested on every commit via CI. All others fall back to the scalar path and are expected to produce correct results.
-
 | Toolchain | Version | Platform | Backend |
 |---|---|---|---|
 | GCC | 11+ | Linux x86_64 | Scalar, SSE2, AVX2 |
@@ -149,8 +199,8 @@ The following toolchains are tested on every commit via CI. All others fall back
 | GCC (arm-linux-gnueabihf) | 11+ | Linux ARMv7 (QEMU) | Scalar + VFPv4 |
 | GCC (riscv64-linux-gnu) | 11+ | Linux RISC-V64 (QEMU) | Scalar |
 | Clang | 14+ | macOS Apple Silicon | NEON |
-| Clang | 14+ | macOS Intel | Scalar, SSE2, AVX2 |
-| MSVC | 2022 | Windows x64 | SSE2, AVX2 |
+| Clang | 14+ | macOS Intel (`macos-13`) | Scalar, SSE2, AVX2 |
+| MSVC | 2022 | Windows x64 | Scalar, AVX2 |
 | Emscripten | 3.0+ | WASM (Node.js/Web) | WASM-SIMD, Scalar |
 
 ---
@@ -241,220 +291,63 @@ ctest --test-dir build
 
 ## Library Components
 
-### simd_f128.h (Core)
+All headers are `static inline` / header-only. A quick summary of what each header provides:
 
-The central engine of the library. Implements the Double-Double type and all fundamental arithmetic operations. All functions are `static inline` - no separate compilation unit is needed beyond the `SIMD_F128_IMPLEMENTATION` guard.
+| Header | Purpose |
+|---|---|
+| `simd_f128.h` | Core type and arithmetic (add, sub, mul, div, sqrt) |
+| `simd_f128_consts.h` | Pre-computed constants (π, e, √2, ln2 at full 106-bit precision) |
+| `simd_f128_io.h` | String parsing and `printf`-style output at 32-digit precision |
+| `simd_f128_math.h` | Transcendental and trig functions (exp, log, sin, cos, atan, sinh, floor, …) |
+| `simd_f128_utils.h` | Comparison operators (lt, eq, ge, …) and abs/min/max |
+| `simd_f128_matrix.h` | mat2/mat3/mat4 and vec2/vec3/vec4 at 128-bit precision |
+| `simd_f128_random.h` | xoshiro256** PRNG producing uniform `simd_f128` in `[0, 1)` |
+| `simd_f128_vector.h` | 4-lane vectorized ops (`simd_f128x4`) using AVX2 |
+| `simd_f128.hpp` | C++ wrapper with operator overloading and `std::ostream` integration |
+| `simd_f128_complex.hpp` | `std::complex<f128::float128>` interoperability |
+| `simd_f128_eigen.hpp` | Eigen `NumTraits` so `float128` works in `Eigen::Matrix` |
 
-**Key properties:**
+**→ Full per-header documentation with code examples: [docs/components.md](docs/components.md)**
 
-- **~106-bit mantissa** - roughly 31-32 decimal digits of precision.
-- **Zero heap allocation** - all operations execute directly in CPU registers, suitable for tight inner loops.
-- **Automatic SIMD dispatch** - selects AVX2/SSE2 (`__m128d`) on Intel/AMD, NEON (`float64x2_t`) on ARM64/Apple Silicon, WASM-SIMD (`v128_t`) on the web, or falls back to scalar C99.
-- **Branch-free fast paths** - minimal branching (restricted to `Inf`/`NaN` guards) ensures consistent execution time and avoids pipeline stalls in the hot path.
-- **Strict IEEE 754 foundation** - built on standard `double`, fully compatible with existing hardware.
+### Quick include pattern
 
-```c
-#define SIMD_F128_IMPLEMENTATION
-#include <simd_f128.h>
-
-int main() {
-    simd_f128 a = simd_f128_from_double(1.234567890123456789);
-    simd_f128 b = simd_f128_from_double(2.0);
-
-    simd_f128 sum  = simd_f128_add(a, b);
-    simd_f128 diff = simd_f128_sub(a, b);
-    simd_f128 prod = simd_f128_mul(a, b);
-    simd_f128 quot = simd_f128_div(a, b);
-    simd_f128 root = simd_f128_sqrt(a);
-
-    return 0;
-}
-```
-
----
-
-### simd_f128_consts.h
-
-Pre-computed, high-precision mathematical constants stored as Double-Double pairs. Each constant captures the full ~106-bit mantissa, avoiding the precision loss inherent in standard 64-bit initialisers.
-
-```c
-#include <simd_f128.h>
-#include <simd_f128_consts.h>
-
-int main() {
-    simd_f128 pi     = SIMD_F128_PI;    // 3.14159265358979323846...
-    simd_f128 e      = SIMD_F128_E;     // 2.71828182845904523536...
-    simd_f128 sqrt_2 = SIMD_F128_SQRT2; // 1.41421356237309504880...
-    simd_f128 ln2    = SIMD_F128_LN2;   // 0.69314718055994530941...
-
-    return 0;
-}
-```
-
----
-
-### simd_f128_io.h
-
-Handles conversion between the internal Double-Double representation and human-readable decimal strings. Standard `printf` formatting cannot faithfully render 128-bit values; this header uses an iterative high-precision extraction algorithm to produce up to 32 correct decimal places.
+In **one** translation unit only:
 
 ```c
 #define SIMD_F128_IMPLEMENTATION
 #include <simd_f128.h>
-#include <simd_f128_io.h>
-
-int main() {
-    // parsing from string maintains the full 31-digit precision
-    simd_f128 val = simd_f128_from_string("3.1415926535897932384626433832795");
-
-    // direct console output
-    simd_f128_print(val);
-
-    // string conversion for logging or ui
-    char buffer[128];
-    simd_f128_to_string(buffer, sizeof(buffer), val);
-
-    return 0;
-}
+#include <simd_f128_io.h>    // optional: print / string conversion
+#include <simd_f128_math.h>  // optional: exp, log, sin, cos, ...
 ```
+
+All other files include without the macro. For C++ projects, use `simd_f128.hpp` — it pulls in everything automatically.
 
 ---
 
-### simd_f128_math.h
-
-Advanced mathematical functions built on top of the core Double-Double primitives. All functions are `static inline` and require no additional compilation unit.
-
-**Algorithms used:**
-
-- **`exp`** — range reduction to $N=16$ intervals followed by a high-degree Chebyshev minimax polynomial, then exact scaling via `ldexp` and a 16-entry lookup table. Handles overflow (`> 709.78`) and underflow explicitly.
-- **`log`** — seeds from the standard `double` `log()`, then refines with 1-2 iterations of Halley's method (2 iterations for subnormal inputs), which is mathematically sufficient to recover all 31-32 digits due to cubic convergence.
-- **`pow`** — computed as `exp(exp * log(base))`. Fully protected against integer overflow during exponent parity checks. Supports base-zero inputs and propagates `NaN` according to IEEE-754.
-- **`sin`** — range-reduces to quadrant ($[-\pi/4, \pi/4]$) then evaluates a highly-tuned Chebyshev minimax polynomial.
-- **`cos`** — range-reduces to quadrant ($[-\pi/4, \pi/4]$) then evaluates a highly-tuned Chebyshev minimax polynomial.
-- **`sincos`** — computes both sine and cosine simultaneously, saving redundant Range Reduction and polynomial evaluation steps.
-- **`sinh` / `tanh`** — evaluate via Taylor series near zero to prevent catastrophic cancellation, falling back to exponential formulations for larger inputs.
-
-```c
-#define SIMD_F128_IMPLEMENTATION
-#include <simd_f128.h>
-#include <simd_f128_consts.h>
-#include <simd_f128_math.h>
-
-int main() {
-    simd_f128 x = SIMD_F128_PI;
-
-    // e^π
-    simd_f128 epi = simd_f128_exp(x);
-
-    // ln(e) == 1
-    simd_f128 one = simd_f128_log(SIMD_F128_E);
-
-    // 2^10 == 1024
-    simd_f128 base = simd_f128_from_double(2.0);
-    simd_f128 exp  = simd_f128_from_double(10.0);
-    simd_f128 pw   = simd_f128_pow(base, exp);
-
-    // sin(π/6) == 0.5
-    simd_f128 half_pi = simd_f128_mul(x, simd_f128_from_double(1.0 / 6.0));
-    simd_f128 s       = simd_f128_sin(half_pi);
-
-    // cos(0) == 1
-    simd_f128 c = simd_f128_cos(simd_f128_from_double(0.0));
-
-    return 0;
-}
-```
-
-> **Note:** `sin` and `cos` use a simplified range reduction suitable for moderate arguments. For very large inputs (|x| > ~10^15), consider applying Payne-Hanek argument reduction externally before calling these functions.
-
----
-
-### simd_f128_utils.h
-
-Comparison operators and utility functions. All are `static inline` and work with any SIMD backend.
-
-The foundation is `simd_f128_cmp`, which compares the `hi` components first and only falls through to the `lo` components when `hi` values are identical — matching the canonical Double-Double ordering rule.
-
-```c
-#include <simd_f128.h>
-#include <simd_f128_utils.h>
-
-int main() {
-    simd_f128 a = simd_f128_from_double(1.0);
-    simd_f128 b = simd_f128_from_double(2.0);
-
-    // comparisons
-    int lt = simd_f128_lt(a, b);  // 1
-    int eq = simd_f128_eq(a, b);  // 0
-    int ge = simd_f128_ge(b, a);  // 1
-
-    // utility
-    simd_f128 neg = simd_f128_from_double(-3.14);
-    simd_f128 abs_val = simd_f128_abs(neg);       // 3.14...
-    simd_f128 lo      = simd_f128_min(a, b);      // 1.0
-    simd_f128 hi      = simd_f128_max(a, b);      // 2.0
-
-    return 0;
-}
-```
-
----
-
-### simd_f128.hpp
-
-A modern C++ wrapper that makes `simd_f128` feel like a native arithmetic type. Include this single header in C++ projects — it pulls in all other headers automatically.
-
-**Features:**
-
-- `f128::float128` class with full operator overloading (`+`, `-`, `*`, `/`, `+=`, `-=`, `*=`, `/=`).
-- Full interoperability with `std::complex<double>` via `f128::complex128`.
-- Seamless integration with the **Eigen** matrix library via `simd_f128_eigen.hpp`.
-- All six comparison operators (`==`, `!=`, `<`, `>`, `<=`, `>=`).
-- Unary negation (`-x`).
-- `std::ostream` integration (`std::cout << val`).
-- Free functions mirroring `<cmath>`: `f128::exp`, `f128::log`, `f128::pow`, `f128::sin`, `f128::cos`, `f128::sqrt`, `f128::abs`.
-- Predefined constants: `f128::pi`, `f128::e`, `f128::sqrt2`, `f128::ln2`.
-
-```cpp
-#define SIMD_F128_IMPLEMENTATION
-#include <simd_f128.hpp>
-#include <iostream>
-
-int main() {
-    f128::float128 a(1.5);
-    f128::float128 b(2.5);
-
-    // natural arithmetic
-    f128::float128 sum  = a + b;
-    f128::float128 prod = a * b;
-
-    // math functions
-    f128::float128 root = f128::sqrt(a);
-    f128::float128 s    = f128::sin(f128::pi);
-
-    // stream output
-    std::cout << "a + b = " << sum  << "\n";
-    std::cout << "a * b = " << prod << "\n";
-    std::cout << "sqrt(a) = " << root << "\n";
-
-    // comparisons
-    if (a < b) {
-        std::cout << "a is smaller\n";
-    }
-
-    return 0;
-}
-```
-
-The `float128` class stores a `simd_f128 data` member publicly, so it can be passed directly to any C API function when needed:
-
-```cpp
-f128::float128 val(3.14);
-simd_f128_print(val.data);  // call c api directly
-```
-
----
 
 ## API Reference
+
+Full function-level reference with signatures and descriptions for every public symbol:
+
+**→ [docs/api_reference.md](docs/api_reference.md)**
+
+Quick lookup — core functions:
+
+| Function | Description |
+|---|---|
+| `simd_f128_from_double(d)` | Promote `double` to 128-bit. |
+| `simd_f128_add(a, b)` | Double-Double addition (TwoSum). |
+| `simd_f128_sub(a, b)` | Subtraction. |
+| `simd_f128_mul(a, b)` | Multiplication (TwoProd + FMA). |
+| `simd_f128_div(a, b)` | Division (Newton-Raphson). |
+| `simd_f128_sqrt(x)` | Square root (Newton-Raphson + residual). |
+| `simd_f128_exp(x)` | `e^x`. |
+| `simd_f128_log(x)` | Natural log. |
+| `simd_f128_sin(x)` / `simd_f128_cos(x)` | Sine / cosine (radians). |
+| `simd_f128_print(x)` | Print to stdout at 32 digits. |
+| `simd_f128_to_string(buf, n, x)` | Write to string buffer. |
+
+---
 
 ### simd_f128.h
 
@@ -489,11 +382,27 @@ simd_f128_print(val.data);  // call c api directly
 | Function | Signature | Description |
 |---|---|---|
 | `simd_f128_exp` | `simd_f128 simd_f128_exp(simd_f128 x)` | `e^x`. Returns `+Inf` for `x > 709.78`, `0` for `x < -745`. |
-| `simd_f128_log` | `simd_f128 simd_f128_log(simd_f128 x)` | Natural logarithm. Returns `NaN` for `x ≤ 0`. |
-| `simd_f128_pow` | `simd_f128 simd_f128_pow(simd_f128 base, simd_f128 exp)` | `base^exp`. Correctly handles base zero, infinity, and NaN according to IEEE-754. |
-| `simd_f128_sin` | `simd_f128 simd_f128_sin(simd_f128 x)` | Sine (radians). Best accuracy for moderate arguments. |
-| `simd_f128_cos` | `simd_f128 simd_f128_cos(simd_f128 x)` | Cosine (radians). Best accuracy for moderate arguments. |
-| `simd_f128_sincos` | `void simd_f128_sincos(simd_f128 x, simd_f128* s, simd_f128* c)` | Computes sine and cosine simultaneously. |
+| `simd_f128_log` | `simd_f128 simd_f128_log(simd_f128 x)` | Natural log. Returns `NaN` for `x ≤ 0`. |
+| `simd_f128_log2` | `simd_f128 simd_f128_log2(simd_f128 x)` | Base-2 log. |
+| `simd_f128_log10` | `simd_f128 simd_f128_log10(simd_f128 x)` | Base-10 log. |
+| `simd_f128_pow` | `simd_f128 simd_f128_pow(simd_f128 base, simd_f128 exp)` | `base^exp`. Handles base zero, infinity, and NaN per IEEE-754. |
+| `simd_f128_cbrt` | `simd_f128 simd_f128_cbrt(simd_f128 x)` | Cube root. |
+| `simd_f128_sin` | `simd_f128 simd_f128_sin(simd_f128 x)` | Sine (radians). |
+| `simd_f128_cos` | `simd_f128 simd_f128_cos(simd_f128 x)` | Cosine (radians). |
+| `simd_f128_tan` | `simd_f128 simd_f128_tan(simd_f128 x)` | Tangent (radians). |
+| `simd_f128_sincos` | `void simd_f128_sincos(simd_f128 x, simd_f128* s, simd_f128* c)` | Computes sine and cosine in a single pass. |
+| `simd_f128_atan` | `simd_f128 simd_f128_atan(simd_f128 x)` | Arctangent. |
+| `simd_f128_atan2` | `simd_f128 simd_f128_atan2(simd_f128 y, simd_f128 x)` | `atan(y/x)` with quadrant correction. |
+| `simd_f128_asin` | `simd_f128 simd_f128_asin(simd_f128 x)` | Arcsine. Domain: `[-1, 1]`. |
+| `simd_f128_acos` | `simd_f128 simd_f128_acos(simd_f128 x)` | Arccosine. Domain: `[-1, 1]`. |
+| `simd_f128_sinh` | `simd_f128 simd_f128_sinh(simd_f128 x)` | Hyperbolic sine. |
+| `simd_f128_cosh` | `simd_f128 simd_f128_cosh(simd_f128 x)` | Hyperbolic cosine. |
+| `simd_f128_tanh` | `simd_f128 simd_f128_tanh(simd_f128 x)` | Hyperbolic tangent. |
+| `simd_f128_floor` | `simd_f128 simd_f128_floor(simd_f128 x)` | Floor. |
+| `simd_f128_ceil` | `simd_f128 simd_f128_ceil(simd_f128 x)` | Ceiling. |
+| `simd_f128_trunc` | `simd_f128 simd_f128_trunc(simd_f128 x)` | Truncate toward zero. |
+| `simd_f128_round` | `simd_f128 simd_f128_round(simd_f128 x)` | Round half-away from zero. |
+| `simd_f128_fmod` | `simd_f128 simd_f128_fmod(simd_f128 a, simd_f128 b)` | Floating-point remainder. |
 
 ### simd_f128_utils.h
 
@@ -648,41 +557,49 @@ BM_SimdF128_Pow         492 ns          491 ns      1426559
 
 ## Double-Double Arithmetic
 
-simd-f128 represents a value $x$ as the unevaluated sum of two IEEE 754 doubles:
+simd-f128 represents a value as the unevaluated sum of two IEEE 754 doubles — `hi + lo` where `|lo| ≤ ½ ulp(hi)`. This non-overlapping constraint gives ~106 bits of mantissa (~31-32 decimal digits).
 
-$$x = x_{hi} + x_{lo}, \quad |x_{lo}| \leq \frac{1}{2} \, \text{ulp}(x_{hi})$$
+Core algorithms: **TwoSum** (Knuth) for addition, **TwoProd** (Dekker) + FMA for multiplication, **Newton-Raphson** for division and sqrt.
 
-This non-overlapping constraint provides ~106 bits of mantissa — approximately double the precision of a single `double`.
-
-**Implementation basis:**
-
-- **Addition: TwoSum (Knuth)** — An error-free transformation (EFT) for addition that captures the exact rounding residual.
-- **Multiplication: TwoProd (Dekker)** — Exploits hardware FMA (Fused Multiply-Add) where available. On platforms lacking FMA, it seamlessly falls back to **Veltkamp's Split** to divide 53-bit mantissas into 26-bit halves, calculating the exact error product natively without precision loss.
-- **Division: Newton-Raphson Iteration** — Approximates the reciprocal $1/b_{hi}$ and refines it quadratically. Includes rigorous guards against `NaN` propagation during division-by-zero scenarios.
-- **Square Root: Newton-Raphson with Residual Correction** — Uses the hardware `sqrt` instruction to generate a perfect 53-bit initial guess, followed by a Newton-Raphson iteration with residual correction to accurately recover the full ~106-bit mantissa.
-- **Normalisation** — Every arithmetic operation rigidly re-establishes the non-overlapping property before returning.
-
-No memory allocation is required. The entire number lives in two registers.
-
-**Known limitations:**
-
-- Numerical range is identical to IEEE 754 `double` (~1.8 × 10^308). The library extends mantissa precision only; exponent range is unchanged.
-- `NaN` and `Infinity` propagate through standard `double` rules.
-- `sin` and `cos` use simplified range reduction. For large arguments (|x| ≫ 2π), apply Payne-Hanek reduction externally before calling.
-- `pow` does not support negative bases; use `simd_f128_mul` + `simd_f128_exp` for integer powers of negative numbers.
-- On ARMv7, FMA requires VFPv4 hardware (Cortex-A7, A15, A17, A53+) and the `-mfpu=neon-vfpv4` flag.
+**→ Full theory and known limitations: [docs/math_theory.md](docs/math_theory.md)**
 
 ---
 
 ## Examples
 
-Three runnable examples are provided under `examples/`.
+All examples are under `examples/` and build via `./build.sh examples` or `cmake -DSIMD_F128_BUILD_EXAMPLES=ON`.
 
-**`basic_arithmetic.c`** — entry point for new users. Loads `SIMD_F128_PI` and `SIMD_F128_E` from `simd_f128_consts.h`, performs addition, subtraction, and multiplication, then prints all three results at full 32-digit precision.
+### C (`examples/c/`)
 
-**`precision_demo.c`** — demonstrates the core motivation for using this library. Adds `1e-17` to `1.0` using both a standard `double` and a `simd_f128`, then prints both results side by side. The `double` result silently loses the small value; the `simd_f128` result preserves it in the `lo` component.
+**`basic_arithmetic.c`** — starting point. Loads `SIMD_F128_PI` and `SIMD_F128_E`, does add/sub/mul, prints at full 32-digit precision.
 
-**`mandelbrot_core.c`** — a realistic use case. Runs the Mandelbrot iteration `z = z^2 + c` at a deep-zoom coordinate that exceeds 64-bit precision, with the correct escape condition (`|z|^2 > 4`). Reports whether the point escapes and prints the final `zx`/`zy` values at full precision.
+**`precision_demo.c`** — side-by-side comparison of `double` vs `simd_f128` on `1.0 + 1e-17`. The double silently drops the small value; simd_f128 keeps it in the `lo` component.
+
+**`mandelbrot_core.c`** — runs `z = z² + c` at a deep-zoom coordinate past the 64-bit precision boundary. Checks the escape condition `|z|² > 4` and prints the final `zx`/`zy` at full precision.
+
+**`matrix_transform.c`** — 4×4 transform matrix ops using `simd_f128_matrix.h`. Builds a rotation/scale matrix and multiplies it against a vec4, showing the precision advantage on accumulated transform errors.
+
+**`chaotic_pendulum.c`** — simulates a double pendulum with RK4 integration. A good stress-test for accumulated floating-point error — two runs with slightly different initial conditions diverge, demonstrating why 128-bit precision matters for long-horizon simulations.
+
+**`crypto_large_integer.c`** — big-integer-style modular arithmetic using double-double pairs as a precision substrate, relevant to cryptography primitives that need more than 53 bits of mantissa.
+
+### C++ (`examples/cpp/`)
+
+**`cpp_operator_overload.cpp`** — demo of `f128::float128` from `simd_f128.hpp`. Natural arithmetic (`+`, `*`, `/`), comparison operators, `std::ostream` output, and free math functions (`f128::sin`, `f128::exp`, etc.).
+
+### Python (`examples/python/`)
+
+**`python_vanishing_gradient.py`** — simulates the vanishing gradient problem in a deep neural network using 128-bit precision. Compares gradient magnitudes computed with standard `float64` vs `simd_f128` over many layers.
+
+### JavaScript (`examples/js/`)
+
+**`js_web_simulation.js`** — Node.js script that loads the WASM module and runs a physics simulation loop using 128-bit arithmetic, demonstrating the JS API.
+
+### Rust (`examples/rust/`)
+
+Rust crate under `examples/rust/` that calls the C FFI bindings and runs basic arithmetic ops from Rust.
+
+---
 
 Quick example — circle area at 32-digit precision:
 
@@ -707,7 +624,7 @@ int main() {
 }
 ```
 
-Same example using the C++ wrapper:
+Same thing in C++:
 
 ```cpp
 #define SIMD_F128_IMPLEMENTATION
@@ -733,13 +650,15 @@ Every commit is tested across all backends via GitHub Actions. The table below m
 
 | Workflow | Platform | Backend | Runner |
 |---|---|---|---|
-| [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml) | Linux x86_64 | Scalar, AVX2 | `ubuntu-latest` |
-| [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml) | Linux ARM64, ARMv7, RISC-V64 | NEON, Scalar | `ubuntu-latest` + QEMU |
+| [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml) | Linux x86_64 | Scalar, SSE2, AVX2 | `ubuntu-latest` |
+| [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml) | Linux RISC-V64 | Scalar | `ubuntu-latest` + QEMU |
+| [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml) | Python Bindings | CPython Extension | `ubuntu-latest` |
 | [![macOS](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml) | Apple Silicon (M1/M2/M3) | NEON | `macos-latest` |
 | [![macOS](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml) | macOS Intel | Scalar, AVX2 | `macos-13` |
-| [![Windows](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml) | Windows x64 (MSVC) | Scalar | `windows-latest` |
+| [![Windows](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml) | Windows x64 (MSVC) | Scalar, AVX2 | `windows-latest` |
 | [![WASM](https://github.com/tiw302/simd-f128/actions/workflows/wasm.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/wasm.yml) | WebAssembly (Node.js) | WASM-SIMD, Scalar | `ubuntu-latest` + Emscripten |
-| [![Mobile](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml) | Android ARM64, Android ARMv7 | NEON, Scalar | `ubuntu-latest` + QEMU |
+| [![Mobile](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml) | Android ARM64, ARMv7 | NEON, Scalar | `ubuntu-latest` + QEMU |
+| [![Rust](https://github.com/tiw302/simd-f128/actions/workflows/rust.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/rust.yml) | Rust Bindings | Rust FFI (Linux, macOS, Win) | `ubuntu`, `macos`, `windows` |
 
 ---
 
@@ -773,26 +692,53 @@ A fully memory-safe Rust wrapper (via `cc` and `bindgen`), exposing the C functi
 
 ```text
 .
-├── assets/images/        # Logo and documentation media
-├── benchmarks/           # Performance benchmarks (Google Benchmark & Native)
-├── examples/             # Runnable usage examples
-│   ├── basic_arithmetic.c
-│   ├── precision_demo.c
-│   └── mandelbrot_core.c
-├── tests/                # Arithmetic unit tests (C and C++)
+├── assets/images/        # logo and documentation media
+├── benchmarks/           # performance benchmarks (Google Benchmark & native)
+│   ├── CMakeLists.txt
+│   ├── bench_arithmetic.cpp
+│   ├── bench_math.cpp
+│   ├── bench_matrix.cpp
+│   └── bench_compare.c
+├── examples/             # runnable usage examples
+│   ├── CMakeLists.txt
+│   ├── c/                # C examples
+│   ├── cpp/              # C++ examples
+│   ├── js/               # JS/web examples
+│   ├── python/           # Python examples
+│   └── rust/             # Rust examples
+├── tests/                # unit tests
+│   ├── CMakeLists.txt
+│   ├── c/                # C tests
+│   ├── cpp/              # C++ tests
+│   ├── js/               # JS tests
+│   └── python/           # Python tests
 ├── .github/workflows/    # CI pipelines (linux, macos, windows, wasm, mobile)
-├── include/              # Core library and headers
-│   ├── simd_f128.h           # Double-Double arithmetic engine
-│   ├── simd_f128_consts.h    # High-precision mathematical constants
-│   ├── simd_f128_io.h        # String conversion and console output
-│   ├── simd_f128_math.h      # Advanced mathematical functions (exp, log, sin, cos, pow)
-│   ├── simd_f128_utils.h     # Comparison and utility functions (cmp, abs, min, max)
-│   └── simd_f128.hpp         # Modern C++ wrapper with operator overloading
+├── include/              # core library headers
+│   ├── simd_f128.h           # double-double arithmetic engine
+│   ├── simd_f128_consts.h    # high-precision mathematical constants
+│   ├── simd_f128_io.h        # string conversion and console output
+│   ├── simd_f128_math.h      # math functions (exp, log, trig, hyperbolic, etc.)
+│   ├── simd_f128_utils.h     # comparison and utility functions
+│   ├── simd_f128_matrix.h    # mat2/mat3/mat4 and vec2/vec3/vec4 types
+│   ├── simd_f128_random.h    # xoshiro256** PRNG producing simd_f128 uniform randoms
+│   ├── simd_f128_array.h     # batch array operations
+│   ├── simd_f128_vector.h    # vectorized 4-lane ops (simd_f128x4)
+│   ├── simd_f128.hpp         # modern C++ wrapper with operator overloading
+│   ├── simd_f128_complex.h   # complex number arithmetic
+│   ├── simd_f128_complex.hpp # std::complex interoperability
+│   └── simd_f128_eigen.hpp   # Eigen matrix traits
 ├── js/                   # JavaScript bindings and WebAssembly module
 ├── python/               # Python bindings (pybind11)
 ├── rust/                 # Rust bindings (FFI via cc)
-├── CMakeLists.txt        # Cross-platform build configuration
-└── LICENSE               # MIT License
+├── docs/                 # MkDocs documentation
+│   ├── index.md
+│   ├── api_reference.md
+│   ├── math_theory.md
+│   └── demo/             # live WebAssembly demo
+├── build.sh              # Unix build script
+├── build.bat             # Windows build script
+├── CMakeLists.txt        # cross-platform build configuration
+└── LICENSE               # MIT license
 ```
 
 ---

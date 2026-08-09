@@ -33,11 +33,27 @@
 | Function | Signature | Description |
 |---|---|---|
 | `simd_f128_exp` | `simd_f128 simd_f128_exp(simd_f128 x)` | `e^x`. Returns `+Inf` for `x > 709.78`, `0` for `x < -745`. |
-| `simd_f128_log` | `simd_f128 simd_f128_log(simd_f128 x)` | Natural logarithm. Returns `NaN` for `x ≤ 0`. |
-| `simd_f128_pow` | `simd_f128 simd_f128_pow(simd_f128 base, simd_f128 exp)` | `base^exp`. Correctly handles base zero, infinity, and NaN according to IEEE-754. |
-| `simd_f128_sin` | `simd_f128 simd_f128_sin(simd_f128 x)` | Sine (radians). Best accuracy for moderate arguments. |
-| `simd_f128_cos` | `simd_f128 simd_f128_cos(simd_f128 x)` | Cosine (radians). Best accuracy for moderate arguments. |
-| `simd_f128_sincos` | `void simd_f128_sincos(simd_f128 x, simd_f128* s, simd_f128* c)` | Computes sine and cosine simultaneously. |
+| `simd_f128_log` | `simd_f128 simd_f128_log(simd_f128 x)` | Natural log. Returns `NaN` for `x ≤ 0`. |
+| `simd_f128_log2` | `simd_f128 simd_f128_log2(simd_f128 x)` | Base-2 log. |
+| `simd_f128_log10` | `simd_f128 simd_f128_log10(simd_f128 x)` | Base-10 log. |
+| `simd_f128_pow` | `simd_f128 simd_f128_pow(simd_f128 base, simd_f128 exp)` | `base^exp`. Handles base zero, infinity, and NaN per IEEE-754. |
+| `simd_f128_cbrt` | `simd_f128 simd_f128_cbrt(simd_f128 x)` | Cube root. |
+| `simd_f128_sin` | `simd_f128 simd_f128_sin(simd_f128 x)` | Sine (radians). |
+| `simd_f128_cos` | `simd_f128 simd_f128_cos(simd_f128 x)` | Cosine (radians). |
+| `simd_f128_tan` | `simd_f128 simd_f128_tan(simd_f128 x)` | Tangent (radians). |
+| `simd_f128_sincos` | `void simd_f128_sincos(simd_f128 x, simd_f128* s, simd_f128* c)` | Computes sine and cosine in a single pass. |
+| `simd_f128_atan` | `simd_f128 simd_f128_atan(simd_f128 x)` | Arctangent. |
+| `simd_f128_atan2` | `simd_f128 simd_f128_atan2(simd_f128 y, simd_f128 x)` | `atan(y/x)` with quadrant correction. |
+| `simd_f128_asin` | `simd_f128 simd_f128_asin(simd_f128 x)` | Arcsine. Domain: `[-1, 1]`. |
+| `simd_f128_acos` | `simd_f128 simd_f128_acos(simd_f128 x)` | Arccosine. Domain: `[-1, 1]`. |
+| `simd_f128_sinh` | `simd_f128 simd_f128_sinh(simd_f128 x)` | Hyperbolic sine. Taylor series near zero, exponential form for large inputs. |
+| `simd_f128_cosh` | `simd_f128 simd_f128_cosh(simd_f128 x)` | Hyperbolic cosine. |
+| `simd_f128_tanh` | `simd_f128 simd_f128_tanh(simd_f128 x)` | Hyperbolic tangent. |
+| `simd_f128_floor` | `simd_f128 simd_f128_floor(simd_f128 x)` | Floor. |
+| `simd_f128_ceil` | `simd_f128 simd_f128_ceil(simd_f128 x)` | Ceiling. |
+| `simd_f128_trunc` | `simd_f128 simd_f128_trunc(simd_f128 x)` | Truncate toward zero. |
+| `simd_f128_round` | `simd_f128 simd_f128_round(simd_f128 x)` | Round half-away from zero. |
+| `simd_f128_fmod` | `simd_f128 simd_f128_fmod(simd_f128 a, simd_f128 b)` | Floating-point remainder. |
 
 ### simd_f128_utils.h
 
@@ -87,6 +103,36 @@
 | `simd_f128_array_sub` | `void simd_f128_array_sub(a, b, out, len)` | Batch subtract two arrays. |
 | `simd_f128_array_mul` | `void simd_f128_array_mul(a, b, out, len)` | Batch multiply two arrays. |
 | `simd_f128_array_div` | `void simd_f128_array_div(a, b, out, len)` | Batch divide two arrays. |
+
+### simd_f128_matrix.h
+
+| Type | Description |
+|---|---|
+| `simd_f128_mat2` | 2×2 matrix of `simd_f128`. |
+| `simd_f128_mat3` | 3×3 matrix of `simd_f128`. |
+| `simd_f128_mat4` | 4×4 matrix of `simd_f128`. |
+| `simd_f128_vec2` | 2-component vector (`x`, `y`). |
+| `simd_f128_vec3` | 3-component vector (`x`, `y`, `z`). |
+| `simd_f128_vec4` | 4-component vector (`x`, `y`, `z`, `w`). |
+
+| Function | Signature | Description |
+|---|---|---|
+| `simd_f128_mat4_identity` | `simd_f128_mat4 simd_f128_mat4_identity(void)` | Returns the 4×4 identity matrix. |
+| `simd_f128_mat4_mul` | `simd_f128_mat4 simd_f128_mat4_mul(a, b)` | 4×4 matrix multiplication. |
+| `simd_f128_mat4_mul_vec4` | `simd_f128_vec4 simd_f128_mat4_mul_vec4(a, v)` | 4×4 matrix × vec4. |
+| `simd_f128_mat3_identity` | `simd_f128_mat3 simd_f128_mat3_identity(void)` | Returns the 3×3 identity matrix. |
+| `simd_f128_mat3_mul` | `simd_f128_mat3 simd_f128_mat3_mul(a, b)` | 3×3 matrix multiplication. |
+
+### simd_f128_random.h
+
+High-quality PRNG (xoshiro256**) producing uniform `simd_f128` values in `[0, 1)`. No `malloc` — state is caller-managed.
+
+| Symbol | Description |
+|---|---|
+| `simd_f128_prng` | Opaque PRNG state struct (four `uint64_t` values). |
+| `simd_f128_prng_seed(state, seed)` | Seed the generator from a `uint64_t`. |
+| `simd_f128_prng_next(state)` | Advance state, return raw `uint64_t`. |
+| `simd_f128_prng_uniform(state)` | Return a `simd_f128` uniform random in `[0, 1)`. |
 
 ### simd_f128.hpp (C++ only)
 

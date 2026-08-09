@@ -6,12 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>simd-f128 | High Precision</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=2">
 </head>
 
 <body>
     <div class="hero">
-        <h1>simd-f128</h1>
+        <h1><img src="logo.png" alt="simd-f128 logo" style="height: 120px; vertical-align: middle;"></h1>
         <p>128-bit double-double precision directly in your browser using webassembly.</p>
         <div class="demo-box">
             <div class="constants-bar">
@@ -19,7 +20,7 @@
                 <button id="btnLoadE" class="btn-small">Load Euler (e)</button>
                 <button id="btnRandom" class="btn-small">Randomize</button>
             </div>
-            
+
             <input type="text" id="inputA" value="3.1415926535897932384626433832795">
             <select id="operator" class="op-select">
                 <option value="add">+</option>
@@ -41,14 +42,14 @@
             <br>
             <div id="validationWarning" class="warning-box" style="display: none;"></div>
             <button id="calcBtn">Calculate Result</button>
-            
+
             <div class="result-container">
                 <div class="result-header">
                     <div class="result-title">simd-f128 WASM (128-bit)</div>
                     <button id="btnCopy" class="btn-small">Copy</button>
                 </div>
                 <div class="result" id="resultSimdBox">Loading WASM Module...</div>
-                
+
                 <div class="result-title js-title">Standard JavaScript (64-bit)</div>
                 <div class="result js-result" id="jsResultBox">...</div>
             </div>
@@ -59,7 +60,7 @@
                 <div class="result-title">Performance Benchmark (1M Ops)</div>
                 <button id="benchBtn" class="btn-small">Run Benchmark</button>
             </div>
-            
+
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
                 <div>
                     <div style="font-size: 0.85rem; color: #666; margin-bottom: 5px;">WASM (SIMD)</div>
@@ -77,7 +78,7 @@
         </div>
 
         <div class="footer-links">
-            <a href="https://github.com/tiw302/simd-f128">GitHub Repository</a> | 
+            <a href="https://github.com/tiw302/simd-f128">GitHub Repository</a> |
             <a href="https://tiw302.github.io/simd-f128/">Documentation</a>
         </div>
     </div>

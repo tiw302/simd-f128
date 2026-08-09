@@ -87,15 +87,15 @@ int main() {
 
 ## Performance & Benchmarking
 
-The library uses Google Benchmark for rigorous performance profiling. On modern x86 architecture (AVX2), `simd-f128` achieves a massive **~3.4x speedup in multiplication** and a **~1.7x speedup in addition and division** compared to the GCC native software quad-precision `__float128`.
-
 To run the benchmarks locally:
 
 ```bash
-cmake -S . -B build -DSIMD_F128_BUILD_BENCHMARKS=ON
-cmake --build build
-./build/benchmarks/bench_compare
-./build/benchmarks/bench_arithmetic
+./build.sh bench
+# or manually:
+cmake -S . -B build_bench -DSIMD_F128_BUILD_BENCHMARKS=ON
+cmake --build build_bench
+./build_bench/benchmarks/bench_compare
+./build_bench/benchmarks/bench_arithmetic
 ```
 
 

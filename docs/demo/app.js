@@ -28,26 +28,26 @@ function checkValidation() {
     if (valA === '') return;
 
     if (isNaN(numA)) {
-        warnBox.innerHTML = `⚠️ Input A is not a valid number.`;
+        warnBox.innerHTML = `Input A is not a valid number.`;
         warnBox.style.display = 'block';
         return;
     }
 
     if (inputB.style.display !== 'none') {
         if (valB !== '' && isNaN(numB)) {
-            warnBox.innerHTML = `⚠️ Input B is not a valid number.`;
+            warnBox.innerHTML = `Input B is not a valid number.`;
             warnBox.style.display = 'block';
             return;
         }
         if (op === 'div' && numB === 0) {
-            warnBox.innerHTML = `⚠️ Domain Error: Division by zero is undefined.`;
+            warnBox.innerHTML = `Domain Error: Division by zero is undefined.`;
             warnBox.style.display = 'block';
             return;
         }
     }
 
     if ((op === 'asin' || op === 'acos') && (numA < -1 || numA > 1)) {
-        warnBox.innerHTML = `⚠️ Domain Error: A must be between -1.0 and 1.0 for ${op}. <a class="fix-link" id="btnFixAsin">Set to 0.5</a>`;
+        warnBox.innerHTML = `Domain Error: A must be between -1.0 and 1.0 for ${op}. <a class="fix-link" id="btnFixAsin">Set to 0.5</a>`;
         warnBox.style.display = 'block';
 
         document.getElementById('btnFixAsin').addEventListener('click', (e) => {
@@ -59,7 +59,7 @@ function checkValidation() {
     }
 
     if (op === 'log' && numA <= 0) {
-        warnBox.innerHTML = `⚠️ Domain Error: A must be greater than 0 for log. <a class="fix-link" id="btnFixLog">Set to 2.71828...</a>`;
+        warnBox.innerHTML = `Domain Error: A must be greater than 0 for log. <a class="fix-link" id="btnFixLog">Set to 2.71828...</a>`;
         warnBox.style.display = 'block';
 
         document.getElementById('btnFixLog').addEventListener('click', (e) => {
@@ -71,7 +71,7 @@ function checkValidation() {
     }
 
     if (op === 'sqrt' && numA < 0) {
-        warnBox.innerHTML = `⚠️ Domain Error: A must be non-negative for sqrt. <a class="fix-link" id="btnFixSqrt">Set to 2.0</a>`;
+        warnBox.innerHTML = `Domain Error: A must be non-negative for sqrt. <a class="fix-link" id="btnFixSqrt">Set to 2.0</a>`;
         warnBox.style.display = 'block';
 
         document.getElementById('btnFixSqrt').addEventListener('click', (e) => {
