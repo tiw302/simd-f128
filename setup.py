@@ -39,7 +39,7 @@ def main() -> None:
 
     setup(
         name="simd-f128",
-        version="1.5.1",
+        version="1.5.2",
         description="High-performance 128-bit Double-Double arithmetic",
         ext_modules=ext_modules,
         packages=[],
