@@ -32,8 +32,6 @@
 | **x86_64** | Linux | `linux.yml` | **AVX2** (Vectorized) |
 | **x86_64** | Windows (MSVC) | `windows.yml` | **Scalar** |
 | **x86_64** | Windows (MSVC) | `windows.yml` | **AVX2** (Vectorized) |
-| **x86_64** | macOS Intel (`macos-13`) | `macos.yml` | **Scalar** |
-| **x86_64** | macOS Intel (`macos-13`) | `macos.yml` | **AVX2** (Vectorized) |
 | **ARM64 (Apple)** | macOS (M-series) | `macos.yml` | **NEON** (Vectorized) |
 | **ARM64** | Linux/Android (QEMU) | `mobile.yml` | **NEON** (Vectorized) |
 | **ARMv7** | Linux/Android (QEMU) | `mobile.yml` | **Scalar** + VFPv4 |
@@ -199,7 +197,6 @@ While this approach offers massive performance benefits and is perfect for deepl
 | GCC (arm-linux-gnueabihf) | 11+ | Linux ARMv7 (QEMU) | Scalar + VFPv4 |
 | GCC (riscv64-linux-gnu) | 11+ | Linux RISC-V64 (QEMU) | Scalar |
 | Clang | 14+ | macOS Apple Silicon | NEON |
-| Clang | 14+ | macOS Intel (`macos-13`) | Scalar, SSE2, AVX2 |
 | MSVC | 2022 | Windows x64 | Scalar, AVX2 |
 | Emscripten | 3.0+ | WASM (Node.js/Web) | WASM-SIMD, Scalar |
 
@@ -325,11 +322,11 @@ All other files include without the macro. For C++ projects, use `simd_f128.hpp`
 ---
 
 
-## API Reference
+## Documentation
 
-Full function-level reference with signatures and descriptions for every public symbol:
-
-**→ [docs/api_reference.md](docs/api_reference.md)**
+- **[Components Guide](docs/components.md)**: Detailed overview of all modules and their dependencies.
+- **[API Reference](docs/api_reference.md)**: Full function-level reference with signatures and descriptions.
+- **[Math Theory & Architecture](docs/math_theory.md)**: In-depth explanation of Double-Double arithmetic and SIMD optimizations.
 
 Quick lookup — core functions:
 
@@ -654,7 +651,6 @@ Every commit is tested across all backends via GitHub Actions. The table below m
 | [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml) | Linux RISC-V64 | Scalar | `ubuntu-latest` + QEMU |
 | [![Linux](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/linux.yml) | Python Bindings | CPython Extension | `ubuntu-latest` |
 | [![macOS](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml) | Apple Silicon (M1/M2/M3) | NEON | `macos-latest` |
-| [![macOS](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/macos.yml) | macOS Intel | Scalar, AVX2 | `macos-13` |
 | [![Windows](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/windows.yml) | Windows x64 (MSVC) | Scalar, AVX2 | `windows-latest` |
 | [![WASM](https://github.com/tiw302/simd-f128/actions/workflows/wasm.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/wasm.yml) | WebAssembly (Node.js) | WASM-SIMD, Scalar | `ubuntu-latest` + Emscripten |
 | [![Mobile](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml/badge.svg)](https://github.com/tiw302/simd-f128/actions/workflows/mobile.yml) | Android ARM64, ARMv7 | NEON, Scalar | `ubuntu-latest` + QEMU |

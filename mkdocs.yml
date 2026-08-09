@@ -12,6 +12,7 @@ theme:
     accent: cyan
 nav:
   - Home: index.md
+  - Components Guide: components.md
   - API Reference: api_reference.md
   - Math Theory: math_theory.md
   - Live Demo: demo/index.html

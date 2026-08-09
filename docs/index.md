@@ -15,6 +15,7 @@ The `simd-f128` library provides a professional-grade, header-only C implementat
 ## Quick Links
 
 - [GitHub Repository](https://github.com/tiw302/simd-f128)
+- [Components Guide](components.md)
 - [API Reference](api_reference.md)
 - [Math Theory & Architecture](math_theory.md)
 - [Live WebAssembly Demo](demo/index.html)
