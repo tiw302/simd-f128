@@ -1,33 +1,31 @@
-// updated 2026-06-12
-// spdx-license-identifier: mit
-// copyright (c) 2026 jirawat siripuk
+/* simd_f128_consts.h
+ *
+ * high-precision mathematical constants for 128-bit double-double arithmetic.
+ * provides pre-computed constants (e.g. pi, e, sqrt2) with ~106-bit mantissa.
+ *
+ * updated 2026-08-09
+ * spdx-license-identifier: mit
+ * copyright (c) 2026 jirawat siripuk */
 
 #ifndef SIMD_F128_CONSTS_H
 #define SIMD_F128_CONSTS_H
 
 #include "simd_f128.h"
 
-/*
-    simd_f128_consts.h -- high-precision mathematical constants.
-
-    provides pre-computed double-double constants with ~106-bit mantissa
-    (approximately 31 decimal digits of precision).
-*/
-
-//  ██████  ██████  ███    ██ ███████ ████████ ███████ 
-// ██      ██    ██ ████   ██ ██         ██    ██      
-// ██      ██    ██ ██ ██  ██ ███████    ██    ███████ 
-// ██      ██    ██ ██  ██ ██      ██    ██         ██ 
-//  ██████  ██████  ██   ████ ███████    ██    ███████ 
+//  ██████  ██████  ███    ██ ███████ ████████ ███████
+// ██      ██    ██ ████   ██ ██         ██    ██
+// ██      ██    ██ ██ ██  ██ ███████    ██    ███████
+// ██      ██    ██ ██  ██ ██      ██    ██         ██
+//  ██████  ██████  ██   ████ ███████    ██    ███████
 //
 // >>constants storage
-
 // constants are stored as raw double arrays (hi + lo pairs).
 // this layout is architecture-agnostic and avoids structure padding issues.
 static const double _simd_f128_pi_raw[2]    = { 3.1415926535897931, 1.2246467991473532e-16 };
 static const double _simd_f128_e_raw[2]     = { 2.7182818284590451, 1.4456468917292502e-16 };
 static const double _simd_f128_sqrt2_raw[2] = { 1.4142135623730951, -9.6672933134529135e-17 };
 static const double _simd_f128_ln2_raw[2]   = { 0.69314718055994529, 2.3190468138462996e-17 };
+static const double _simd_f128_ln10_raw[2]  = { 2.3025850929940459, -2.1707562233822494e-16 };
 
 // helper to load raw double arrays into portable simd_f128 registers
 SIMD_F128_INLINE simd_f128 _simd_f128_from_raw(const double *raw) {
@@ -39,6 +37,7 @@ SIMD_F128_INLINE simd_f128 _simd_f128_from_raw(const double *raw) {
 #define SIMD_F128_E     _simd_f128_from_raw(_simd_f128_e_raw)
 #define SIMD_F128_SQRT2 _simd_f128_from_raw(_simd_f128_sqrt2_raw)
 #define SIMD_F128_LN2   _simd_f128_from_raw(_simd_f128_ln2_raw)
+#define SIMD_F128_LN10  _simd_f128_from_raw(_simd_f128_ln10_raw)
 
 // >> horner / minimax method constants (precomputed to 128-bit precision)
 static const double _simd_f128_pi_over_2_raw[2] = {  1.5707963267948966e+00,  6.1232339957367660e-17 };
@@ -113,4 +112,4 @@ static const double _simd_f128_cos_coefs_n4[12][2] = {
     {  1.6117413151347128e-24, -6.4586920808726188e-41 }, // c11
 };
 
-#endif /* simd_f128_consts_h */
+#endif // SIMD_F128_CONSTS_H

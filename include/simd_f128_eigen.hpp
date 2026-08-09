@@ -1,6 +1,11 @@
-// updated 2026-06-12
-// spdx-license-identifier: mit
-// copyright (c) 2026 jirawat siripuk
+/* simd_f128_eigen.hpp
+ *
+ * eigen matrix library traits integration for simd_f128.
+ * allows f128::float128 to be used as a native scalar type inside eigen matrices.
+ *
+ * updated 2026-08-09
+ * spdx-license-identifier: mit
+ * copyright (c) 2026 jirawat siripuk */
 
 #ifndef SIMD_F128_EIGEN_HPP
 #define SIMD_F128_EIGEN_HPP
@@ -9,24 +14,23 @@
 #include "simd_f128_complex.hpp"
 #include <Eigen/Core>
 
-// ███████ ██  ██████  ███████ ███    ██ 
-// ██      ██ ██       ██      ████   ██ 
-// █████   ██ ██   ███ █████   ██ ██  ██ 
-// ██      ██ ██    ██ ██      ██  ██ ██ 
-// ███████ ██  ██████  ███████ ██   ████ 
+// ███████ ██  ██████  ███████ ███    ██
+// ██      ██ ██       ██      ████   ██
+// █████   ██ ██   ███ █████   ██ ██  ██
+// ██      ██ ██    ██ ██      ██  ██ ██
+// ███████ ██  ██████  ███████ ██   ████
 //
 // >>eigen matrix traits integration
-
 namespace Eigen {
 
 // specialize eigen::numtraits for float128 type
 template<> struct NumTraits<f128::float128>
- : NumTraits<double> 
+ : NumTraits<double>
 {
   typedef f128::float128 Real;
   typedef f128::float128 NonInteger;
   typedef f128::float128 Nested;
-  
+
   enum {
     IsComplex = 0,
     IsInteger = 0,
@@ -47,7 +51,7 @@ template<> struct NumTraits<f128::complex128>
   typedef f128::float128 Real;
   typedef f128::complex128 NonInteger;
   typedef f128::complex128 Nested;
-  
+
   enum {
     IsComplex = 1,
     IsInteger = 0,
@@ -73,4 +77,4 @@ namespace numext {
 
 } // namespace Eigen
 
-#endif // simd_f128_eigen_hpp
+#endif // SIMD_F128_EIGEN_HPP

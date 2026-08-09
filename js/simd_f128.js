@@ -1,6 +1,6 @@
-/*
- * simd_f128.js -- high-performance 128-bit (double-double) arithmetic for javascript.
+/* simd_f128.js -- high-performance 128-bit (double-double) arithmetic for javascript.
  * project url: https://github.com/tiw302/simd-f128
+ *
  * technical background:
  * ---------------------
  * this library uses "double-double" arithmetic. basically, we represent a
@@ -8,49 +8,48 @@
  * this gives us about 31 decimal digits of precision, which is roughly
  * the same as quad precision (f128) but much faster because it uses
  * hardware double-precision units.
+ *
  * javascript bindings:
  * --------------------
  * this file acts as a javascript wrapper over the compiled webassembly core.
- * it provides a clean, object-oriented api (Float128) while automatically 
+ * it provides a clean, object-oriented api (Float128) while automatically
  * managing wasm heap allocations and avoiding js 64-bit float truncations.
- * license:
- * --------
- * mit license
- * copyright (c) 2026 jirawat siripuk
- * */
+ *
+ * updated 2026-08-09
+ * spdx-license-identifier: mit
+ * copyright (c) 2026 jirawat siripuk */
 
 const Module = require('./simd_f128_wasm.js');
 
 let isReady = false;
+let scratchPtr = 0; // global scratchpad to avoid malloc/free overhead
+
 const readyPromise = new Promise((resolve) => {
     Module.onRuntimeInitialized = () => {
+        scratchPtr = Module._malloc(16);
         isReady = true;
         resolve();
     };
 });
 
-/* Float128:
+/* float128:
  * a javascript interface for the 128-bit double-double arithmetic module.
  * this class abstracts the webassembly boundary, automatically managing
- * memory allocation (malloc/free) when passing complex floating point 
- * structures between the javascript engine and the compiled c core. */
+ * memory allocation when passing complex floating point structures. */
 class Float128 {
     /* constructor:
      * initializes the 128-bit float. it can parse from a high-precision string,
-     * a standard js number (64-bit float), an existing float64array buffer, 
-     * or copy from another float128 instance. memory pointers are strictly 
-     * cleaned up after string parsing to prevent memory leaks in the wasm heap. */
+     * a standard js number (64-bit float), an existing float64array buffer,
+     * or copy from another float128 instance. */
     constructor(val) {
         if (!isReady) throw new Error("wasm module not yet initialized!");
-        
+
         this.data = new Float64Array(2);
-        
+
         if (typeof val === 'string') {
-            const ptr = Module._malloc(16);
-            Module.ccall('simd_f128_wasm_from_string', 'null', ['string', 'number'], [val, ptr]);
-            this.data[0] = Module.getValue(ptr, 'double');
-            this.data[1] = Module.getValue(ptr + 8, 'double');
-            Module._free(ptr);
+            Module.ccall('simd_f128_wasm_from_string', 'null', ['string', 'number'], [val, scratchPtr]);
+            this.data[0] = Module.getValue(scratchPtr, 'double');
+            this.data[1] = Module.getValue(scratchPtr + 8, 'double');
         } else if (typeof val === 'number') {
             this.data[0] = val;
             this.data[1] = 0.0;
@@ -70,26 +69,22 @@ class Float128 {
     }
 
     /* internal binary operator helper:
-     * allocates exactly 16 bytes (2x 64-bit doubles) on the wasm heap for the
-     * result pointer, invokes the target compiled function, extracts the memory,
-     * and guarantees deterministic memory cleanup. */
+     * utilizes a global 16-byte scratchpad allocated on the wasm heap during
+     * initialization. this avoids the extreme overhead of per-call malloc/free
+     * and relies on the single-threaded nature of wasm execution. */
     _callBin(func, other) {
-        const ptr = Module._malloc(16);
-        func(this.data[0], this.data[1], other.data[0], other.data[1], ptr);
+        func(this.data[0], this.data[1], other.data[0], other.data[1], scratchPtr);
         const result = new Float128(0);
-        result.data[0] = Module.getValue(ptr, 'double');
-        result.data[1] = Module.getValue(ptr + 8, 'double');
-        Module._free(ptr);
+        result.data[0] = Module.getValue(scratchPtr, 'double');
+        result.data[1] = Module.getValue(scratchPtr + 8, 'double');
         return result;
     }
 
     _callUn(func) {
-        const ptr = Module._malloc(16);
-        func(this.data[0], this.data[1], ptr);
+        func(this.data[0], this.data[1], scratchPtr);
         const result = new Float128(0);
-        result.data[0] = Module.getValue(ptr, 'double');
-        result.data[1] = Module.getValue(ptr + 8, 'double');
-        Module._free(ptr);
+        result.data[0] = Module.getValue(scratchPtr, 'double');
+        result.data[1] = Module.getValue(scratchPtr + 8, 'double');
         return result;
     }
 
@@ -163,6 +158,46 @@ class Float128 {
         Module._free(ptrBuf);
         return str;
     }
+
+    /* vector operations:
+     * highly optimized array-processing functions. copies entire js Float64Arrays
+     * into the wasm heap, processes them in one compiled loop, and returns the result. */
+    static _processArray(func, a, b) {
+        if (!(a instanceof Float64Array) || !(b instanceof Float64Array)) {
+            throw new Error("Inputs must be Float64Arrays");
+        }
+        if (a.length !== b.length || a.length % 2 !== 0) {
+            throw new Error("Arrays must have matching lengths and be even-sized (N*2)");
+        }
+
+        const len = a.length / 2;
+        const bytes = a.length * 8;
+
+        // allocate wasm heap
+        const ptrA = Module._malloc(bytes);
+        const ptrB = Module._malloc(bytes);
+        const ptrOut = Module._malloc(bytes);
+
+        // copy into wasm heap
+        Module.HEAPF64.set(a, ptrA / 8);
+        Module.HEAPF64.set(b, ptrB / 8);
+
+        // execute c function
+        func(ptrA, ptrB, ptrOut, len);
+
+        // copy out and cleanup
+        const result = new Float64Array(Module.HEAPF64.subarray(ptrOut / 8, ptrOut / 8 + a.length));
+        Module._free(ptrA);
+        Module._free(ptrB);
+        Module._free(ptrOut);
+
+        return result;
+    }
+
+    static addArrays(a, b) { return Float128._processArray(Module._simd_f128_wasm_add_arrays, a, b); }
+    static subArrays(a, b) { return Float128._processArray(Module._simd_f128_wasm_sub_arrays, a, b); }
+    static mulArrays(a, b) { return Float128._processArray(Module._simd_f128_wasm_mul_arrays, a, b); }
+    static divArrays(a, b) { return Float128._processArray(Module._simd_f128_wasm_div_arrays, a, b); }
 }
 
 module.exports = { Float128 };

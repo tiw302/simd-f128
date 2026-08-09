@@ -1,6 +1,11 @@
-// updated 2026-06-12
-// spdx-license-identifier: mit
-// copyright (c) 2026 jirawat siripuk
+/* simd_f128_io.h
+ *
+ * input/output formatting and string parsing for 128-bit double-double values.
+ * includes ultra-fast chunked string conversion and high-precision printing.
+ *
+ * updated 2026-08-09
+ * spdx-license-identifier: mit
+ * copyright (c) 2026 jirawat siripuk */
 
 #ifndef SIMD_F128_IO_H
 #define SIMD_F128_IO_H
@@ -8,21 +13,20 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <stdint.h>
 #include "simd_f128.h"
 #include "simd_f128_math.h"
 
-
-// ███████ ████████ ██████  ██ ███    ██  ██████  
-// ██         ██    ██   ██ ██ ████   ██ ██       
-// ███████    ██    ██████  ██ ██ ██  ██ ██   ███ 
-//      ██    ██    ██   ██ ██ ██  ██ ██ ██    ██ 
-// ███████    ██    ██   ██ ██ ██   ████  ██████  
+// ███████ ████████ ██████  ██ ███    ██  ██████
+// ██         ██    ██   ██ ██ ████   ██ ██
+// ███████    ██    ██████  ██ ██ ██  ██ ██   ███
+//      ██    ██    ██   ██ ██ ██  ██ ██ ██    ██
+// ███████    ██    ██   ██ ██ ██   ████  ██████
 //
 // >>string parsing api
-
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif // __cplusplus
 
 /* print function (stdout):
  * formats and prints the 128-bit number directly to standard output
@@ -31,7 +35,7 @@ void simd_f128_print(simd_f128 x);
 
 /* default string conversion:
  * converts the 128-bit number into a character buffer using a default
- * precision of 31 significant decimal digits. this is sufficient to capture 
+ * precision of 31 significant decimal digits. this is sufficient to capture
  * the full accuracy of the double-double format without garbage digits. */
 void simd_f128_to_string(char* buf, size_t buf_size, simd_f128 x);
 
@@ -48,20 +52,29 @@ void simd_f128_to_string_prec(char* buf, size_t buf_size, simd_f128 x, int digit
  * exponents gracefully. */
 simd_f128 simd_f128_from_string(const char* str);
 
+/* serialize to bytes:
+ * serializes the 128-bit number into a 16-byte little-endian byte array.
+ * out buffer must have at least 16 bytes of allocated space. */
+void simd_f128_to_bytes(uint8_t* out, simd_f128 x);
+
+/* deserialize from bytes:
+ * deserializes a 128-bit number from a 16-byte little-endian byte array.
+ * in buffer must have at least 16 bytes of allocated space. */
+simd_f128 simd_f128_from_bytes(const uint8_t* in);
+
 #ifdef __cplusplus
 }
 #endif
 
 #ifdef SIMD_F128_IMPLEMENTATION
 
-// ██ ███    ███ ██████  ██      ███████ ███    ███ ███████ ███    ██ ████████  █████  ████████ ██  ██████  ███    ██ 
-// ██ ████  ████ ██   ██ ██      ██      ████  ████ ██      ████   ██    ██    ██   ██    ██    ██ ██    ██ ████   ██ 
-// ██ ██ ████ ██ ██████  ██      █████   ██ ████ ██ █████   ██ ██  ██    ██    ███████    ██    ██ ██    ██ ██ ██  ██ 
-// ██ ██  ██  ██ ██      ██      ██      ██  ██  ██ ██      ██  ██ ██    ██    ██   ██    ██    ██ ██    ██ ██  ██ ██ 
-// ██ ██      ██ ██      ███████ ███████ ██      ██ ███████ ██   ████    ██    ██   ██    ██    ██  ██████  ██   ████ 
+// ██ ███    ███ ██████  ██      ███████ ███    ███ ███████ ███    ██ ████████  █████  ████████ ██  ██████  ███    ██
+// ██ ████  ████ ██   ██ ██      ██      ████  ████ ██      ████   ██    ██    ██   ██    ██    ██ ██    ██ ████   ██
+// ██ ██ ████ ██ ██████  ██      █████   ██ ████ ██ █████   ██ ██  ██    ██    ███████    ██    ██ ██    ██ ██ ██  ██
+// ██ ██  ██  ██ ██      ██      ██      ██  ██  ██ ██      ██  ██ ██    ██    ██   ██    ██    ██ ██    ██ ██  ██ ██
+// ██ ██      ██ ██      ███████ ███████ ██      ██ ███████ ██   ████    ██    ██   ██    ██    ██  ██████  ██   ████
 //
 // >>implementation logic
-
 // safe internal hi/lo extract helper
 // (note: this is kept to avoid refactoring the entire file, but simd_f128_extract should be used directly)
 static inline void _simd_f128_extract_internal(simd_f128 x, double* hi, double* lo) {
@@ -762,8 +775,8 @@ void simd_f128_to_string_prec(char* buf, size_t buf_size, simd_f128 x, int digit
     }
 
     // separate the integer part using floor
-    // note: using floor(hi) instead of full simd_f128_floor(x) can cause subtle rounding 
-    // bugs when hi is near an integer but lo is positive. kept for simplicity as simd_f128_floor 
+    // note: using floor(hi) instead of full simd_f128_floor(x) can cause subtle rounding
+    // bugs when hi is near an integer but lo is positive. kept for simplicity as simd_f128_floor
     // is in math.h which might not be included yet.
     double int_part = floor(hi);
     if (hi == int_part && lo < 0.0) {
@@ -774,7 +787,7 @@ void simd_f128_to_string_prec(char* buf, size_t buf_size, simd_f128 x, int digit
     double hi_abs = fabs(hi);
     if (hi_abs > 0.0 && (hi_abs >= 1e15 || hi_abs < 1e-4)) {
         int exp_val = (int)floor(log10(hi_abs));
-        
+
         // scale the number by 10^-exp_val iteratively to avoid overflow
         int shift_exp = -exp_val;
         simd_f128 scaled_x = x;
@@ -786,7 +799,7 @@ void simd_f128_to_string_prec(char* buf, size_t buf_size, simd_f128 x, int digit
             shift_exp += 250;
         }
         scaled_x = simd_f128_mul(scaled_x, _simd_f128_pow10_int(shift_exp));
-        
+
         double s_hi, s_lo;
         _simd_f128_extract_internal(scaled_x, &s_hi, &s_lo);
         if (fabs(s_hi) >= 10.0) {
@@ -796,42 +809,42 @@ void simd_f128_to_string_prec(char* buf, size_t buf_size, simd_f128 x, int digit
             scaled_x = simd_f128_mul(scaled_x, simd_f128_from_double(10.0));
             exp_val--;
         }
-        
+
         _simd_f128_extract_internal(scaled_x, &hi, &lo);
-        
+
         double s_int_part = floor(hi);
         if (hi == s_int_part && lo < 0.0) {
             s_int_part -= 1.0;
         }
-        
+
         char s_int_buf[64];
         snprintf(s_int_buf, sizeof(s_int_buf), "%.0f", s_int_part);
-        
+
         simd_f128 f_int = simd_f128_from_double(s_int_part);
         simd_f128 frac = simd_f128_sub(scaled_x, f_int);
         simd_f128 ten = simd_f128_from_double(10.0);
-        
+
         char frac_buf[128] = {0};
         int frac_len = 0;
-        
+
         // extract significand digits iteratively
         for (int i = 0; i < digits - 1; i++) {
             frac = simd_f128_mul(frac, ten);
             double f_hi, f_lo;
             _simd_f128_extract_internal(frac, &f_hi, &f_lo);
-            
+
             double digit = floor(f_hi);
             if (f_hi == digit && f_lo < 0.0) {
                 digit -= 1.0;
             }
             if (digit < 0.0) digit = 0.0;
             if (digit > 9.0) digit = 9.0;
-            
+
             frac_buf[frac_len++] = (char)('0' + (int)digit);
             frac = simd_f128_sub(frac, simd_f128_from_double(digit));
         }
         frac_buf[frac_len] = '\0';
-        
+
         snprintf(buf, buf_size, "%s%s.%se%+d", is_neg ? "-" : "", s_int_buf, frac_buf, exp_val);
         return;
     }
@@ -847,7 +860,7 @@ void simd_f128_to_string_prec(char* buf, size_t buf_size, simd_f128 x, int digit
 
     char frac_buf[128] = {0};
     int frac_len = 0;
-    
+
     // total digits to extract is digits - int_digits
     int frac_digits_to_extract = digits - int_digits;
     if (frac_digits_to_extract < 0) frac_digits_to_extract = 0;
@@ -855,18 +868,18 @@ void simd_f128_to_string_prec(char* buf, size_t buf_size, simd_f128 x, int digit
     // multiply by 10, grab integer digit, subtract, repeat
     for (int i = 0; i < frac_digits_to_extract; i++) {
         frac = simd_f128_mul(frac, ten);
-        
+
         double f_hi, f_lo;
         _simd_f128_extract_internal(frac, &f_hi, &f_lo);
-        
-        double digit = floor(f_hi); 
+
+        double digit = floor(f_hi);
         if (f_hi == digit && f_lo < 0.0) {
             digit -= 1.0;
         }
-        
+
         if (digit < 0.0) digit = 0.0;
         if (digit > 9.0) digit = 9.0;
-        
+
         frac_buf[frac_len++] = (char)('0' + (int)digit);
         frac = simd_f128_sub(frac, simd_f128_from_double(digit));
     }
@@ -890,10 +903,8 @@ simd_f128 simd_f128_from_string(const char* str) {
     simd_f128 res = simd_f128_from_double(0.0);
     if (!str) return res;
 
-    // skip leading whitespace characters
     while (*str == ' ' || *str == '\t' || *str == '\n' || *str == '\r') str++;
 
-    // parse sign of the number
     int is_neg = 0;
     if (*str == '-') {
         is_neg = 1;
@@ -902,7 +913,6 @@ simd_f128 simd_f128_from_string(const char* str) {
         str++;
     }
 
-    // parse special string literals (nan / inf) case-insensitively
     if (_simd_f128_strncasecmp3(str, "nan") == 0) {
         return simd_f128_from_double(NAN);
     }
@@ -910,29 +920,37 @@ simd_f128 simd_f128_from_string(const char* str) {
         return simd_f128_from_double(is_neg ? -INFINITY : INFINITY);
     }
 
-    simd_f128 ten = simd_f128_from_double(10.0);
-    
-    // parse integer part digits
+    uint64_t accum = 0;
+    int digits = 0;
+
+    // fast chunked parser for integer part
     while (*str >= '0' && *str <= '9') {
-        double d = (double)(*str - '0');
-        res = simd_f128_add(simd_f128_mul(res, ten), simd_f128_from_double(d));
+        accum = accum * 10 + (*str - '0');
+        digits++;
         str++;
+        if (digits == 18) { // max safe digits for uint64_t is 19
+            res = simd_f128_add(simd_f128_mul(res, _simd_f128_pow10_int(18)), simd_f128_from_double((double)accum));
+            accum = 0;
+            digits = 0;
+        }
+    }
+    if (digits > 0) {
+        res = simd_f128_add(simd_f128_mul(res, _simd_f128_pow10_int(digits)), simd_f128_from_double((double)accum));
     }
 
-    // parse fractional part digits
+    // fractional part iterative division to preserve exact 106-bit rounding semantics
     if (*str == '.') {
         str++;
+        simd_f128 ten = simd_f128_from_double(10.0);
         simd_f128 frac_mult = simd_f128_from_double(1.0);
         while (*str >= '0' && *str <= '9') {
             frac_mult = simd_f128_div(frac_mult, ten);
             double d = (double)(*str - '0');
-            // accumulate: res = res + d * 10^-n
             res = simd_f128_add(res, simd_f128_mul(simd_f128_from_double(d), frac_mult));
             str++;
         }
     }
 
-    // parse scientific exponent part (e/E followed by optional sign and integer)
     if (*str == 'e' || *str == 'E') {
         str++;
         int exp_neg = 0;
@@ -944,38 +962,42 @@ simd_f128 simd_f128_from_string(const char* str) {
         }
         int exp_val = 0;
         while (*str >= '0' && *str <= '9') {
-            // prevent signed integer overflow for extremely large exponents
-            if (exp_val < 100000) {
-                exp_val = exp_val * 10 + (*str - '0');
-            }
+            if (exp_val < 100000) exp_val = exp_val * 10 + (*str - '0');
             str++;
         }
-        
-        // apply exponent scaling in chunks of 300 to prevent intermediate overflow/underflow
+
         int e = exp_val;
         if (exp_neg) {
-            while (e > 300) {
-                res = simd_f128_div(res, _simd_f128_pow10_int(300));
-                e -= 300;
-            }
+            while (e > 300) { res = simd_f128_div(res, _simd_f128_pow10_int(300)); e -= 300; }
             res = simd_f128_div(res, _simd_f128_pow10_int(e));
         } else {
-            while (e > 300) {
-                res = simd_f128_mul(res, _simd_f128_pow10_int(300));
-                e -= 300;
-            }
+            while (e > 300) { res = simd_f128_mul(res, _simd_f128_pow10_int(300)); e -= 300; }
             res = simd_f128_mul(res, _simd_f128_pow10_int(e));
         }
     }
 
-    // negate the final result if negative sign was matched
     if (is_neg) {
-        simd_f128 zero = simd_f128_from_double(0.0);
-        res = simd_f128_sub(zero, res);
+        res = simd_f128_sub(simd_f128_from_double(0.0), res);
     }
-
     return res;
 }
 
-#endif // simd_f128_implementation
-#endif // simd_f128_io_h
+
+void simd_f128_to_bytes(uint8_t* out, simd_f128 x) {
+    if (!out) return;
+    double hi, lo;
+    simd_f128_extract(x, &hi, &lo);
+    memcpy(out, &hi, 8);
+    memcpy(out + 8, &lo, 8);
+}
+
+simd_f128 simd_f128_from_bytes(const uint8_t* in) {
+    if (!in) return simd_f128_from_double(0.0);
+    double hi, lo;
+    memcpy(&hi, in, 8);
+    memcpy(&lo, in + 8, 8);
+    return simd_f128_from_hi_lo(hi, lo);
+}
+
+#endif // SIMD_F128_IMPLEMENTATION
+#endif // SIMD_F128_IO_H

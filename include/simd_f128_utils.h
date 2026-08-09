@@ -1,23 +1,28 @@
-// updated 2026-06-12
-// spdx-license-identifier: mit
-// copyright (c) 2026 jirawat siripuk
+/* simd_f128_utils.h
+ *
+ * utility functions and comparison operators for 128-bit double-double values.
+ * provides equality, relational checks, and bitwise manipulation helpers.
+ *
+ * updated 2026-08-09
+ * spdx-license-identifier: mit
+ * copyright (c) 2026 jirawat siripuk */
 
 #ifndef SIMD_F128_UTILS_H
 #define SIMD_F128_UTILS_H
 
 #include "simd_f128.h"
 
-// ██ ██████  
-// ██ ██  ██ 
-// ██ ██  ██ 
-// ██ ██  ██ 
-// ██ ██████ 
+
+// ██ ██████
+// ██ ██  ██
+// ██ ██  ██
+// ██ ██  ██
+// ██ ██████
 //
 // >>comparison api
-
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif // __cplusplus
 
 // compare two double-double numbers, returning -1 if a < b, 1 if a > b, and 0 if a == b
 SIMD_F128_INLINE int simd_f128_cmp(simd_f128 a, simd_f128 b);
@@ -54,16 +59,15 @@ SIMD_F128_INLINE simd_f128 simd_f128_max(simd_f128 a, simd_f128 b);
 
 #ifdef __cplusplus
 }
-#endif
+#endif // __cplusplus
 
-// ██ ███    ███ ██████  ██      ███████ ███    ███ ███████ ███    ██ ████████  █████  ████████ ██  ██████  ███    ██ 
-// ██ ████  ████ ██   ██ ██      ██      ████  ████ ██      ████   ██    ██    ██   ██    ██    ██ ██    ██ ████   ██ 
-// ██ ██ ████ ██ ██████  ██      █████   ██ ████ ██ █████   ██ ██  ██    ██    ███████    ██    ██ ██    ██ ██ ██  ██ 
-// ██ ██  ██  ██ ██      ██      ██      ██  ██  ██ ██      ██  ██ ██    ██    ██   ██    ██    ██ ██    ██ ██  ██ ██ 
-// ██ ██      ██ ██      ███████ ███████ ██      ██ ███████ ██   ████    ██    ██   ██    ██    ██  ██████  ██   ████ 
+// ██ ███    ███ ██████  ██      ███████ ███    ███ ███████ ███    ██ ████████  █████  ████████ ██  ██████  ███    ██
+// ██ ████  ████ ██   ██ ██      ██      ████  ████ ██      ████   ██    ██    ██   ██    ██    ██ ██    ██ ████   ██
+// ██ ██ ████ ██ ██████  ██      █████   ██ ████ ██ █████   ██ ██  ██    ██    ███████    ██    ██ ██    ██ ██ ██  ██
+// ██ ██  ██  ██ ██      ██      ██      ██  ██  ██ ██      ██  ██ ██    ██    ██   ██    ██    ██ ██    ██ ██  ██ ██
+// ██ ██      ██ ██      ███████ ███████ ██      ██ ███████ ██   ████    ██    ██   ██    ██    ██  ██████  ██   ████
 //
 // >>implementation logic
-
 SIMD_F128_INLINE int simd_f128_cmp(simd_f128 a, simd_f128 b) {
     double ahi, alo, bhi, blo;
     simd_f128_extract(a, &ahi, &alo);
@@ -132,7 +136,7 @@ SIMD_F128_INLINE int simd_f128_isinf(simd_f128 x) {
 SIMD_F128_INLINE simd_f128 simd_f128_abs(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
-    
+
     // absolute value logic:
     // negate both components if hi is negative.
     // if hi is positive, keep signs.
@@ -162,4 +166,4 @@ SIMD_F128_INLINE simd_f128 simd_f128_max(simd_f128 a, simd_f128 b) {
     return (simd_f128_cmp(a, b) >= 0) ? a : b;
 }
 
-#endif // simd_f128_utils_h
+#endif // SIMD_F128_UTILS_H

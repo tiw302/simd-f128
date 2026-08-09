@@ -1,6 +1,6 @@
-/*
- * simd_f128.d.ts -- high-performance 128-bit (double-double) arithmetic for typescript.
+/* simd_f128.d.ts -- high-performance 128-bit (double-double) arithmetic for typescript.
  * project url: https://github.com/tiw302/simd-f128
+ *
  * technical background:
  * ---------------------
  * this library uses "double-double" arithmetic. basically, we represent a
@@ -8,41 +8,41 @@
  * this gives us about 31 decimal digits of precision, which is roughly
  * the same as quad precision (f128) but much faster because it uses
  * hardware double-precision units.
+ *
  * typescript bindings:
  * --------------------
  * this file provides exact typings for the javascript webassembly wrapper,
  * ensuring type safety and intellisense integration for modern ts projects.
- * license:
- * --------
- * mit license
- * copyright (c) 2026 jirawat siripuk
- * */
+ *
+ * updated 2026-08-09
+ * spdx-license-identifier: mit
+ * copyright (c) 2026 jirawat siripuk */
 
 export class Float128 {
-    // raw 128-bit memory representation mapped directly to the wasm heap.
-    // exposes the underlying double-double format (hi, lo) explicitly.
+    /* raw 128-bit memory representation mapped directly to the wasm heap.
+     * exposes the underlying double-double format (hi, lo) explicitly. */
     data: Float64Array;
 
-    // memory-safe initializer capable of bridging javascript primitives,
-    // high-precision string literals, or existing unmanaged typed arrays.
+    /* memory-safe initializer capable of bridging javascript primitives,
+     * high-precision string literals, or existing unmanaged typed arrays. */
     constructor(val: string | number | Float128 | Float64Array);
 
     // runtime synchronization flag confirming wasm environment boot.
     static readonly isReady: boolean;
 
-    // async blocker to ensure critical sections do not execute until
-    // the c core has successfully initialized the memory subsystem.
+    /* async blocker to ensure critical sections do not execute until
+     * the c core has successfully initialized the memory subsystem. */
     static ready(): Promise<void>;
 
-    // core hardware-accelerated arithmetic operations
-    // these guarantee zero heap allocations (all operations map to wasm internals)
+    /* core hardware-accelerated arithmetic operations.
+     * these guarantee zero heap allocations (all operations map to wasm internals). */
     add(other: Float128): Float128;
     sub(other: Float128): Float128;
     mul(other: Float128): Float128;
     div(other: Float128): Float128;
 
-    // advanced transcendental math and geometric functions
-    // exact bounded calculations based on libm precision characteristics
+    /* advanced transcendental math and geometric functions.
+     * exact bounded calculations based on libm precision characteristics. */
     sqrt(): Float128;
     exp(): Float128;
     log(): Float128;
@@ -75,7 +75,7 @@ export class Float128 {
     le(other: Float128): boolean;
     ge(other: Float128): boolean;
 
-    // deterministic formatting engine to extract high-precision decimals
-    // directly from the memory buffer without javascript number rounding errors.
+    /* deterministic formatting engine to extract high-precision decimals
+     * directly from the memory buffer without javascript number rounding errors. */
     toString(precision?: number): string;
 }

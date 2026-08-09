@@ -1,6 +1,11 @@
-// updated 2026-06-12
-// spdx-license-identifier: mit
-// copyright (c) 2026 jirawat siripuk
+/* simd_f128_complex.h
+ *
+ * complex number operations for 128-bit double-double values.
+ * provides arithmetic and absolute value computations in c.
+ *
+ * updated 2026-08-09
+ * spdx-license-identifier: mit
+ * copyright (c) 2026 jirawat siripuk */
 
 #ifndef SIMD_F128_COMPLEX_H
 #define SIMD_F128_COMPLEX_H
@@ -9,18 +14,16 @@
 #include "simd_f128_math.h"
 #include "simd_f128_utils.h"
 
-
-//  ██████  ██████  ███    ███ ██████  ██      ███████ ██   ██ 
-// ██      ██    ██ ████  ████ ██   ██ ██      ██       ██ ██  
-// ██      ██    ██ ██ ████ ██ ██████  ██      █████     ███   
-// ██      ██    ██ ██  ██  ██ ██      ██      ██       ██ ██  
-//  ██████  ██████  ██      ██ ██      ███████ ███████ ██   ██ 
+//  ██████  ██████  ███    ███ ██████  ██      ███████ ██   ██
+// ██      ██    ██ ████  ████ ██   ██ ██      ██       ██ ██
+// ██      ██    ██ ██ ████ ██ ██████  ██      █████     ███
+// ██      ██    ██ ██  ██  ██ ██      ██      ██       ██ ██
+//  ██████  ██████  ██      ██ ██      ███████ ███████ ██   ██
 //
 // >>complex numbers api
-
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif // __cplusplus
 
 typedef struct {
     simd_f128 real;
@@ -51,7 +54,7 @@ SIMD_F128_INLINE simd_f128_complex simd_f128_complex_mul(simd_f128_complex a, si
     simd_f128 i1i2 = simd_f128_mul(a.imag, b.imag);
     simd_f128 r1i2 = simd_f128_mul(a.real, b.imag);
     simd_f128 r2i1 = simd_f128_mul(a.imag, b.real);
-    
+
     res.real = simd_f128_sub(r1r2, i1i2);
     res.imag = simd_f128_add(r1i2, r2i1);
     return res;
@@ -100,6 +103,6 @@ SIMD_F128_INLINE simd_f128_complex simd_f128_complex_conj(simd_f128_complex a) {
 
 #ifdef __cplusplus
 }
-#endif
+#endif // __cplusplus
 
-#endif // simd_f128_complex_h
+#endif // SIMD_F128_COMPLEX_H

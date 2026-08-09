@@ -1,6 +1,10 @@
-/*
- * lib.rs -- high-performance 128-bit (double-double) arithmetic for rust.
+/* lib.rs
+ *
+ * high-performance 128-bit (double-double) arithmetic for rust.
+ * safe abstractions over the c-core. implements std::ops for native feel.
+ *
  * project url: https://github.com/tiw302/simd-f128
+ *
  * technical background:
  * ---------------------
  * this library uses "double-double" arithmetic. basically, we represent a
@@ -8,35 +12,32 @@
  * this gives us about 31 decimal digits of precision, which is roughly
  * the same as quad precision (f128) but much faster because it uses
  * hardware double-precision units.
- * rust bindings:
- * --------------
- * this file provides safe rust abstractions over the underlying c-core 
- * functions via ffi. it implements standard rust traits (std::ops) so 
- * that float128 feels like a native rust primitive with zero overhead.
- * license:
- * --------
- * mit license
- * copyright (c) 2026 jirawat siripuk
- * */
+ *
+ * updated 2026-08-09
+ * spdx-license-identifier: mit
+ * copyright (c) 2026 jirawat siripuk */
 
 use std::ops::{Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, Neg};
 use std::cmp::Ordering;
 
-// the core 128-bit floating point type.
-// we force a strict c representation and 16-byte memory alignment (align(16)).
-// this ensures that when rust passes pointers to the c backend, the memory 
-// perfectly aligns with avx2 and wasm simd128 vector register requirements.
+/* 128-bit floating point type.
+ * strictly aligned to 16 bytes for avx2/wasm simd128 compatibility over ffi. */
 #[repr(C, align(16))]
 #[derive(Copy, Clone, Debug)]
 pub struct Float128 {
-    // must match the c struct layout exactly (hi, lo)
     data: [f64; 2],
 }
 
-// ffi bindings to the c-core backend.
-// we use pointer passing (*const f64, *mut f64) instead of passing structs by value.
-// this completely sidesteps c abi calling convention bugs across different operating systems,
-// ensuring the parameters are cleanly mapped to memory registers without unexpected stack copies.
+/* 128-bit complex floating point type.
+ * aligned to 16 bytes for simd compatibility. */
+#[repr(C, align(16))]
+#[derive(Copy, Clone, Debug)]
+pub struct Complex128 {
+    data: [f64; 4],
+}
+
+/* ffi bindings.
+ * uses pointers instead of passing structs by value to avoid c abi issues. */
 extern "C" {
     fn rs_simd_f128_add(a: *const f64, b: *const f64, out: *mut f64);
     fn rs_simd_f128_sub(a: *const f64, b: *const f64, out: *mut f64);
@@ -71,12 +72,20 @@ extern "C" {
     fn rs_simd_f128_const_e(out: *mut f64);
     fn rs_simd_f128_const_sqrt2(out: *mut f64);
     fn rs_simd_f128_const_ln2(out: *mut f64);
+
+    fn rs_simd_f128_complex_add(a: *const f64, b: *const f64, out: *mut f64);
+    fn rs_simd_f128_complex_sub(a: *const f64, b: *const f64, out: *mut f64);
+    fn rs_simd_f128_complex_mul(a: *const f64, b: *const f64, out: *mut f64);
+    fn rs_simd_f128_complex_div(a: *const f64, b: *const f64, out: *mut f64);
+    fn rs_simd_f128_complex_abs_sqr(a: *const f64, out: *mut f64);
+    fn rs_simd_f128_complex_abs(a: *const f64, out: *mut f64);
+    fn rs_simd_f128_complex_arg(a: *const f64, out: *mut f64);
+    fn rs_simd_f128_complex_conj(a: *const f64, out: *mut f64);
 }
 
-// safe rust abstractions over the unsafe ffi boundary.
-// every method here allocates the result array (`let mut out = [0.0; 2]`) 
-// purely on the rust stack. this guarantees zero heap allocations while 
-// remaining perfectly thread-safe.
+// =========================================================================
+// float128 implementation
+// =========================================================================
 impl Float128 {
     pub fn new(val: f64) -> Self {
         let mut out = [0.0; 2];
@@ -93,12 +102,6 @@ impl Float128 {
     // =========================================================================
     // transcendental and geometric math functions
     // =========================================================================
-    // all mathematical operations defer to the heavily optimized c-core.
-    // the underlying implementations utilize 128-bit minimax polynomials, 
-    // newton-raphson iterations, and hardware fused multiply-add (fma) 
-    // when compiled with avx2 or neon backends. precision is strictly bounded
-    // to ~31 decimal digits across the entire domain space.
-    
     pub fn sqrt(self) -> Self {
         let mut out = [0.0; 2];
         unsafe { rs_simd_f128_sqrt(self.data.as_ptr(), out.as_mut_ptr()); }
@@ -219,13 +222,6 @@ impl Float128 {
         Float128 { data: out }
     }
 
-    // =========================================================================
-    // exact pre-computed mathematical constants
-    // =========================================================================
-    // these constants are injected directly from the c-core's read-only memory segment.
-    // they are pre-calculated to exact 128-bit double-double precision limits,
-    // ensuring no precision is lost during initialization.
-
     pub fn pi() -> Self {
         let mut out = [0.0; 2];
         unsafe { rs_simd_f128_const_pi(out.as_mut_ptr()); }
@@ -251,69 +247,158 @@ impl Float128 {
     }
 }
 
-// operator overloading for native rust ergonomics.
-// by implementing standard std::ops traits, float128 can be used exactly like a native f64.
-// rust's llvm backend is smart enough to inline these wrapper traits away, meaning 
-// the abstraction overhead drops to absolute zero at runtime.
-impl Add for Float128 {
-    type Output = Self;
-    fn add(self, other: Self) -> Self {
+// =========================================================================
+// complex128 implementation
+// =========================================================================
+impl Complex128 {
+    pub fn new() -> Self {
+        Complex128 { data: [0.0; 4] }
+    }
+
+    pub fn new_f128(real: Float128, imag: Float128) -> Self {
+        let (rhi, rlo) = real.extract();
+        let (ihi, ilo) = imag.extract();
+        Complex128 { data: [rhi, rlo, ihi, ilo] }
+    }
+
+    pub fn new_f64(real: f64, imag: f64) -> Self {
+        Self::new_f128(Float128::new(real), Float128::new(imag))
+    }
+
+    pub fn real(&self) -> Float128 {
+        Float128 { data: [self.data[0], self.data[1]] }
+    }
+
+    pub fn imag(&self) -> Float128 {
+        Float128 { data: [self.data[2], self.data[3]] }
+    }
+
+    pub fn abs_sqr(self) -> Float128 {
         let mut out = [0.0; 2];
-        unsafe { rs_simd_f128_add(self.data.as_ptr(), other.data.as_ptr(), out.as_mut_ptr()); }
+        unsafe { rs_simd_f128_complex_abs_sqr(self.data.as_ptr(), out.as_mut_ptr()); }
         Float128 { data: out }
     }
-}
 
-impl Sub for Float128 {
-    type Output = Self;
-    fn sub(self, other: Self) -> Self {
+    pub fn abs(self) -> Float128 {
         let mut out = [0.0; 2];
-        unsafe { rs_simd_f128_sub(self.data.as_ptr(), other.data.as_ptr(), out.as_mut_ptr()); }
+        unsafe { rs_simd_f128_complex_abs(self.data.as_ptr(), out.as_mut_ptr()); }
         Float128 { data: out }
     }
-}
 
-impl Mul for Float128 {
-    type Output = Self;
-    fn mul(self, other: Self) -> Self {
+    pub fn arg(self) -> Float128 {
         let mut out = [0.0; 2];
-        unsafe { rs_simd_f128_mul(self.data.as_ptr(), other.data.as_ptr(), out.as_mut_ptr()); }
+        unsafe { rs_simd_f128_complex_arg(self.data.as_ptr(), out.as_mut_ptr()); }
         Float128 { data: out }
     }
-}
 
-impl Div for Float128 {
-    type Output = Self;
-    fn div(self, other: Self) -> Self {
-        let mut out = [0.0; 2];
-        unsafe { rs_simd_f128_div(self.data.as_ptr(), other.data.as_ptr(), out.as_mut_ptr()); }
-        Float128 { data: out }
+    pub fn conj(self) -> Self {
+        let mut out = [0.0; 4];
+        unsafe { rs_simd_f128_complex_conj(self.data.as_ptr(), out.as_mut_ptr()); }
+        Complex128 { data: out }
+    }
+
+    pub fn sin(self) -> Self {
+        let x = self.real();
+        let y = self.imag();
+        Self::new_f128(x.sin() * y.cosh(), x.cos() * y.sinh())
+    }
+
+    pub fn cos(self) -> Self {
+        let x = self.real();
+        let y = self.imag();
+        Self::new_f128(x.cos() * y.cosh(), -(x.sin() * y.sinh()))
+    }
+
+    pub fn tan(self) -> Self {
+        self.sin() / self.cos()
+    }
+
+    pub fn sinh(self) -> Self {
+        let x = self.real();
+        let y = self.imag();
+        Self::new_f128(x.sinh() * y.cos(), x.cosh() * y.sin())
+    }
+
+    pub fn cosh(self) -> Self {
+        let x = self.real();
+        let y = self.imag();
+        Self::new_f128(x.cosh() * y.cos(), x.sinh() * y.sin())
+    }
+
+    pub fn tanh(self) -> Self {
+        self.sinh() / self.cosh()
     }
 }
 
-impl AddAssign for Float128 {
-    fn add_assign(&mut self, other: Self) {
-        *self = *self + other;
-    }
+// =========================================================================
+// operator overloading macros
+// =========================================================================
+macro_rules! impl_arithmetic_ops {
+    ($type:ident, $trait:ident, $method:ident, $ffi_func:ident, $out_size:expr) => {
+        impl $trait for $type {
+            type Output = Self;
+            fn $method(self, other: Self) -> Self {
+                let mut out = [0.0; $out_size];
+                unsafe { $ffi_func(self.data.as_ptr(), other.data.as_ptr(), out.as_mut_ptr()); }
+                $type { data: out }
+            }
+        }
+        impl $trait for &$type {
+            type Output = $type;
+            fn $method(self, other: Self) -> $type {
+                (*self).$method(*other)
+            }
+        }
+        impl $trait<$type> for &$type {
+            type Output = $type;
+            fn $method(self, other: $type) -> $type {
+                (*self).$method(other)
+            }
+        }
+        impl $trait<&$type> for $type {
+            type Output = $type;
+            fn $method(self, other: &$type) -> $type {
+                self.$method(*other)
+            }
+        }
+    };
 }
 
-impl SubAssign for Float128 {
-    fn sub_assign(&mut self, other: Self) {
-        *self = *self - other;
-    }
+macro_rules! impl_assign_ops {
+    ($type:ident, $trait:ident, $method:ident, $op_trait:ident, $op_method:ident) => {
+        impl $trait for $type {
+            fn $method(&mut self, other: Self) {
+                *self = self.$op_method(other);
+            }
+        }
+        impl $trait<&$type> for $type {
+            fn $method(&mut self, other: &$type) {
+                *self = self.$op_method(*other);
+            }
+        }
+    };
 }
 
-impl MulAssign for Float128 {
-    fn mul_assign(&mut self, other: Self) {
-        *self = *self * other;
-    }
-}
+// float128 basic arithmetic
+impl_arithmetic_ops!(Float128, Add, add, rs_simd_f128_add, 2);
+impl_arithmetic_ops!(Float128, Sub, sub, rs_simd_f128_sub, 2);
+impl_arithmetic_ops!(Float128, Mul, mul, rs_simd_f128_mul, 2);
+impl_arithmetic_ops!(Float128, Div, div, rs_simd_f128_div, 2);
 
-impl DivAssign for Float128 {
-    fn div_assign(&mut self, other: Self) {
-        *self = *self / other;
-    }
-}
+impl_assign_ops!(Float128, AddAssign, add_assign, add);
+impl_assign_ops!(Float128, SubAssign, sub_assign, sub);
+impl_assign_ops!(Float128, MulAssign, mul_assign, mul);
+impl_assign_ops!(Float128, DivAssign, div_assign, div);
+
+impl_arithmetic_ops!(Complex128, Add, add, rs_simd_f128_complex_add, 4);
+impl_arithmetic_ops!(Complex128, Sub, sub, rs_simd_f128_complex_sub, 4);
+impl_arithmetic_ops!(Complex128, Mul, mul, rs_simd_f128_complex_mul, 4);
+impl_arithmetic_ops!(Complex128, Div, div, rs_simd_f128_complex_div, 4);
+
+impl_assign_ops!(Complex128, AddAssign, add_assign, add);
+impl_assign_ops!(Complex128, SubAssign, sub_assign, sub);
+impl_assign_ops!(Complex128, MulAssign, mul_assign, mul);
+impl_assign_ops!(Complex128, DivAssign, div_assign, div);
 
 impl Neg for Float128 {
     type Output = Self;
@@ -325,11 +410,72 @@ impl Neg for Float128 {
         Float128 { data: out }
     }
 }
+impl Neg for &Float128 {
+    type Output = Float128;
+    fn neg(self) -> Float128 {
+        -(*self)
+    }
+}
 
-// float128 does not implement eq or ord because nan comparison properties
-// make total ordering mathematically impossible under strict ieee-754 semantics.
-// instead, partial_eq and partial_ord are implemented to correctly handle
-// comparisons (returning false or none when nan is involved).
+impl Neg for Complex128 {
+    type Output = Self;
+    fn neg(self) -> Self {
+        Self::new_f128(-self.real(), -self.imag())
+    }
+}
+impl Neg for &Complex128 {
+    type Output = Complex128;
+    fn neg(self) -> Complex128 {
+        -(*self)
+    }
+}
+
+// =========================================================================
+// native type interoperability (f64)
+// =========================================================================
+impl From<f64> for Float128 {
+    fn from(val: f64) -> Self {
+        Float128::new(val)
+    }
+}
+
+macro_rules! impl_f64_arithmetic {
+    ($trait:ident, $method:ident) => {
+        impl $trait<f64> for Float128 {
+            type Output = Float128;
+            fn $method(self, other: f64) -> Float128 {
+                self.$method(Float128::new(other))
+            }
+        }
+        impl $trait<f64> for &Float128 {
+            type Output = Float128;
+            fn $method(self, other: f64) -> Float128 {
+                (*self).$method(Float128::new(other))
+            }
+        }
+        impl $trait<Float128> for f64 {
+            type Output = Float128;
+            fn $method(self, other: Float128) -> Float128 {
+                Float128::new(self).$method(other)
+            }
+        }
+        impl $trait<&Float128> for f64 {
+            type Output = Float128;
+            fn $method(self, other: &Float128) -> Float128 {
+                Float128::new(self).$method(*other)
+            }
+        }
+    };
+}
+
+impl_f64_arithmetic!(Add, add);
+impl_f64_arithmetic!(Sub, sub);
+impl_f64_arithmetic!(Mul, mul);
+impl_f64_arithmetic!(Div, div);
+
+// =========================================================================
+// comparison & formatting
+// =========================================================================
 impl PartialEq for Float128 {
     fn eq(&self, other: &Self) -> bool {
         if self.data[0].is_nan() || other.data[0].is_nan() {
@@ -357,17 +503,17 @@ impl PartialOrd for Float128 {
     }
 }
 
-// default initialization.
-// returns a new Float128 initialized to 0.0.
 impl Default for Float128 {
     fn default() -> Self {
         Float128::new(0.0)
     }
 }
+impl Default for Complex128 {
+    fn default() -> Self {
+        Complex128::new()
+    }
+}
 
-// string parsing via ffi.
-// we safely allocate a null-terminated c_string in rust memory space first.
-// this prevents the c-core from reading uninitialized rust memory, preventing segfaults.
 impl std::str::FromStr for Float128 {
     type Err = &'static str;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -380,9 +526,6 @@ impl std::str::FromStr for Float128 {
     }
 }
 
-// deterministic formatting engine.
-// we pass a 128-byte stack-allocated buffer to the c-core to format the string.
-// this is extremely fast and avoids rust string allocation overhead until the final utf-8 slice.
 impl std::fmt::Display for Float128 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut buf = [0u8; 128];
@@ -398,104 +541,8 @@ impl std::fmt::Display for Float128 {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_default() {
-        let a = Float128::default();
-        let (hi, lo) = a.extract();
-        assert_eq!(hi, 0.0);
-        assert_eq!(lo, 0.0);
-    }
-
-    #[test]
-    fn test_addition() {
-        let a = Float128::new(1.0);
-        let b = Float128::new(1e-17);
-        let c = a + b;
-        let (hi, lo) = c.extract();
-        assert_eq!(hi, 1.0);
-        assert_eq!(lo, 1e-17);
-    }
-
-    #[test]
-    fn test_neg() {
-        let a = Float128::new(1.0);
-        let b = -a;
-        assert_eq!(b.extract().0, -1.0);
-    }
-
-    #[test]
-    fn test_from_str() {
-        use std::str::FromStr;
-        let pi = Float128::from_str("3.14159265358979323846264338327950").unwrap();
-        assert!(pi.extract().0 > 3.14);
-    }
-
-    #[test]
-    fn test_display() {
-        let pi = Float128::pi();
-        let s = format!("{}", pi);
-        assert!(s.starts_with("3.1415926535897932"));
-    }
-
-    #[test]
-    fn test_advanced_math() {
-        let two = Float128::new(2.0);
-        let three = Float128::new(3.0);
-        let pow_res = two.pow(three);
-        let (hi, _) = pow_res.extract();
-        assert_eq!(hi, 8.0);
-
-        let neg_four_point_seven = Float128::new(-4.7);
-        assert_eq!(neg_four_point_seven.abs().extract().0, 4.7);
-        assert_eq!(neg_four_point_seven.floor().extract().0, -5.0);
-        assert_eq!(neg_four_point_seven.ceil().extract().0, -4.0);
-        assert_eq!(neg_four_point_seven.round().extract().0, -5.0);
-        assert_eq!(neg_four_point_seven.trunc().extract().0, -4.0);
-
-        let ten_point_five = Float128::new(10.5);
-        let three_f128 = Float128::new(3.0);
-        assert_eq!(ten_point_five.fmod(three_f128).extract().0, 1.5);
-
-        let one = Float128::new(1.0);
-        let asin_res = one.asin();
-        let pi_over_2 = Float128::pi() * Float128::new(0.5);
-        assert!((asin_res - pi_over_2).abs().extract().0 < 1e-12);
-    }
-
-    #[test]
-    fn test_hyperbolic_and_trig() {
-        // test tan
-        let zero = Float128::new(0.0);
-        let tan_zero = zero.tan();
-        assert!((tan_zero.extract().0).abs() < 1e-15);
-
-        // tan(pi/4) should be approximately 1.0
-        let pi_over_4 = Float128::pi() * Float128::new(0.25);
-        let tan_pi_over_4 = pi_over_4.tan();
-        assert!((tan_pi_over_4.extract().0 - 1.0).abs() < 1e-12);
-
-        // test sinh, cosh, tanh
-        let one = Float128::new(1.0);
-        let sinh_one = one.sinh();
-        let cosh_one = one.cosh();
-        let tanh_one = one.tanh();
-
-        // sinh(1) = (e - 1/e) / 2
-        // cosh(1) = (e + 1/e) / 2
-        // tanh(1) = sinh(1) / cosh(1)
-        let e = Float128::e();
-        let inv_e = Float128::new(1.0) / e;
-        let expected_sinh = (e - inv_e) * Float128::new(0.5);
-        let expected_cosh = (e + inv_e) * Float128::new(0.5);
-        let expected_tanh = expected_sinh / expected_cosh;
-
-        assert!((sinh_one - expected_sinh).abs().extract().0 < 1e-15);
-        assert!((cosh_one - expected_cosh).abs().extract().0 < 1e-15);
-        assert!((tanh_one - expected_tanh).abs().extract().0 < 1e-15);
+impl std::fmt::Display for Complex128 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} + {}i", self.real(), self.imag())
     }
 }

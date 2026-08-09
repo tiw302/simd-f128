@@ -1,6 +1,12 @@
-// updated 2026-06-12
-// spdx-license-identifier: mit
-// copyright (c) 2026 jirawat siripuk
+/* simd_f128.hpp
+ *
+ * modern c++ wrapper class for simd_f128 double-double values.
+ * provides operator overloading and std::numeric_limits specializations.
+ *
+ * updated 2026-08-09
+ * spdx-license-identifier: mit
+ * copyright (c) 2026 jirawat siripuk */
+
 #ifndef SIMD_F128_HPP
 #define SIMD_F128_HPP
 
@@ -15,14 +21,13 @@
 #include <limits>
 #include <functional>
 
-// ██████  ██████  ██████  
-// ██      ██  ██  ██  ██ 
-// ██      ██████  ██████ 
-// ██      ██      ██     
-// ██████  ██      ██     
+// ██████  ██████  ██████
+// ██      ██  ██  ██  ██
+// ██      ██████  ██████
+// ██      ██      ██
+// ██████  ██      ██
 //
 // >>cpp wrapper class
-
 namespace f128 {
 
 class float128 {
@@ -48,15 +53,15 @@ public:
     /* arithmetic operator overloading:
      * maps standard c++ mathematical operators to the underlying simd c api.
      * division follows strict ieee-754 semantics regarding division by zero,
-     * returning inf or nan directly rather than throwing c++ exceptions, 
+     * returning inf or nan directly rather than throwing c++ exceptions,
      * ensuring safe usage in tightly optimized computational loops. */
     SIMD_F128_DEVICE float128 operator+(const float128& b) const { return float128(simd_f128_add(data, b.data)); }
     SIMD_F128_DEVICE float128 operator-(const float128& b) const { return float128(simd_f128_sub(data, b.data)); }
     SIMD_F128_DEVICE float128 operator*(const float128& b) const { return float128(simd_f128_mul(data, b.data)); }
     SIMD_F128_DEVICE float128 operator/(const float128& b) const { return float128(simd_f128_div(data, b.data)); }
 
-    /* compound assignment operators:
-     * mutates the current object by applying the requested operation. */
+    // compound assignment operators:
+    // mutates the current object by applying the requested operation.
     SIMD_F128_DEVICE float128& operator+=(const float128& b) { data = simd_f128_add(data, b.data); return *this; }
     SIMD_F128_DEVICE float128& operator-=(const float128& b) { data = simd_f128_sub(data, b.data); return *this; }
     SIMD_F128_DEVICE float128& operator*=(const float128& b) { data = simd_f128_mul(data, b.data); return *this; }
@@ -121,12 +126,22 @@ SIMD_F128_DEVICE inline bool operator<=(double a, const float128& b) { return fl
 // global math wrappers mapping to namespace f128 functions
 SIMD_F128_DEVICE inline float128 exp(float128 x) { return float128(simd_f128_exp(x.data)); }
 SIMD_F128_DEVICE inline float128 log(float128 x) { return float128(simd_f128_log(x.data)); }
+SIMD_F128_DEVICE inline float128 log10(float128 x) { return float128(simd_f128_log10(x.data)); }
+SIMD_F128_DEVICE inline float128 log2(float128 x) { return float128(simd_f128_log2(x.data)); }
 SIMD_F128_DEVICE inline float128 pow(float128 b, float128 e) { return float128(simd_f128_pow(b.data, e.data)); }
 SIMD_F128_DEVICE inline float128 sin(float128 x) { return float128(simd_f128_sin(x.data)); }
 SIMD_F128_DEVICE inline float128 cos(float128 x) { return float128(simd_f128_cos(x.data)); }
 SIMD_F128_DEVICE inline float128 sqrt(float128 x) { return float128(simd_f128_sqrt(x.data)); }
+SIMD_F128_DEVICE inline float128 cbrt(float128 x) { return float128(simd_f128_cbrt(x.data)); }
 SIMD_F128_DEVICE inline float128 rsqrt(float128 x) { return float128(simd_f128_rsqrt(x.data)); }
 SIMD_F128_DEVICE inline float128 abs(float128 x) { return float128(simd_f128_abs(x.data)); }
+SIMD_F128_DEVICE inline float128 erf(float128 x) { return float128(simd_f128_erf(x.data)); }
+SIMD_F128_DEVICE inline float128 erfc(float128 x) { return float128(simd_f128_erfc(x.data)); }
+SIMD_F128_DEVICE inline float128 tgamma(float128 x) { return float128(simd_f128_tgamma(x.data)); }
+SIMD_F128_DEVICE inline float128 j0(float128 x) { return float128(simd_f128_j0(x.data)); }
+SIMD_F128_DEVICE inline float128 j1(float128 x) { return float128(simd_f128_j1(x.data)); }
+SIMD_F128_DEVICE inline float128 y0(float128 x) { return float128(simd_f128_y0(x.data)); }
+SIMD_F128_DEVICE inline float128 y1(float128 x) { return float128(simd_f128_y1(x.data)); }
 SIMD_F128_DEVICE inline float128 floor(float128 x) { return float128(simd_f128_floor(x.data)); }
 SIMD_F128_DEVICE inline float128 ceil(float128 x) { return float128(simd_f128_ceil(x.data)); }
 SIMD_F128_DEVICE inline float128 trunc(float128 x) { return float128(simd_f128_trunc(x.data)); }
@@ -186,7 +201,7 @@ public:
     static f128::float128 lowest() noexcept { return -max(); }
     static f128::float128 max() noexcept { return f128::float128(simd_f128_from_hi_lo(1.7976931348623157e+308, 0.0)); }
     static f128::float128 epsilon() noexcept { return f128::float128(simd_f128_from_hi_lo(4.9303806576313238e-32, 0.0)); } // 2^-104
-    static f128::float128 round_error() noexcept { return f128::float128(0.5); }
+    static f128::float128 round_error() noexcept { return f128::float128(simd_f128_from_hi_lo(0.5, 0.0)); }
     static f128::float128 infinity() noexcept { return f128::float128(simd_f128_from_hi_lo(INFINITY, 0.0)); }
     static f128::float128 quiet_NaN() noexcept { return f128::float128(simd_f128_from_hi_lo(NAN, 0.0)); }
     static f128::float128 signaling_NaN() noexcept { return f128::float128(simd_f128_from_hi_lo(NAN, 0.0)); }
@@ -208,6 +223,8 @@ struct hash<f128::float128> {
 // std namespace overloads to allow standard template resolution and adl integration
 inline f128::float128 exp(f128::float128 x) { return f128::exp(x); }
 inline f128::float128 log(f128::float128 x) { return f128::log(x); }
+inline f128::float128 log10(f128::float128 x) { return f128::log10(x); }
+inline f128::float128 log2(f128::float128 x) { return f128::log2(x); }
 inline f128::float128 pow(f128::float128 b, f128::float128 e) { return f128::pow(b, e); }
 inline f128::float128 sin(f128::float128 x) { return f128::sin(x); }
 inline f128::float128 cos(f128::float128 x) { return f128::cos(x); }
@@ -216,6 +233,14 @@ inline f128::float128 sinh(f128::float128 x) { return f128::sinh(x); }
 inline f128::float128 cosh(f128::float128 x) { return f128::cosh(x); }
 inline f128::float128 tanh(f128::float128 x) { return f128::tanh(x); }
 inline f128::float128 sqrt(f128::float128 x) { return f128::sqrt(x); }
+inline f128::float128 cbrt(f128::float128 x) { return f128::cbrt(x); }
+inline f128::float128 erf(f128::float128 x) { return f128::erf(x); }
+inline f128::float128 erfc(f128::float128 x) { return f128::erfc(x); }
+inline f128::float128 tgamma(f128::float128 x) { return f128::tgamma(x); }
+inline f128::float128 j0(f128::float128 x) { return f128::j0(x); }
+inline f128::float128 j1(f128::float128 x) { return f128::j1(x); }
+inline f128::float128 y0(f128::float128 x) { return f128::y0(x); }
+inline f128::float128 y1(f128::float128 x) { return f128::y1(x); }
 inline f128::float128 abs(f128::float128 x) { return f128::abs(x); }
 inline f128::float128 floor(f128::float128 x) { return f128::floor(x); }
 inline f128::float128 ceil(f128::float128 x) { return f128::ceil(x); }
@@ -231,4 +256,4 @@ inline bool isinf(f128::float128 x) { return f128::isinf(x); }
 
 } // namespace std
 
-#endif /* SIMD_F128_HPP */
+#endif // SIMD_F128_HPP

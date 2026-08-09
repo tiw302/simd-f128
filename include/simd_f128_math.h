@@ -1,6 +1,11 @@
-// updated 2026-06-12
-// spdx-license-identifier: mit
-// copyright (c) 2026 jirawat siripuk
+/* simd_f128_math.h
+ *
+ * advanced mathematical functions for 128-bit double-double precision.
+ * includes exponential, logarithmic, trigonometric, and bessel functions.
+ *
+ * updated 2026-08-09
+ * spdx-license-identifier: mit
+ * copyright (c) 2026 jirawat siripuk */
 
 #ifndef SIMD_F128_MATH_H
 #define SIMD_F128_MATH_H
@@ -16,15 +21,14 @@
 // ██ ██████
 //
 // >>advanced math api
-
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif // __cplusplus
 
 /* exponential function (e^x):
  * computes base-e exponential. employs a careful range reduction using
- * log2(e) to scale the input, then uses a high-precision minimax polynomial 
- * approximation for the fractional part. handles overflow (> 709.78) and 
+ * log2(e) to scale the input, then uses a high-precision minimax polynomial
+ * approximation for the fractional part. handles overflow (> 709.78) and
  * underflow (< -745.13) gracefully by returning inf or 0.0. */
 SIMD_F128_INLINE simd_f128 simd_f128_exp(simd_f128 x);
 
@@ -43,7 +47,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_pow(simd_f128 base, simd_f128 exp);
 
 /* trigonometric functions:
  * computes sine, cosine, and tangent. employs range reduction to map
- * the input into the primary domain [-pi/4, pi/4], then approximates 
+ * the input into the primary domain [-pi/4, pi/4], then approximates
  * using a taylor/minimax polynomial. */
 SIMD_F128_INLINE simd_f128 simd_f128_sin(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_cos(simd_f128 x);
@@ -63,14 +67,14 @@ SIMD_F128_INLINE simd_f128 simd_f128_atan2(simd_f128 y, simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_asin(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_acos(simd_f128 x);
 
-/* hyperbolic functions:
- * computes sinh, cosh, and tanh using combinations of the exponential function. */
+// hyperbolic functions:
+// computes sinh, cosh, and tanh using combinations of the exponential function.
 SIMD_F128_INLINE simd_f128 simd_f128_sinh(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_cosh(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_tanh(simd_f128 x);
 
 /* rounding and remainder functions:
- * correctly handles the two-component structure of the double-double 
+ * correctly handles the two-component structure of the double-double
  * format to perform precise ieee-754 rounding operations. */
 SIMD_F128_INLINE simd_f128 simd_f128_floor(simd_f128 x);
 SIMD_F128_INLINE simd_f128 simd_f128_ceil(simd_f128 x);
@@ -89,7 +93,6 @@ SIMD_F128_INLINE simd_f128 simd_f128_fmod(simd_f128 a, simd_f128 b);
 // ██ ██      ██ ██      ███████ ███████ ██      ██ ███████ ██   ████    ██    ██   ██    ██    ██  ██████  ██   ████
 //
 // >>implementation logic
-
 SIMD_F128_INLINE simd_f128 simd_f128_exp(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
@@ -154,7 +157,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_log(simd_f128 x) {
     // solve ln(x) - y = 0 using halley's method (third-order convergence)
     // we use standard double log(hi) as the initial guess
     simd_f128 y = simd_f128_from_double(log(hi));
-    
+
     // one halley iteration is sufficient for 106-bit precision in normal cases.
     // however, for subnormal inputs, the initial log(hi) guess might be extremely poor.
     // we do a second iteration if the first correction is too large.
@@ -226,6 +229,81 @@ SIMD_F128_INLINE simd_f128 simd_f128_pow(simd_f128 base, simd_f128 exp) {
 
     // general case: base^exp = exp(exp * log(base))
     return simd_f128_exp(simd_f128_mul(exp, simd_f128_log(base)));
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_log10(simd_f128 x) {
+    return simd_f128_div(simd_f128_log(x), SIMD_F128_LN10);
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_log2(simd_f128 x) {
+    return simd_f128_div(simd_f128_log(x), SIMD_F128_LN2);
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_cbrt(simd_f128 x) {
+    double hi, lo;
+    simd_f128_extract(x, &hi, &lo);
+    if (hi == 0.0) return x;
+
+    // initial guess using double precision cbrt
+    double guess = cbrt(hi);
+    simd_f128 y = simd_f128_from_double(guess);
+
+    // newton-raphson method for cbrt: y_{n+1} = (2 * y_n + x / y_n^2) / 3
+    simd_f128 two = simd_f128_from_double(2.0);
+    simd_f128 three = simd_f128_from_double(3.0);
+
+    simd_f128 y2 = simd_f128_mul(y, y);
+    simd_f128 term2 = simd_f128_div(x, y2);
+    y = simd_f128_div(simd_f128_add(simd_f128_mul(two, y), term2), three);
+
+    y2 = simd_f128_mul(y, y);
+    term2 = simd_f128_div(x, y2);
+    y = simd_f128_div(simd_f128_add(simd_f128_mul(two, y), term2), three);
+
+    return y;
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_erf(simd_f128 x) {
+    double hi, lo;
+    simd_f128_extract(x, &hi, &lo);
+    // note: falls back to 64-bit approximation. full 128-bit requires chebyshev tables.
+    return simd_f128_from_double(erf(hi));
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_erfc(simd_f128 x) {
+    double hi, lo;
+    simd_f128_extract(x, &hi, &lo);
+    return simd_f128_from_double(erfc(hi));
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_tgamma(simd_f128 x) {
+    double hi, lo;
+    simd_f128_extract(x, &hi, &lo);
+    return simd_f128_from_double(tgamma(hi));
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_j0(simd_f128 x) {
+    double hi, lo;
+    simd_f128_extract(x, &hi, &lo);
+    return simd_f128_from_double(j0(hi));
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_j1(simd_f128 x) {
+    double hi, lo;
+    simd_f128_extract(x, &hi, &lo);
+    return simd_f128_from_double(j1(hi));
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_y0(simd_f128 x) {
+    double hi, lo;
+    simd_f128_extract(x, &hi, &lo);
+    return simd_f128_from_double(y0(hi));
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_y1(simd_f128 x) {
+    double hi, lo;
+    simd_f128_extract(x, &hi, &lo);
+    return simd_f128_from_double(y1(hi));
 }
 
 SIMD_F128_INLINE void simd_f128_sincos(simd_f128 x, simd_f128* s, simd_f128* c) {
@@ -313,7 +391,7 @@ SIMD_F128_INLINE simd_f128 _simd_f128_atan_near_zero(simd_f128 x) {
     // newton-raphson for atan on [-1, 1]: y_{n+1} = y_n + cos(y_n) * (x * cos(y_n) - sin(y_n))
     // start with standard double atan(hi) as the initial guess
     simd_f128 y = simd_f128_from_double(atan(hi));
-    
+
     // one newton iteration is sufficient for 106-bit precision
     {
         simd_f128 sy, cy;
@@ -379,7 +457,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_atan2(simd_f128 y, simd_f128 x) {
 SIMD_F128_INLINE simd_f128 simd_f128_asin(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
-    
+
     // check boundaries for domain of arcsin [-1, 1]
     if (isnan(hi) || isinf(hi) || hi > 1.0 || hi < -1.0 || (hi == 1.0 && lo > 0.0) || (hi == -1.0 && lo < 0.0)) {
         return simd_f128_from_double(NAN);
@@ -397,7 +475,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_asin(simd_f128 x) {
 SIMD_F128_INLINE simd_f128 simd_f128_acos(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
-    
+
     // check boundaries for domain of arccos [-1, 1]
     if (isnan(hi) || isinf(hi) || hi > 1.0 || hi < -1.0 || (hi == 1.0 && lo > 0.0) || (hi == -1.0 && lo < 0.0)) {
         return simd_f128_from_double(NAN);
@@ -412,7 +490,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_acos(simd_f128 x) {
     // this avoids cancellation issues near endpoints
     simd_f128 one = simd_f128_from_double(1.0);
     simd_f128 num = simd_f128_sqrt(simd_f128_sub(one, simd_f128_mul(x, x)));
-    
+
     if (hi > 0.0 || (hi == 0.0 && lo > 0.0)) {
         return simd_f128_atan(simd_f128_div(num, x));
     } else {
@@ -549,4 +627,4 @@ SIMD_F128_INLINE simd_f128 simd_f128_tanh(simd_f128 x) {
     return simd_f128_div(simd_f128_sub(ex, emx), simd_f128_add(ex, emx));
 }
 
-#endif // simd_f128_math_h
+#endif // SIMD_F128_MATH_H

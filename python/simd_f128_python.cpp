@@ -1,7 +1,6 @@
-
-/*
- * simd_f128_python.cpp -- high-performance 128-bit (double-double) arithmetic for python.
+/* simd_f128_python.cpp -- high-performance 128-bit (double-double) arithmetic for python.
  * project url: https://github.com/tiw302/simd-f128
+ *
  * technical background:
  * ---------------------
  * this library uses "double-double" arithmetic. basically, we represent a
@@ -9,19 +8,19 @@
  * this gives us about 31 decimal digits of precision, which is roughly
  * the same as quad precision (f128) but much faster because it uses
  * hardware double-precision units.
+ *
  * python bindings:
  * ----------------
- * this file utilizes pybind11 to securely expose the underlying c++
- * floating point math into the python ecosystem, mapping operator overloads
- * and transcendental functions without precision loss.
- * license:
- * --------
- * mit license
- * copyright (c) 2026 jirawat siripuk
- * */
+ * pybind11 wrapper for the c++ math core. maps operator overloads
+ * and math functions directly to python without precision loss.
+ *
+ * updated 2026-08-09
+ * spdx-license-identifier: mit
+ * copyright (c) 2026 jirawat siripuk */
 
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
+#include <pybind11/numpy.h>
 #define SIMD_F128_IMPLEMENTATION
 #include "../include/simd_f128.hpp"
 #include "../include/simd_f128_complex.hpp"
@@ -31,23 +30,17 @@ namespace py = pybind11;
 PYBIND11_MODULE(simd_f128, m) {
     m.doc() = "simd-f128: 128-bit double-double arithmetic module";
 
-    // ███████ ██       ██████   █████  ████████
-    // ██      ██      ██    ██ ██   ██    ██
-    // █████   ██      ██    ██ ███████    ██
-    // ██      ██      ██    ██ ██   ██    ██
-    // ██      ███████  ██████  ██   ██    ██
-    //
-    // >>class float128
+    // ============================================================================
+    // class float128
+    // ============================================================================
     py::class_<f128::float128>(m, "Float128")
         .def(py::init<>())
         .def(py::init<double>())
-        // bypass pybind11's default float cast (which truncates to 64-bit) by
-        // catching string initializers via lambda and routing directly to the c-core parser.
+        // parse from string to avoid pybind11's 64-bit float truncation
         .def(py::init([](const std::string& s) { return f128::float128(simd_f128_from_string(s.c_str())); }))
         .def("to_string", &f128::float128::to_string)
         .def("__str__", &f128::float128::to_string)
-        // override __repr__ to yield a valid python eval() expression that precisely
-        // reconstructs the float128 state from a high-precision string literal.
+        // return eval-safe string for __repr__
         .def("__repr__", [](const f128::float128& self) { return "Float128('" + self.to_string() + "')"; })
         .def(py::self + py::self)
         .def(py::self - py::self)
@@ -65,13 +58,9 @@ PYBIND11_MODULE(simd_f128, m) {
         .def(py::self >= py::self)
         .def(-py::self);
 
-    //  ██████  ██████  ███    ███ ██████  ██      ███████ ██   ██
-    // ██      ██    ██ ████  ████ ██   ██ ██      ██       ██ ██
-    // ██      ██    ██ ██ ████ ██ ██████  ██      █████     ███
-    // ██      ██    ██ ██  ██  ██ ██      ██      ██       ██ ██
-    //  ██████  ██████  ██      ██ ██      ███████ ███████ ██   ██
-    //
-    // >>class complex128
+    // ============================================================================
+    // class complex128
+    // ============================================================================
     py::class_<f128::complex128>(m, "Complex128")
         .def(py::init<>())
         .def(py::init<double, double>(), py::arg("real"), py::arg("imag") = 0.0)
@@ -90,17 +79,10 @@ PYBIND11_MODULE(simd_f128, m) {
         .def(py::self *= py::self)
         .def(py::self /= py::self);
 
-    // ███    ███  █████  ████████ ██   ██
-    // ████  ████ ██   ██    ██    ██   ██
-    // ██ ████ ██ ███████    ██    ███████
-    // ██  ██  ██ ██   ██    ██    ██   ██
-    // ██      ██ ██   ██    ██    ██   ██
-    //
-    // >>math functions
-    //
-    // expose transcendental, geometric, and logical functions into the python
-    // module namespace. overloads are resolved via static_cast for functions
-    // that operate on both float128 and complex128 domains.
+    // ============================================================================
+    // math functions
+    // ============================================================================
+    // bind math functions. use static_cast to resolve float/complex overloads.
     m.def("exp", &f128::exp);
     m.def("log", &f128::log);
     m.def("pow", &f128::pow);
@@ -132,30 +114,118 @@ PYBIND11_MODULE(simd_f128, m) {
     m.def("isinf", &f128::isinf);
     m.def("abs_sqr", &f128::abs_sqr);
 
-    // ████████ ██    ██ ██████  ███████
-    //    ██     ██  ██  ██   ██ ██
-    //    ██      ████   ██████  █████
-    //    ██       ██    ██      ██
-    //    ██       ██    ██      ███████
-    //
-    // >>implicit conversions
-    //
-    // register seamless automatic type promotion from standard python complex
-    // (which is backed by c++ std::complex<double>) up to our custom complex128.
+    // ============================================================================
+    // implicit conversions
+    // ============================================================================
+    // allow implicit conversion from python's built-in complex type
     py::implicitly_convertible<std::complex<double>, f128::complex128>();
 
-    //  ██████  ██████  ███    ██ ███████ ████████
-    // ██      ██    ██ ████   ██ ██         ██
-    // ██      ██    ██ ██ ██  ██ ███████    ██
-    // ██      ██    ██ ██  ██ ██      ██    ██
-    //  ██████  ██████  ██   ████ ███████    ██
-    //
-    // >>constants
-    //
-    // pre-computed mathematically exact constants initialized directly into
-    // the python module attributes.
+    // ============================================================================
+    // constants
+    // ============================================================================
+    // math constants
     m.attr("pi") = f128::pi;
     m.attr("e") = f128::e;
     m.attr("sqrt2") = f128::sqrt2;
     m.attr("ln2") = f128::ln2;
+
+    // ============================================================================
+    // numpy vectorization
+    // ============================================================================
+    // vectorized numpy array operations for (n, 2) shapes
+    m.def("add_arrays", [](py::array_t<double> a, py::array_t<double> b) -> py::array_t<double> {
+        py::buffer_info buf_a = a.request(), buf_b = b.request();
+        if (buf_a.ndim != 2 || buf_a.shape[1] != 2 || buf_b.ndim != 2 || buf_b.shape[1] != 2)
+            throw std::runtime_error("Inputs must have shape (N, 2)");
+        if (buf_a.shape[0] != buf_b.shape[0])
+            throw std::runtime_error("Input shapes must match");
+
+        size_t n = buf_a.shape[0];
+        py::array_t<double> result({n, (size_t)2});
+        py::buffer_info buf_res = result.request();
+
+        double* ptr_a = static_cast<double*>(buf_a.ptr);
+        double* ptr_b = static_cast<double*>(buf_b.ptr);
+        double* ptr_res = static_cast<double*>(buf_res.ptr);
+
+        for (size_t i = 0; i < n; i++) {
+            simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i*2], ptr_a[i*2+1]);
+            simd_f128 sb = simd_f128_from_hi_lo(ptr_b[i*2], ptr_b[i*2+1]);
+            simd_f128 sr = simd_f128_add(sa, sb);
+            simd_f128_extract(sr, &ptr_res[i*2], &ptr_res[i*2+1]);
+        }
+        return result;
+    }, "element-wise addition of (N, 2) arrays");
+
+    m.def("sub_arrays", [](py::array_t<double> a, py::array_t<double> b) -> py::array_t<double> {
+        py::buffer_info buf_a = a.request(), buf_b = b.request();
+        if (buf_a.ndim != 2 || buf_a.shape[1] != 2 || buf_b.ndim != 2 || buf_b.shape[1] != 2)
+            throw std::runtime_error("Inputs must have shape (N, 2)");
+        if (buf_a.shape[0] != buf_b.shape[0])
+            throw std::runtime_error("Input shapes must match");
+
+        size_t n = buf_a.shape[0];
+        py::array_t<double> result({n, (size_t)2});
+        py::buffer_info buf_res = result.request();
+
+        double* ptr_a = static_cast<double*>(buf_a.ptr);
+        double* ptr_b = static_cast<double*>(buf_b.ptr);
+        double* ptr_res = static_cast<double*>(buf_res.ptr);
+
+        for (size_t i = 0; i < n; i++) {
+            simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i*2], ptr_a[i*2+1]);
+            simd_f128 sb = simd_f128_from_hi_lo(ptr_b[i*2], ptr_b[i*2+1]);
+            simd_f128 sr = simd_f128_sub(sa, sb);
+            simd_f128_extract(sr, &ptr_res[i*2], &ptr_res[i*2+1]);
+        }
+        return result;
+    }, "element-wise subtraction of (N, 2) arrays");
+
+    m.def("mul_arrays", [](py::array_t<double> a, py::array_t<double> b) -> py::array_t<double> {
+        py::buffer_info buf_a = a.request(), buf_b = b.request();
+        if (buf_a.ndim != 2 || buf_a.shape[1] != 2 || buf_b.ndim != 2 || buf_b.shape[1] != 2)
+            throw std::runtime_error("Inputs must have shape (N, 2)");
+        if (buf_a.shape[0] != buf_b.shape[0])
+            throw std::runtime_error("Input shapes must match");
+
+        size_t n = buf_a.shape[0];
+        py::array_t<double> result({n, (size_t)2});
+        py::buffer_info buf_res = result.request();
+
+        double* ptr_a = static_cast<double*>(buf_a.ptr);
+        double* ptr_b = static_cast<double*>(buf_b.ptr);
+        double* ptr_res = static_cast<double*>(buf_res.ptr);
+
+        for (size_t i = 0; i < n; i++) {
+            simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i*2], ptr_a[i*2+1]);
+            simd_f128 sb = simd_f128_from_hi_lo(ptr_b[i*2], ptr_b[i*2+1]);
+            simd_f128 sr = simd_f128_mul(sa, sb);
+            simd_f128_extract(sr, &ptr_res[i*2], &ptr_res[i*2+1]);
+        }
+        return result;
+    }, "element-wise multiplication of (N, 2) arrays");
+
+    m.def("div_arrays", [](py::array_t<double> a, py::array_t<double> b) -> py::array_t<double> {
+        py::buffer_info buf_a = a.request(), buf_b = b.request();
+        if (buf_a.ndim != 2 || buf_a.shape[1] != 2 || buf_b.ndim != 2 || buf_b.shape[1] != 2)
+            throw std::runtime_error("Inputs must have shape (N, 2)");
+        if (buf_a.shape[0] != buf_b.shape[0])
+            throw std::runtime_error("Input shapes must match");
+
+        size_t n = buf_a.shape[0];
+        py::array_t<double> result({n, (size_t)2});
+        py::buffer_info buf_res = result.request();
+
+        double* ptr_a = static_cast<double*>(buf_a.ptr);
+        double* ptr_b = static_cast<double*>(buf_b.ptr);
+        double* ptr_res = static_cast<double*>(buf_res.ptr);
+
+        for (size_t i = 0; i < n; i++) {
+            simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i*2], ptr_a[i*2+1]);
+            simd_f128 sb = simd_f128_from_hi_lo(ptr_b[i*2], ptr_b[i*2+1]);
+            simd_f128 sr = simd_f128_div(sa, sb);
+            simd_f128_extract(sr, &ptr_res[i*2], &ptr_res[i*2+1]);
+        }
+        return result;
+    }, "element-wise division of (N, 2) arrays");
 }
