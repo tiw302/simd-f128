@@ -13,9 +13,9 @@
 #include <string.h>
 
 #define SIMD_F128_IMPLEMENTATION
-#include "../include/simd_f128.h"
-#include "../include/simd_f128_math.h"
-#include "../include/simd_f128_utils.h"
+#include "../../include/simd_f128.h"
+#include "../../include/simd_f128_math.h"
+#include "../../include/simd_f128_utils.h"
 
 // [TEST CASE] signed zero
 // verifies +0.0 and -0.0 distinguishability and interactions.

@@ -12,9 +12,9 @@
 #include <iostream>
 #include <vector>
 
-#include "../include/simd_f128.hpp"
-#include "../include/simd_f128_array.h"
-#include "../include/simd_f128_complex.hpp"
+#include "../../include/simd_f128.hpp"
+#include "../../include/simd_f128_array.h"
+#include "../../include/simd_f128_complex.hpp"
 
 int main() {
     int failed = 0;

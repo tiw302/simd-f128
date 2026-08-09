@@ -12,9 +12,9 @@
 #include <stdlib.h>
 
 #define SIMD_F128_IMPLEMENTATION
-#include "../include/simd_f128.h"
-#include "../include/simd_f128_random.h"
-#include "../include/simd_f128_utils.h"
+#include "../../include/simd_f128.h"
+#include "../../include/simd_f128_random.h"
+#include "../../include/simd_f128_utils.h"
 
 // [TEST CASE] random initialization
 // verifies state is populated properly.

@@ -26,7 +26,7 @@ jobs:
           cd js
           node build.js
           cd ..
-          node tests/test_js.js
+          node tests/js/test_js.js
 
   scalar:
     runs-on: ubuntu-latest

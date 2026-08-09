@@ -12,10 +12,10 @@
 #include <stdlib.h>
 
 #define SIMD_F128_IMPLEMENTATION
-#include "../include/simd_f128.h"
-#include "../include/simd_f128_math.h"
-#include "../include/simd_f128_utils.h"
-#include "../include/simd_f128_vector.h"
+#include "../../include/simd_f128.h"
+#include "../../include/simd_f128_math.h"
+#include "../../include/simd_f128_utils.h"
+#include "../../include/simd_f128_vector.h"
 
 static int within_ulp(simd_f128 a, simd_f128 b, int ulps) {
     double ahi, alo, bhi, blo;

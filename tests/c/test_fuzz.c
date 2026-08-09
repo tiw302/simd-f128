@@ -17,7 +17,7 @@
 #endif
 
 #define SIMD_F128_IMPLEMENTATION
-#include "../include/simd_f128.h"
+#include "../../include/simd_f128.h"
 
 // generate random double in a reasonable range
 double rand_double() {

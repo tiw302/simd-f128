@@ -11,7 +11,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "../include/simd_f128.hpp"
+#include "../../include/simd_f128.hpp"
 
 int test_nan_ops() {
     f128::float128 nan_val = f128::float128(NAN);

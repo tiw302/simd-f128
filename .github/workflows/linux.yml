@@ -67,4 +67,4 @@ jobs:
       - name: Build and install simd-f128 Python module
         run: pip install .
       - name: Run Python binding tests
-        run: python tests/test_python.py
+        run: python tests/python/test_python.py
