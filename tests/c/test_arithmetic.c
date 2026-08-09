@@ -1,3 +1,12 @@
+/* test_arithmetic.c
+ *
+ * comprehensive test suite for simd-f128.
+ * validates math correctness, arithmetic, and geometric operations.
+ *
+ * updated 2026-08-09
+ * spdx-license-identifier: mit
+ * copyright (c) 2026 jirawat siripuk */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -10,6 +19,7 @@
 #include "../include/simd_f128_utils.h"
 #include "../include/simd_f128_math.h"
 #include "../include/simd_f128_complex.h"
+#include "../include/simd_f128_array.h"
 
 static void extract(simd_f128 x, double *hi, double *lo) {
     simd_f128_extract(x, hi, lo);
@@ -78,19 +88,19 @@ int main() {
 
     printf("[1.1] constants\n");
     extract(SIMD_F128_PI, &hi, &lo);
-    CHECK("pi hi accurate", fabsl(hi - 3.1415926535897931) < 1e-15);
+    CHECK("pi hi accurate", fabs(hi - 3.1415926535897931) < 1e-15);
     CHECK("pi lo is residual", lo != 0.0);
     CHECK("pi hi > pi lo", hi > fabsl(lo));
 
     extract(SIMD_F128_E, &hi, &lo);
-    CHECK("e hi accurate", fabsl(hi - 2.7182818284590451) < 1e-15);
+    CHECK("e hi accurate", fabs(hi - 2.7182818284590451) < 1e-15);
     CHECK("e lo is residual", lo != 0.0);
 
     extract(SIMD_F128_SQRT2, &hi, &lo);
-    CHECK("sqrt2 hi accurate", fabsl(hi - 1.4142135623730951) < 1e-15);
+    CHECK("sqrt2 hi accurate", fabs(hi - 1.4142135623730951) < 1e-15);
 
     extract(SIMD_F128_LN2, &hi, &lo);
-    CHECK("ln2 hi accurate", fabsl(hi - 0.6931471805599453) < 1e-15);
+    CHECK("ln2 hi accurate", fabs(hi - 0.6931471805599453) < 1e-15);
 
     printf("\n[1.2] from_double\n");
     simd_f128 one = simd_f128_from_double(1.0);
@@ -135,11 +145,11 @@ int main() {
     simd_f128 two = simd_f128_from_double(2.0);
     simd_f128 prod1 = simd_f128_mul(SIMD_F128_PI, two);
     extract(prod1, &hi, &lo);
-    CHECK("pi * 2.0 hi ~ 6.283", fabsl(hi - 6.283185307179586) < 1e-14);
+    CHECK("pi * 2.0 hi ~ 6.283", fabs(hi - 6.283185307179586) < 1e-14);
 
     simd_f128 prod2 = simd_f128_mul(SIMD_F128_PI, SIMD_F128_PI);
     extract(prod2, &hi, &lo);
-    CHECK("pi^2 hi ~ 9.8696", fabsl(hi - 9.869604401089358) < 1e-13);
+    CHECK("pi^2 hi ~ 9.8696", fabs(hi - 9.869604401089358) < 1e-13);
 
     simd_f128 one_check = simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(1.0));
     extract(one_check, &hi, &lo);
@@ -154,11 +164,11 @@ int main() {
 
     simd_f128 div2 = simd_f128_div(SIMD_F128_PI, two_f128);
     extract(div2, &hi, &lo);
-    CHECK("pi/2 hi ~ 1.5707", fabsl(hi - 1.5707963267948966) < 1e-14);
+    CHECK("pi/2 hi ~ 1.5707", fabs(hi - 1.5707963267948966) < 1e-14);
 
     simd_f128 div3 = simd_f128_div(simd_f128_from_double(1.0), simd_f128_from_double(3.0));
     extract(div3, &hi, &lo);
-    CHECK("1/3 hi ~ 0.3333", fabsl(hi - 0.3333333333333333) < 1e-14);
+    CHECK("1/3 hi ~ 0.3333", fabs(hi - 0.3333333333333333) < 1e-14);
 
     printf("\n[1.7] sqrt\n");
     simd_f128 sq4 = simd_f128_sqrt(simd_f128_from_double(4.0));
@@ -167,11 +177,11 @@ int main() {
 
     simd_f128 sq2 = simd_f128_sqrt(simd_f128_from_double(2.0));
     extract(sq2, &hi, &lo);
-    CHECK("sqrt(2.0) ~ 1.4142", fabsl(hi - 1.4142135623730951) < 1e-14);
+    CHECK("sqrt(2.0) ~ 1.4142", fabs(hi - 1.4142135623730951) < 1e-14);
 
     simd_f128 sq10 = simd_f128_sqrt(simd_f128_from_double(10.0));
     extract(sq10, &hi, &lo);
-    CHECK("sqrt(10.0) ~ 3.1622", fabsl(hi - 3.1622776601683795) < 1e-13);
+    CHECK("sqrt(10.0) ~ 3.1622", fabs(hi - 3.1622776601683795) < 1e-13);
 
     simd_f128 sq0_25 = simd_f128_sqrt(simd_f128_from_double(0.25));
     extract(sq0_25, &hi, &lo);
@@ -191,11 +201,11 @@ int main() {
     simd_f128 large2 = simd_f128_from_double(1e150);
     simd_f128 large_sum = simd_f128_add(large1, large2);
     extract(large_sum, &hi, &lo);
-    CHECK("1e150 + 1e150 ~ 2e150", fabsl(hi - 2e150) < 1e135);
+    CHECK("1e150 + 1e150 ~ 2e150", fabs(hi - 2e150) < 1e135);
 
     simd_f128 large_prod = simd_f128_mul(large1, simd_f128_from_double(2.0));
     extract(large_prod, &hi, &lo);
-    CHECK("1e150 * 2.0 ~ 2e150", fabsl(hi - 2e150) < 1e135);
+    CHECK("1e150 * 2.0 ~ 2e150", fabs(hi - 2e150) < 1e135);
 
     printf("\n[2.3] cancellation in subtraction\n");
     simd_f128 big1 = simd_f128_from_double(1.000000000000001);
@@ -362,7 +372,7 @@ int main() {
     simd_f128 fl = simd_f128_floor(r_val);
     extract(fl, &hi, &lo);
     CHECK("floor(4.7) == 4.0", hi == 4.0);
-    
+
     simd_f128 ce = simd_f128_ceil(r_val);
     extract(ce, &hi, &lo);
     CHECK("ceil(4.7) == 5.0", hi == 5.0);
@@ -432,7 +442,7 @@ int main() {
     simd_f128 neg_inf_val = simd_f128_from_double(-INFINITY);
 
     CHECK("exp(NaN) is NaN", simd_f128_isnan(simd_f128_exp(nan_val)));
-    
+
     double res_hi, res_lo;
     simd_f128_extract(simd_f128_exp(neg_inf_val), &res_hi, &res_lo);
     CHECK("exp(-inf) is 0.0", res_hi == 0.0);
@@ -441,6 +451,12 @@ int main() {
     CHECK("sin(inf) is NaN", simd_f128_isnan(simd_f128_sin(inf_val)));
     CHECK("cos(NaN) is NaN", simd_f128_isnan(simd_f128_cos(nan_val)));
     CHECK("cos(inf) is NaN", simd_f128_isnan(simd_f128_cos(inf_val)));
+
+    // check specific threshold bounds migrated from test_exp_threshold.c
+    simd_f128 exp_val1 = simd_f128_exp(simd_f128_from_double(709.5));
+    CHECK("exp(709.5) does not overflow prematurely", !simd_f128_isinf(exp_val1) && !simd_f128_isnan(exp_val1));
+    simd_f128 exp_val2 = simd_f128_exp(simd_f128_from_double(709.1));
+    CHECK("exp(709.1) does not overflow prematurely", !simd_f128_isinf(exp_val2) && !simd_f128_isnan(exp_val2));
 
     CHECK("log(NaN) is NaN", simd_f128_isnan(simd_f128_log(nan_val)));
     CHECK("log(inf) is inf", simd_f128_isinf(simd_f128_log(inf_val)));
@@ -501,7 +517,7 @@ int main() {
     // atan2 sign-of-zero compliance
     double a2_hi, a2_lo;
     simd_f128_extract(simd_f128_atan2(neg_zero_f128, neg_zero_f128), &a2_hi, &a2_lo);
-    CHECK("atan2(-0.0, -0.0) is -pi", fabsl(a2_hi - (-3.141592653589793)) < 1e-12);
+    CHECK("atan2(-0.0, -0.0) is -pi", fabs(a2_hi - (-3.141592653589793)) < 1e-12);
 
 
     printf("\n=== SECTION 9: Complex Numbers ===\n\n");
@@ -509,7 +525,7 @@ int main() {
     printf("[9.1] complex arithmetic\n");
     simd_f128_complex c1 = {simd_f128_from_double(1.0), simd_f128_from_double(2.0)};
     simd_f128_complex c2 = {simd_f128_from_double(3.0), simd_f128_from_double(4.0)};
-    
+
     simd_f128_complex c_sum = simd_f128_complex_add(c1, c2);
     extract(c_sum.real, &hi, &lo);
     CHECK("c_sum.real == 4.0", hi == 4.0);
@@ -526,6 +542,29 @@ int main() {
     simd_f128 c_abs = simd_f128_complex_abs_sqr(c2); // |3+4i|^2 = 9 + 16 = 25
     extract(c_abs, &hi, &lo);
     CHECK("|c2|^2 == 25.0", hi == 25.0);
+
+    printf("\n=== SECTION 10: Array Operations (SoA) ===\n\n");
+    
+    #define SOA_TEST_LEN 10
+    double a_hi[SOA_TEST_LEN], a_lo[SOA_TEST_LEN];
+    double b_hi[SOA_TEST_LEN], b_lo[SOA_TEST_LEN];
+    double out_hi[SOA_TEST_LEN], out_lo[SOA_TEST_LEN];
+    
+    for (int i = 0; i < SOA_TEST_LEN; i++) {
+        a_hi[i] = i * 2.0; a_lo[i] = i * 1e-16;
+        b_hi[i] = i * 1.5; b_lo[i] = i * 1e-16;
+    }
+    
+    printf("[10.1] soa array addition\n");
+    simd_f128_array_add_soa(a_hi, a_lo, b_hi, b_lo, out_hi, out_lo, SOA_TEST_LEN);
+    CHECK("soa add [5] hi", out_hi[5] == (10.0 + 7.5));
+    CHECK("soa add [5] lo", fabs(out_lo[5] - (10.0 * 1e-16)) < 1e-30);
+
+    printf("[10.2] soa array multiplication\n");
+    simd_f128_array_mul_soa(a_hi, a_lo, b_hi, b_lo, out_hi, out_lo, SOA_TEST_LEN);
+    simd_f128 r5 = simd_f128_from_hi_lo(out_hi[5], out_lo[5]);
+    simd_f128 s5 = simd_f128_mul(simd_f128_from_hi_lo(10.0, 5e-16), simd_f128_from_hi_lo(7.5, 5e-16));
+    CHECK_CLOSE("soa mul [5] against scalar", r5, s5, 2);
 
     printf("\n=== SUMMARY ===\n\n");
     printf("Total tests:  %d\n", tests_run);

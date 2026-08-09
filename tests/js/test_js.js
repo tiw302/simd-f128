@@ -1,3 +1,12 @@
+/* test_js.js
+ *
+ * javascript webassembly bindings tests.
+ * validates math correctness over the emscripten ffi boundary.
+ *
+ * updated 2026-08-09
+ * spdx-license-identifier: mit
+ * copyright (c) 2026 jirawat siripuk */
+
 const { Float128 } = require('../js/simd_f128.js');
 
 console.log("Starting JS Wrapper Tests...");
@@ -10,37 +19,42 @@ console.log("Starting JS Wrapper Tests...");
 
         let errors = 0;
 
-        // [1] Testing Float128 Creation
-        console.log("[1] Testing Float128 Creation...");
+        // [TEST CASE] float128 creation
+        // verifies class instantiation from strings.
+        console.log("running float128 creation tests...");
         const a = new Float128("1.5");
         const b = new Float128("2.5");
 
-        // [2] Testing Float128 Add
-        console.log("[2] Testing Float128 Add...");
+        // [TEST CASE] addition
+        // verifies float128 addition.
+        console.log("running float128 addition tests...");
         const c = a.add(b);
         if (!c.toString().startsWith("4.0")) {
             console.error("Add failed! Got " + c.toString());
             errors++;
         }
 
-        // [3] Testing Float128 Mul
-        console.log("[3] Testing Float128 Mul...");
+        // [TEST CASE] multiplication
+        // verifies float128 multiplication.
+        console.log("running float128 multiplication tests...");
         const d = a.mul(b);
         if (!d.toString().startsWith("3.75")) {
             console.error("Mul failed! Got " + d.toString());
             errors++;
         }
 
-        // [4] Testing Float128 Sub
-        console.log("[4] Testing Float128 Sub...");
+        // [TEST CASE] subtraction
+        // verifies float128 subtraction.
+        console.log("running float128 subtraction tests...");
         const e = b.sub(a);
         if (!e.toString().startsWith("1.0")) {
             console.error("Sub failed! Got " + e.toString());
             errors++;
         }
 
-        // [5] Testing Float128 Div
-        console.log("[5] Testing Float128 Div...");
+        // [TEST CASE] division
+        // verifies float128 division.
+        console.log("running float128 division tests...");
         const f = b.div(a); // 2.5 / 1.5 = 1.6666666666666666...
         const expectedDivStr = "1.6666666666666666666666666666";
         if (!f.toString().includes(expectedDivStr)) {
@@ -48,8 +62,9 @@ console.log("Starting JS Wrapper Tests...");
             errors++;
         }
 
-        // [6] Testing Precision
-        console.log("[6] Testing Precision...");
+        // [TEST CASE] precision limits
+        // verifies precision holds for non-terminating decimals.
+        console.log("running precision tests...");
         const one = new Float128("1.0");
         const three = new Float128("3.0");
         const third = one.div(three);
@@ -60,8 +75,9 @@ console.log("Starting JS Wrapper Tests...");
             errors++;
         }
 
-        // [7] testing new math functions
-        console.log("[7] Testing New Math Functions...");
+        // [TEST CASE] advanced math
+        // verifies power, absolute, rounding, and fmod functions.
+        console.log("running advanced math tests...");
         const two = new Float128("2.0");
         const threeF128 = new Float128("3.0");
         const powRes = two.pow(threeF128);
