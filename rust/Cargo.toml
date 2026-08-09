@@ -1,12 +1,17 @@
 [package]
 name = "simd-f128"
-version = "1.5.0"
+version = "1.5.1"
 edition = "2021"
 description = "High-performance cross-platform 128-bit arithmetic for SIMD applications"
 license = "MIT"
 authors = ["Jirawat Siripuk"]
 repository = "https://github.com/tiw302/simd-f128"
-
+include = [
+    "src/**/*",
+    "build.rs",
+    "Cargo.toml",
+    "include/**/*"
+]
 [dependencies]
 
 [build-dependencies]

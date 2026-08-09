@@ -82,5 +82,6 @@ jobs:
           override: true
       - name: Publish to crates.io
         run: |
+          cp -r include rust/
           cd rust
-          cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --allow-dirty

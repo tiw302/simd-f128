@@ -12,15 +12,22 @@ fn main() {
     let wrapper_path = format!("{}/simd_f128_wrapper.c", out_dir);
 
     let manifest_dir = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
-    let parent_dir = manifest_dir.parent().unwrap().to_str().unwrap().replace("\\", "/");
+    let local_include = manifest_dir.join("include");
+    let parent_include = manifest_dir.parent().unwrap().join("include");
+    
+    let include_dir = if local_include.exists() {
+        local_include.to_str().unwrap().replace("\\", "/")
+    } else {
+        parent_include.to_str().unwrap().replace("\\", "/")
+    };
 
     let includes = format!(r#"
-#include "{0}/include/simd_f128.h"
-#include "{0}/include/simd_f128_io.h"
-#include "{0}/include/simd_f128_math.h"
-#include "{0}/include/simd_f128_utils.h"
-#include "{0}/include/simd_f128_complex.h"
-"#, parent_dir);
+#include "{0}/simd_f128.h"
+#include "{0}/simd_f128_io.h"
+#include "{0}/simd_f128_math.h"
+#include "{0}/simd_f128_utils.h"
+#include "{0}/simd_f128_complex.h"
+"#, include_dir);
 
     let wrapper_code = r#"
 // =========================================================================
