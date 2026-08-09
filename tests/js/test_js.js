@@ -7,7 +7,7 @@
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
-const { Float128 } = require('../js/simd_f128.js');
+const { Float128 } = require('../../js/simd_f128.js');
 
 console.log("Starting JS Wrapper Tests...");
 

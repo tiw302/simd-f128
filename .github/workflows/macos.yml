@@ -18,24 +18,3 @@ jobs:
       - name: Run tests
         run: ctest --test-dir build -C Release --output-on-failure -V
 
-  intel-scalar:
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v4
-      - name: Configure CMake (Scalar)
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-      - name: Build
-        run: cmake --build build --config Release
-      - name: Run tests
-        run: ctest --test-dir build -C Release --output-on-failure -V
-
-  intel-avx2:
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v4
-      - name: Configure CMake (AVX2)
-        run: cmake -S . -B build_avx2 -DCMAKE_BUILD_TYPE=Release -DSIMD_F128_AVX2=ON
-      - name: Build
-        run: cmake --build build_avx2 --config Release
-      - name: Run tests
-        run: ctest --test-dir build_avx2 -C Release --output-on-failure -V

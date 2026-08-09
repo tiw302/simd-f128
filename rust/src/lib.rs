@@ -365,7 +365,7 @@ macro_rules! impl_arithmetic_ops {
 }
 
 macro_rules! impl_assign_ops {
-    ($type:ident, $trait:ident, $method:ident, $op_trait:ident, $op_method:ident) => {
+    ($type:ident, $trait:ident, $method:ident, $op_method:ident) => {
         impl $trait for $type {
             fn $method(&mut self, other: Self) {
                 *self = self.$op_method(other);
