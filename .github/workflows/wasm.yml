@@ -18,7 +18,7 @@ jobs:
       - name: Compile and run (WASM + SIMD128, Node.js)
         run: |
           source emsdk/emsdk_env.sh
-          emcc tests/test_arithmetic.c -O3 -msimd128 -o test_wasm_simd.js
+          emcc tests/c/test_arithmetic.c -O3 -msimd128 -o test_wasm_simd.js
           node test_wasm_simd.js
       - name: Build JS Wrapper and test
         run: |
@@ -39,5 +39,5 @@ jobs:
       - name: Compile and run (WASM Scalar fallback, Node.js)
         run: |
           source emsdk/emsdk_env.sh
-          emcc tests/test_arithmetic.c -O3 -o test_wasm_scalar.js
+          emcc tests/c/test_arithmetic.c -O3 -o test_wasm_scalar.js
           node test_wasm_scalar.js

@@ -1,51 +1,50 @@
+/* build.rs
+ *
+ * rust build script for simd-f128. dynamically generates c wrappers and
+ * aligns target cpu features (avx2, fma, sse2) with the c compiler.
+ *
+ * updated 2026-08-09
+ * spdx-license-identifier: mit
+ * copyright (c) 2026 jirawat siripuk */
+
 fn main() {
-    /*
-     * build.rs -- rust build script for simd-f128.
-     * project url: https://github.com/tiw302/simd-f128
-     * technical background:
-     * ---------------------
-     * this library uses "double-double" arithmetic. basically, we represent a
-     * high-precision number as the sum of two 64-bit doubles (hi + lo).
-     * this gives us about 31 decimal digits of precision, which is roughly
-     * the same as quad precision (f128) but much faster because it uses
-     * hardware double-precision units.
-     * build system:
-     * -------------
-     * since the core c library is header-only, this build script dynamically 
-     * generates a simple c wrapper file (`simd_f128_wrapper.c`) at compile time.
-     * it also detects the target cpu features (avx2, fma, sse2) and passes the 
-     * appropriate compilation flags (`-mavx2`, `-mfma`) to the `cc` compiler.
-     * license:
-     * --------
-     * mit license
-     * copyright (c) 2026 jirawat siripuk
-     * */
-    
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let wrapper_path = format!("{}/simd_f128_wrapper.c", out_dir);
-    
+
     let manifest_dir = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
     let parent_dir = manifest_dir.parent().unwrap().to_str().unwrap().replace("\\", "/");
-    
+
     let includes = format!(r#"
 #include "{0}/include/simd_f128.h"
 #include "{0}/include/simd_f128_io.h"
 #include "{0}/include/simd_f128_math.h"
 #include "{0}/include/simd_f128_utils.h"
+#include "{0}/include/simd_f128_complex.h"
 "#, parent_dir);
 
     let wrapper_code = r#"
 // =========================================================================
 // ffi wrapper generation
 // =========================================================================
-// we expose c wrappers using simple double arrays (double*) to completely
-// bypass platform-specific abi issues with passing __m128d simd vectors 
-// by value across the rust/c boundary.
+/* use simple double arrays for c wrappers to avoid __m128d abi issues
+ * when passing vectors by value across the ffi boundary. */
 static inline simd_f128 arr_to_simd(const double* v) {
     return simd_f128_from_hi_lo(v[0], v[1]);
 }
 static inline void simd_to_arr(simd_f128 x, double* out) {
     simd_f128_extract(x, &out[0], &out[1]);
+}
+
+static inline simd_f128_complex arr_to_simd_complex(const double* v) {
+    simd_f128_complex c;
+    c.real = simd_f128_from_hi_lo(v[0], v[1]);
+    c.imag = simd_f128_from_hi_lo(v[2], v[3]);
+    return c;
+}
+
+static inline void simd_to_arr_complex(simd_f128_complex c, double* out) {
+    simd_f128_extract(c.real, &out[0], &out[1]);
+    simd_f128_extract(c.imag, &out[2], &out[3]);
 }
 
 void rs_simd_f128_add(const double* a, const double* b, double* out) { simd_to_arr(simd_f128_add(arr_to_simd(a), arr_to_simd(b)), out); }
@@ -82,6 +81,15 @@ void rs_simd_f128_const_e(double* out) { simd_to_arr(SIMD_F128_E, out); }
 void rs_simd_f128_const_sqrt2(double* out) { simd_to_arr(SIMD_F128_SQRT2, out); }
 void rs_simd_f128_const_ln2(double* out) { simd_to_arr(SIMD_F128_LN2, out); }
 
+void rs_simd_f128_complex_add(const double* a, const double* b, double* out) { simd_to_arr_complex(simd_f128_complex_add(arr_to_simd_complex(a), arr_to_simd_complex(b)), out); }
+void rs_simd_f128_complex_sub(const double* a, const double* b, double* out) { simd_to_arr_complex(simd_f128_complex_sub(arr_to_simd_complex(a), arr_to_simd_complex(b)), out); }
+void rs_simd_f128_complex_mul(const double* a, const double* b, double* out) { simd_to_arr_complex(simd_f128_complex_mul(arr_to_simd_complex(a), arr_to_simd_complex(b)), out); }
+void rs_simd_f128_complex_div(const double* a, const double* b, double* out) { simd_to_arr_complex(simd_f128_complex_div(arr_to_simd_complex(a), arr_to_simd_complex(b)), out); }
+void rs_simd_f128_complex_abs_sqr(const double* a, double* out) { simd_to_arr(simd_f128_complex_abs_sqr(arr_to_simd_complex(a)), out); }
+void rs_simd_f128_complex_abs(const double* a, double* out) { simd_to_arr(simd_f128_complex_abs(arr_to_simd_complex(a)), out); }
+void rs_simd_f128_complex_arg(const double* a, double* out) { simd_to_arr(simd_f128_complex_arg(arr_to_simd_complex(a)), out); }
+void rs_simd_f128_complex_conj(const double* a, double* out) { simd_to_arr_complex(simd_f128_complex_conj(arr_to_simd_complex(a)), out); }
+
 "#;
 
     let full_code = format!("{}\n{}", includes, wrapper_code);
@@ -91,10 +99,8 @@ void rs_simd_f128_const_ln2(double* out) { simd_to_arr(SIMD_F128_LN2, out); }
     // =========================================================================
     // cross-language compiler feature alignment
     // =========================================================================
-    // we query rust's target cpu features (passed down dynamically by cargo) 
-    // and inject the exact same instruction set flags (avx2, fma, sse2) into 
-    // the c compiler. this ensures the generated c-core perfectly matches 
-    // the rust binary's capabilities, unlocking hardware-level simd optimizations.
+    /* pass target cpu features (avx2, fma, sse2) from cargo to the c compiler.
+     * this matches the c-core capabilities with the rust binary. */
     let mut build = cc::Build::new();
     build.file(wrapper_path)
          .define("SIMD_F128_IMPLEMENTATION", None)

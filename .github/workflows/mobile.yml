@@ -17,7 +17,7 @@ jobs:
           sudo apt-get install -y gcc-aarch64-linux-gnu qemu-user
       - name: Compile and run (Android ARM64 / NEON via QEMU)
         run: |
-          aarch64-linux-gnu-gcc tests/test_arithmetic.c \
+          aarch64-linux-gnu-gcc tests/c/test_arithmetic.c \
             -O3 -lm -static -o test_aarch64
           qemu-aarch64 ./test_aarch64
 
@@ -31,7 +31,7 @@ jobs:
           sudo apt-get install -y gcc-arm-linux-gnueabihf qemu-user
       - name: Compile and run (Android ARMv7 Scalar + VFPv4 via QEMU)
         run: |
-          arm-linux-gnueabihf-gcc tests/test_arithmetic.c \
+          arm-linux-gnueabihf-gcc tests/c/test_arithmetic.c \
             -O3 -lm -static \
             -mfpu=neon-vfpv4 -mfloat-abi=hard \
             -o test_armv7

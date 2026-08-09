@@ -50,7 +50,7 @@ jobs:
           sudo apt-get install -y gcc-riscv64-linux-gnu qemu-user
       - name: Compile and run (RISC-V64 Scalar via QEMU)
         run: |
-          riscv64-linux-gnu-gcc tests/test_arithmetic.c \
+          riscv64-linux-gnu-gcc tests/c/test_arithmetic.c \
             -O3 -lm -static -o test_riscv64
           qemu-riscv64 ./test_riscv64
 

@@ -50,18 +50,18 @@ jobs:
         with:
           node-version: '18.x'
           registry-url: 'https://registry.npmjs.org'
-      
+
       - name: Install Emscripten
         run: |
           git clone --depth 1 https://github.com/emscripten-core/emsdk.git
           cd emsdk && ./emsdk install latest && ./emsdk activate latest
-      
+
       - name: Build WASM
         run: |
           source emsdk/emsdk_env.sh
           cd js
           node build.js
-          
+
       - name: Publish to NPM
         run: |
           cp README.md js/
@@ -69,3 +69,18 @@ jobs:
           npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish_cargo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+      - name: Publish to crates.io
+        run: |
+          cd rust
+          cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}

@@ -1,7 +1,8 @@
 # build artifacts & cache
 build/
-build_test/
+build_tests/
 build_bench/
+build_examples/
 build_wasm/
 build_asan/
 out/
@@ -164,3 +165,4 @@ htmlcov/
 
 # gemini
 GEMINI.md
+AGENTS.md
