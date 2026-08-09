@@ -13,7 +13,7 @@ static void run_precision_demo(void) {
     }
 
     /* 1e-17 is smaller than 64-bit machine epsilon (~2.22e-16) */
-    const double big_d   = 1.0;
+    const double big_d = 1.0;
     const double small_d = 1e-17;
     double result_d = big_d + small_d;
 
@@ -21,7 +21,7 @@ static void run_precision_demo(void) {
     printf("          precision lost: %s\n\n", result_d == 1.0 ? "yes" : "no");
 
     /* simd-f128 retains the 1e-17 residual in the .lo component */
-    simd_f128 big_f   = simd_f128_from_double(1.0);
+    simd_f128 big_f = simd_f128_from_double(1.0);
     simd_f128 small_f = simd_f128_from_double(1e-17);
     simd_f128 result_f = simd_f128_add(big_f, small_f);
 

@@ -3,12 +3,12 @@
  * manual timing comparison without external benchmark frameworks. */
 
 #define SIMD_F128_IMPLEMENTATION
-#include "../include/simd_f128.h"
-
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <stdint.h>
+
+#include "../include/simd_f128.h"
 
 #define ITERATIONS 10000000
 
@@ -26,7 +26,7 @@ static double get_time(void) {
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
 }
-#endif // _WIN32
+#endif  // _WIN32
 
 /* volatile sinks are used here intentionally to prevent aggressive compiler
  * dead-code elimination (dce). without this, the compiler would see that the
@@ -36,7 +36,7 @@ volatile long double g_sink_ldouble;
 
 #ifdef __SIZEOF_FLOAT128__
 volatile __float128 g_sink_float128;
-#endif // __SIZEOF_FLOAT128__
+#endif  // __SIZEOF_FLOAT128__
 void sink_simd(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
@@ -69,8 +69,8 @@ void bench_double(void) {
     double t5 = get_time();
     g_sink_double = a_div;
 
-    printf("| double (64-bit)    | %8.2f | %8.2f | %8.2f |\n",
-        (t1 - t0) * 1000.0, (t3 - t2) * 1000.0, (t5 - t4) * 1000.0);
+    printf("| double (64-bit)    | %8.2f | %8.2f | %8.2f |\n", (t1 - t0) * 1000.0,
+           (t3 - t2) * 1000.0, (t5 - t4) * 1000.0);
 }
 
 void bench_long_double(void) {
@@ -99,8 +99,8 @@ void bench_long_double(void) {
     double t5 = get_time();
     g_sink_ldouble = a_div;
 
-    printf("| long double (x87)  | %8.2f | %8.2f | %8.2f |\n",
-        (t1 - t0) * 1000.0, (t3 - t2) * 1000.0, (t5 - t4) * 1000.0);
+    printf("| long double (x87)  | %8.2f | %8.2f | %8.2f |\n", (t1 - t0) * 1000.0,
+           (t3 - t2) * 1000.0, (t5 - t4) * 1000.0);
 }
 
 #ifdef __SIZEOF_FLOAT128__
@@ -130,10 +130,10 @@ void bench_float128(void) {
     double t5 = get_time();
     g_sink_float128 = a_div;
 
-    printf("| __float128 (GCC)   | %8.2f | %8.2f | %8.2f |\n",
-        (t1 - t0) * 1000.0, (t3 - t2) * 1000.0, (t5 - t4) * 1000.0);
+    printf("| __float128 (GCC)   | %8.2f | %8.2f | %8.2f |\n", (t1 - t0) * 1000.0,
+           (t3 - t2) * 1000.0, (t5 - t4) * 1000.0);
 }
-#endif // __SIZEOF_FLOAT128__
+#endif  // __SIZEOF_FLOAT128__
 
 void bench_simd_f128(void) {
     simd_f128 a_add = simd_f128_from_double(1.1);
@@ -166,8 +166,8 @@ void bench_simd_f128(void) {
     double t5 = get_time();
     sink_simd(a_div);
 
-    printf("| simd-f128 (SIMD)   | %8.2f | %8.2f | %8.2f |\n",
-        (t1 - t0) * 1000.0, (t3 - t2) * 1000.0, (t5 - t4) * 1000.0);
+    printf("| simd-f128 (SIMD)   | %8.2f | %8.2f | %8.2f |\n", (t1 - t0) * 1000.0,
+           (t3 - t2) * 1000.0, (t5 - t4) * 1000.0);
 }
 
 int main(void) {
@@ -181,7 +181,7 @@ int main(void) {
     bench_long_double();
 #ifdef __SIZEOF_FLOAT128__
     bench_float128();
-#endif // __SIZEOF_FLOAT128__
+#endif  // __SIZEOF_FLOAT128__
     bench_simd_f128();
 
     printf("\n");

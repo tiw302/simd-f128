@@ -5,8 +5,8 @@
 #include <benchmark/benchmark.h>
 #define SIMD_F128_IMPLEMENTATION
 #include "../include/simd_f128.h"
-#include "../include/simd_f128_vector.h"
 #include "../include/simd_f128_array.h"
+#include "../include/simd_f128_vector.h"
 
 // ██████   ██████  ██    ██ ██████  ██      ███████
 // ██   ██ ██    ██ ██    ██ ██   ██ ██      ██
@@ -59,7 +59,7 @@ static void BM_Float128_Mul(benchmark::State& state) {
     }
 }
 BENCHMARK(BM_Float128_Mul);
-#endif // __SIZEOF_FLOAT128__
+#endif  // __SIZEOF_FLOAT128__
 
 // ███████  ██  █████   █████
 // ██      ███ ██   ██ ██   ██
@@ -153,13 +153,13 @@ static void BM_SimdF128x4_Sqrt(benchmark::State& state) {
     state.SetItemsProcessed(state.iterations() * 4);
 }
 BENCHMARK(BM_SimdF128x4_Sqrt);
-#endif // SIMD_F128_USE_AVX2
+#endif  // SIMD_F128_USE_AVX2
 
 //  █████  ██████  ██████   █████  ██    ██
-// ██   ██ ██   ██ ██   ██ ██   ██  ██  ██ 
-// ███████ ██████  ██████  ███████   ████  
-// ██   ██ ██   ██ ██   ██ ██   ██    ██   
-// ██   ██ ██   ██ ██   ██ ██   ██    ██   
+// ██   ██ ██   ██ ██   ██ ██   ██  ██  ██
+// ███████ ██████  ██████  ███████   ████
+// ██   ██ ██   ██ ██   ██ ██   ██    ██
+// ██   ██ ██   ██ ██   ██ ██   ██    ██
 //
 // >>simd-f128 array processing: soa vs aos
 #define SOA_BENCH_LEN 1024
@@ -168,8 +168,10 @@ static void BM_SimdF128_Array_SoA_Add(benchmark::State& state) {
     double b_hi[SOA_BENCH_LEN], b_lo[SOA_BENCH_LEN];
     double out_hi[SOA_BENCH_LEN], out_lo[SOA_BENCH_LEN];
     for (int i = 0; i < SOA_BENCH_LEN; i++) {
-        a_hi[i] = 1.0; a_lo[i] = 1e-16;
-        b_hi[i] = 2.0; b_lo[i] = 1e-16;
+        a_hi[i] = 1.0;
+        a_lo[i] = 1e-16;
+        b_hi[i] = 2.0;
+        b_lo[i] = 1e-16;
     }
     for (auto _ : state) {
         simd_f128_array_add_soa(a_hi, a_lo, b_hi, b_lo, out_hi, out_lo, SOA_BENCH_LEN);
@@ -185,8 +187,10 @@ static void BM_SimdF128_Array_SoA_Mul(benchmark::State& state) {
     double b_hi[SOA_BENCH_LEN], b_lo[SOA_BENCH_LEN];
     double out_hi[SOA_BENCH_LEN], out_lo[SOA_BENCH_LEN];
     for (int i = 0; i < SOA_BENCH_LEN; i++) {
-        a_hi[i] = 1.0; a_lo[i] = 1e-16;
-        b_hi[i] = 2.0; b_lo[i] = 1e-16;
+        a_hi[i] = 1.0;
+        a_lo[i] = 1e-16;
+        b_hi[i] = 2.0;
+        b_lo[i] = 1e-16;
     }
     for (auto _ : state) {
         simd_f128_array_mul_soa(a_hi, a_lo, b_hi, b_lo, out_hi, out_lo, SOA_BENCH_LEN);

@@ -23,7 +23,7 @@
 // >>advanced math api
 #ifdef __cplusplus
 extern "C" {
-#endif // __cplusplus
+#endif  // __cplusplus
 
 /* exponential function (e^x):
  * computes base-e exponential. employs a careful range reduction using
@@ -86,11 +86,12 @@ SIMD_F128_INLINE simd_f128 simd_f128_fmod(simd_f128 a, simd_f128 b);
 }
 #endif
 
-// ██ ███    ███ ██████  ██      ███████ ███    ███ ███████ ███    ██ ████████  █████  ████████ ██  ██████  ███    ██
-// ██ ████  ████ ██   ██ ██      ██      ████  ████ ██      ████   ██    ██    ██   ██    ██    ██ ██    ██ ████   ██
-// ██ ██ ████ ██ ██████  ██      █████   ██ ████ ██ █████   ██ ██  ██    ██    ███████    ██    ██ ██    ██ ██ ██  ██
-// ██ ██  ██  ██ ██      ██      ██      ██  ██  ██ ██      ██  ██ ██    ██    ██   ██    ██    ██ ██    ██ ██  ██ ██
-// ██ ██      ██ ██      ███████ ███████ ██      ██ ███████ ██   ████    ██    ██   ██    ██    ██  ██████  ██   ████
+// ██ ███    ███ ██████  ██      ███████ ███    ███ ███████ ███    ██ ████████  █████  ████████ ██
+// ██████  ███    ██ ██ ████  ████ ██   ██ ██      ██      ████  ████ ██      ████   ██    ██    ██
+// ██    ██    ██ ██    ██ ████   ██ ██ ██ ████ ██ ██████  ██      █████   ██ ████ ██ █████   ██ ██
+// ██    ██    ███████    ██    ██ ██    ██ ██ ██  ██ ██ ██  ██  ██ ██      ██      ██      ██  ██
+// ██ ██      ██  ██ ██    ██    ██   ██    ██    ██ ██    ██ ██  ██ ██ ██ ██      ██ ██ ███████
+// ███████ ██      ██ ███████ ██   ████    ██    ██   ██    ██    ██  ██████  ██   ████
 //
 // >>implementation logic
 SIMD_F128_INLINE simd_f128 simd_f128_exp(simd_f128 x) {
@@ -120,7 +121,9 @@ SIMD_F128_INLINE simd_f128 simd_f128_exp(simd_f128 x) {
         s = simd_f128_add(_simd_f128_from_raw(_simd_f128_exp_coefs_n16[j]), simd_f128_mul(s, r));
     }
     // reconstruct e^r using the relation: e^r ~ 1 + r + r^2 * s = 1 + r * (1 + r * s)
-    simd_f128 er = simd_f128_add(simd_f128_from_double(1.0), simd_f128_mul(r, simd_f128_add(simd_f128_from_double(1.0), simd_f128_mul(r, s))));
+    simd_f128 er = simd_f128_add(
+        simd_f128_from_double(1.0),
+        simd_f128_mul(r, simd_f128_add(simd_f128_from_double(1.0), simd_f128_mul(r, s))));
 
     // scale by 2^(k/16) using pre-computed lookup tables:
     // exp(x) = e^r * 2^(k/16) = e^r * 2^(k % 16 / 16) * 2^(k / 16)
@@ -335,21 +338,25 @@ SIMD_F128_INLINE void simd_f128_sincos(simd_f128 x, simd_f128* s, simd_f128* c) 
     double k_double = round(x_scaled_hi);
     long long k = (long long)k_double;
 
-    simd_f128 r = simd_f128_sub(x, simd_f128_mul(simd_f128_from_double(k_double), SIMD_F128_PI_OVER_2));
+    simd_f128 r =
+        simd_f128_sub(x, simd_f128_mul(simd_f128_from_double(k_double), SIMD_F128_PI_OVER_2));
     simd_f128 rsq = simd_f128_mul(r, r);
 
     // evaluate chebyshev minimax polynomial approximations for sin(r) and cos(r)
     // sin(r) ~ r * (1 + rsq * s_sin)
     simd_f128 s_sin = _simd_f128_from_raw(_simd_f128_sin_coefs_n4[11]);
     for (int j = 10; j >= 0; j--) {
-        s_sin = simd_f128_add(_simd_f128_from_raw(_simd_f128_sin_coefs_n4[j]), simd_f128_mul(s_sin, rsq));
+        s_sin = simd_f128_add(_simd_f128_from_raw(_simd_f128_sin_coefs_n4[j]),
+                              simd_f128_mul(s_sin, rsq));
     }
-    simd_f128 sin_r = simd_f128_mul(r, simd_f128_add(simd_f128_from_double(1.0), simd_f128_mul(rsq, s_sin)));
+    simd_f128 sin_r =
+        simd_f128_mul(r, simd_f128_add(simd_f128_from_double(1.0), simd_f128_mul(rsq, s_sin)));
 
     // cos(r) ~ 1 + rsq * s_cos
     simd_f128 s_cos = _simd_f128_from_raw(_simd_f128_cos_coefs_n4[11]);
     for (int j = 10; j >= 0; j--) {
-        s_cos = simd_f128_add(_simd_f128_from_raw(_simd_f128_cos_coefs_n4[j]), simd_f128_mul(s_cos, rsq));
+        s_cos = simd_f128_add(_simd_f128_from_raw(_simd_f128_cos_coefs_n4[j]),
+                              simd_f128_mul(s_cos, rsq));
     }
     simd_f128 cos_r = simd_f128_add(simd_f128_from_double(1.0), simd_f128_mul(rsq, s_cos));
 
@@ -446,11 +453,15 @@ SIMD_F128_INLINE simd_f128 simd_f128_atan2(simd_f128 y, simd_f128 x) {
     if (xhi > 0.0) {
         return simd_f128_atan(simd_f128_div(y, x));
     } else if (xhi < 0.0) {
-        if (yhi >= 0.0) return simd_f128_add(simd_f128_atan(simd_f128_div(y, x)), SIMD_F128_PI);
-        else return simd_f128_sub(simd_f128_atan(simd_f128_div(y, x)), SIMD_F128_PI);
+        if (yhi >= 0.0)
+            return simd_f128_add(simd_f128_atan(simd_f128_div(y, x)), SIMD_F128_PI);
+        else
+            return simd_f128_sub(simd_f128_atan(simd_f128_div(y, x)), SIMD_F128_PI);
     } else {
-        if (yhi > 0.0) return simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(0.5));
-        else return simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(-0.5));
+        if (yhi > 0.0)
+            return simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(0.5));
+        else
+            return simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(-0.5));
     }
 }
 
@@ -459,7 +470,8 @@ SIMD_F128_INLINE simd_f128 simd_f128_asin(simd_f128 x) {
     simd_f128_extract(x, &hi, &lo);
 
     // check boundaries for domain of arcsin [-1, 1]
-    if (isnan(hi) || isinf(hi) || hi > 1.0 || hi < -1.0 || (hi == 1.0 && lo > 0.0) || (hi == -1.0 && lo < 0.0)) {
+    if (isnan(hi) || isinf(hi) || hi > 1.0 || hi < -1.0 || (hi == 1.0 && lo > 0.0) ||
+        (hi == -1.0 && lo < 0.0)) {
         return simd_f128_from_double(NAN);
     }
     if (hi == 1.0 && lo == 0.0) return simd_f128_mul(SIMD_F128_PI, simd_f128_from_double(0.5));
@@ -477,7 +489,8 @@ SIMD_F128_INLINE simd_f128 simd_f128_acos(simd_f128 x) {
     simd_f128_extract(x, &hi, &lo);
 
     // check boundaries for domain of arccos [-1, 1]
-    if (isnan(hi) || isinf(hi) || hi > 1.0 || hi < -1.0 || (hi == 1.0 && lo > 0.0) || (hi == -1.0 && lo < 0.0)) {
+    if (isnan(hi) || isinf(hi) || hi > 1.0 || hi < -1.0 || (hi == 1.0 && lo > 0.0) ||
+        (hi == -1.0 && lo < 0.0)) {
         return simd_f128_from_double(NAN);
     }
     if (hi == 1.0 && lo == 0.0) return simd_f128_from_double(0.0);
@@ -575,7 +588,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_sinh(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
     if (isnan(hi)) return x;
-    if (isinf(hi)) return x; // sinh(±inf) = ±inf
+    if (isinf(hi)) return x;  // sinh(±inf) = ±inf
 
     // taylor series fallback for small x to avoid catastrophic cancellation
     // sinh(x) ~ x + x^3/6 + x^5/120
@@ -598,7 +611,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_cosh(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
     if (isnan(hi)) return x;
-    if (isinf(hi)) return simd_f128_from_double(INFINITY); // cosh(±inf) = +inf
+    if (isinf(hi)) return simd_f128_from_double(INFINITY);  // cosh(±inf) = +inf
     simd_f128 ex = simd_f128_exp(x);
     simd_f128 emx = simd_f128_div(simd_f128_from_double(1.0), ex);
     return simd_f128_mul(simd_f128_add(ex, emx), simd_f128_from_double(0.5));
@@ -609,7 +622,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_tanh(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
     if (isnan(hi)) return x;
-    if (isinf(hi)) return simd_f128_from_double(hi > 0.0 ? 1.0 : -1.0); // tanh(±inf) = ±1.0
+    if (isinf(hi)) return simd_f128_from_double(hi > 0.0 ? 1.0 : -1.0);  // tanh(±inf) = ±1.0
 
     // taylor series fallback for small x to avoid catastrophic cancellation
     // tanh(x) ~ x - x^3/3 + 2x^5/15
@@ -627,4 +640,4 @@ SIMD_F128_INLINE simd_f128 simd_f128_tanh(simd_f128 x) {
     return simd_f128_div(simd_f128_sub(ex, emx), simd_f128_add(ex, emx));
 }
 
-#endif // SIMD_F128_MATH_H
+#endif  // SIMD_F128_MATH_H

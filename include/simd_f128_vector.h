@@ -22,7 +22,7 @@
 // >>vectorized api (simd_f128x4 for avx2)
 #ifdef __cplusplus
 extern "C" {
-#endif // __cplusplus
+#endif  // __cplusplus
 
 #if defined(SIMD_F128_USE_AVX2)
 
@@ -80,11 +80,16 @@ SIMD_F128_INLINE simd_f128x4 simd_f128x4_mul(simd_f128x4 a, simd_f128x4 b) {
     __m256d u2 = _mm256_sub_pd(a.hi, u1);
     __m256d v1 = _mm256_sub_pd(vp, _mm256_sub_pd(vp, b.hi));
     __m256d v2 = _mm256_sub_pd(b.hi, v1);
-    __m256d err = _mm256_add_pd(_mm256_add_pd(_mm256_add_pd(_mm256_sub_pd(_mm256_mul_pd(u1, v1), hi_prod), _mm256_mul_pd(u1, v2)), _mm256_mul_pd(u2, v1)), _mm256_mul_pd(u2, v2));
+    __m256d err = _mm256_add_pd(
+        _mm256_add_pd(
+            _mm256_add_pd(_mm256_sub_pd(_mm256_mul_pd(u1, v1), hi_prod), _mm256_mul_pd(u1, v2)),
+            _mm256_mul_pd(u2, v1)),
+        _mm256_mul_pd(u2, v2));
 #endif
 
     // accumulate cross-terms and the exact multiplication roundoff error
-    __m256d lo_prod = _mm256_add_pd(_mm256_add_pd(_mm256_mul_pd(a.hi, b.lo), _mm256_mul_pd(a.lo, b.hi)), err);
+    __m256d lo_prod =
+        _mm256_add_pd(_mm256_add_pd(_mm256_mul_pd(a.hi, b.lo), _mm256_mul_pd(a.lo, b.hi)), err);
 
     simd_f128x4 res;
     res.hi = _mm256_add_pd(hi_prod, lo_prod);
@@ -175,7 +180,7 @@ SIMD_F128_INLINE simd_f128x4 simd_f128x4_sqrt(simd_f128x4 a) {
     return res;
 }
 
-#else // !defined(SIMD_F128_USE_AVX2)
+#else  // !defined(SIMD_F128_USE_AVX2)
 
 // fallback implementation of simd_f128x4 for non-avx2 platforms
 typedef struct {
@@ -263,10 +268,10 @@ SIMD_F128_INLINE simd_f128x4 simd_f128x4_sqrt(simd_f128x4 a) {
     return res;
 }
 
-#endif // SIMD_F128_USE_AVX2
+#endif  // SIMD_F128_USE_AVX2
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif  // __cplusplus
 
-#endif // SIMD_F128_VECTOR_H
+#endif  // SIMD_F128_VECTOR_H

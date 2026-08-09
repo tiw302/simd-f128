@@ -8,12 +8,13 @@
  * copyright (c) 2026 jirawat siripuk */
 
 #define SIMD_F128_IMPLEMENTATION
-#include "../include/simd_f128.hpp"
-#include "../include/simd_f128_complex.hpp"
-#include "../include/simd_f128_array.h"
+#include <complex>
 #include <iostream>
 #include <vector>
-#include <complex>
+
+#include "../include/simd_f128.hpp"
+#include "../include/simd_f128_array.h"
+#include "../include/simd_f128_complex.hpp"
 
 int main() {
     int failed = 0;
@@ -25,7 +26,10 @@ int main() {
     // and fix the -Wignored-attributes gcc warning.
     alignas(16) simd_f128 a[100];
     alignas(16) simd_f128 b[100];
-    for (int i=0; i<100; i++) { a[i] = simd_f128_from_double(1.5); b[i] = simd_f128_from_double(2.5); }
+    for (int i = 0; i < 100; i++) {
+        a[i] = simd_f128_from_double(1.5);
+        b[i] = simd_f128_from_double(2.5);
+    }
     alignas(16) simd_f128 out[100];
 
     simd_f128_array_add(a, b, out, 100);
@@ -84,11 +88,12 @@ int main() {
     std::complex<double> std_c(1.0, 2.0);
     f128::complex128 f128_c(std_c);
     f128::complex128 f128_c2(3.0, 4.0);
-    f128::complex128 f128_res = f128_c * f128_c2; // -5 + 10i
+    f128::complex128 f128_res = f128_c * f128_c2;  // -5 + 10i
 
     std::complex<double> std_res = static_cast<std::complex<double>>(f128_res);
     if (std_res.real() != -5.0 || std_res.imag() != 10.0) {
-        std::cerr << "std::complex conversion failed! Got " << std_res.real() << " + " << std_res.imag() << "i" << std::endl;
+        std::cerr << "std::complex conversion failed! Got " << std_res.real() << " + "
+                  << std_res.imag() << "i" << std::endl;
         failed++;
     }
 
@@ -98,7 +103,8 @@ int main() {
     std::complex<double> std_sinh_res = static_cast<std::complex<double>>(comp_sinh);
     double expected_real = std::sinh(1.0) * std::cos(1.0);
     double expected_imag = std::cosh(1.0) * std::sin(1.0);
-    if (std::abs(std_sinh_res.real() - expected_real) > 1e-12 || std::abs(std_sinh_res.imag() - expected_imag) > 1e-12) {
+    if (std::abs(std_sinh_res.real() - expected_real) > 1e-12 ||
+        std::abs(std_sinh_res.imag() - expected_imag) > 1e-12) {
         std::cerr << "complex sinh failed! Got " << std_sinh_res << std::endl;
         failed++;
     }

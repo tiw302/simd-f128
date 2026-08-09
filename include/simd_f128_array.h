@@ -10,8 +10,9 @@
 #ifndef SIMD_F128_ARRAY_H
 #define SIMD_F128_ARRAY_H
 
-#include "simd_f128.h"
 #include <stddef.h>
+
+#include "simd_f128.h"
 
 //  █████  ██████  ██████   █████  ██    ██
 // ██   ██ ██   ██ ██   ██ ██   ██  ██  ██
@@ -22,7 +23,7 @@
 // >>array processing api
 #ifdef __cplusplus
 extern "C" {
-#endif // __cplusplus
+#endif  // __cplusplus
 
 #if defined(__cplusplus) || defined(_MSC_VER)
 #define SIMD_F128_RESTRICT __restrict
@@ -37,28 +38,36 @@ extern "C" {
  * parallel simd instructions. */
 
 // batch add two double-double arrays
-SIMD_F128_INLINE void simd_f128_array_add(const simd_f128* SIMD_F128_RESTRICT a, const simd_f128* SIMD_F128_RESTRICT b, simd_f128* SIMD_F128_RESTRICT out, size_t length) {
+SIMD_F128_INLINE void simd_f128_array_add(const simd_f128* SIMD_F128_RESTRICT a,
+                                          const simd_f128* SIMD_F128_RESTRICT b,
+                                          simd_f128* SIMD_F128_RESTRICT out, size_t length) {
     for (size_t i = 0; i < length; i++) {
         out[i] = simd_f128_add(a[i], b[i]);
     }
 }
 
 // batch subtract two double-double arrays
-SIMD_F128_INLINE void simd_f128_array_sub(const simd_f128* SIMD_F128_RESTRICT a, const simd_f128* SIMD_F128_RESTRICT b, simd_f128* SIMD_F128_RESTRICT out, size_t length) {
+SIMD_F128_INLINE void simd_f128_array_sub(const simd_f128* SIMD_F128_RESTRICT a,
+                                          const simd_f128* SIMD_F128_RESTRICT b,
+                                          simd_f128* SIMD_F128_RESTRICT out, size_t length) {
     for (size_t i = 0; i < length; i++) {
         out[i] = simd_f128_sub(a[i], b[i]);
     }
 }
 
 // batch multiply two double-double arrays
-SIMD_F128_INLINE void simd_f128_array_mul(const simd_f128* SIMD_F128_RESTRICT a, const simd_f128* SIMD_F128_RESTRICT b, simd_f128* SIMD_F128_RESTRICT out, size_t length) {
+SIMD_F128_INLINE void simd_f128_array_mul(const simd_f128* SIMD_F128_RESTRICT a,
+                                          const simd_f128* SIMD_F128_RESTRICT b,
+                                          simd_f128* SIMD_F128_RESTRICT out, size_t length) {
     for (size_t i = 0; i < length; i++) {
         out[i] = simd_f128_mul(a[i], b[i]);
     }
 }
 
 // batch divide two double-double arrays
-SIMD_F128_INLINE void simd_f128_array_div(const simd_f128* SIMD_F128_RESTRICT a, const simd_f128* SIMD_F128_RESTRICT b, simd_f128* SIMD_F128_RESTRICT out, size_t length) {
+SIMD_F128_INLINE void simd_f128_array_div(const simd_f128* SIMD_F128_RESTRICT a,
+                                          const simd_f128* SIMD_F128_RESTRICT b,
+                                          simd_f128* SIMD_F128_RESTRICT out, size_t length) {
     for (size_t i = 0; i < length; i++) {
         out[i] = simd_f128_div(a[i], b[i]);
     }
@@ -70,12 +79,12 @@ SIMD_F128_INLINE void simd_f128_array_div(const simd_f128* SIMD_F128_RESTRICT a,
  * maximize true vectorization potential. on avx2+ platforms, this allows
  * processing 4 double-double values per cycle natively without extraction. */
 
-SIMD_F128_INLINE void simd_f128_array_add_soa(
-    const double* SIMD_F128_RESTRICT a_hi, const double* SIMD_F128_RESTRICT a_lo,
-    const double* SIMD_F128_RESTRICT b_hi, const double* SIMD_F128_RESTRICT b_lo,
-    double* SIMD_F128_RESTRICT out_hi, double* SIMD_F128_RESTRICT out_lo,
-    size_t length)
-{
+SIMD_F128_INLINE void simd_f128_array_add_soa(const double* SIMD_F128_RESTRICT a_hi,
+                                              const double* SIMD_F128_RESTRICT a_lo,
+                                              const double* SIMD_F128_RESTRICT b_hi,
+                                              const double* SIMD_F128_RESTRICT b_lo,
+                                              double* SIMD_F128_RESTRICT out_hi,
+                                              double* SIMD_F128_RESTRICT out_lo, size_t length) {
     size_t i = 0;
 #if defined(SIMD_F128_USE_AVX2)
     for (; i + 3 < length; i += 4) {
@@ -145,9 +154,7 @@ SIMD_F128_INLINE void simd_f128_array_add_soa(
 SIMD_F128_INLINE void simd_f128_array_add_soa_fast(
     const double* SIMD_F128_RESTRICT a_hi, const double* SIMD_F128_RESTRICT a_lo,
     const double* SIMD_F128_RESTRICT b_hi, const double* SIMD_F128_RESTRICT b_lo,
-    double* SIMD_F128_RESTRICT out_hi, double* SIMD_F128_RESTRICT out_lo,
-    size_t length)
-{
+    double* SIMD_F128_RESTRICT out_hi, double* SIMD_F128_RESTRICT out_lo, size_t length) {
     size_t i = 0;
 #if defined(SIMD_F128_USE_AVX2)
     for (; i + 3 < length; i += 4) {
@@ -205,12 +212,12 @@ SIMD_F128_INLINE void simd_f128_array_add_soa_fast(
     }
 }
 
-SIMD_F128_INLINE void simd_f128_array_sub_soa(
-    const double* SIMD_F128_RESTRICT a_hi, const double* SIMD_F128_RESTRICT a_lo,
-    const double* SIMD_F128_RESTRICT b_hi, const double* SIMD_F128_RESTRICT b_lo,
-    double* SIMD_F128_RESTRICT out_hi, double* SIMD_F128_RESTRICT out_lo,
-    size_t length)
-{
+SIMD_F128_INLINE void simd_f128_array_sub_soa(const double* SIMD_F128_RESTRICT a_hi,
+                                              const double* SIMD_F128_RESTRICT a_lo,
+                                              const double* SIMD_F128_RESTRICT b_hi,
+                                              const double* SIMD_F128_RESTRICT b_lo,
+                                              double* SIMD_F128_RESTRICT out_hi,
+                                              double* SIMD_F128_RESTRICT out_lo, size_t length) {
     size_t i = 0;
 #if defined(SIMD_F128_USE_AVX2)
     for (; i + 3 < length; i += 4) {
@@ -222,10 +229,7 @@ SIMD_F128_INLINE void simd_f128_array_sub_soa(
         // knuth's two-sum for subtraction
         __m256d s = _mm256_sub_pd(ahi, bhi);
         __m256d v = _mm256_sub_pd(s, ahi);
-        __m256d e = _mm256_sub_pd(
-                        _mm256_sub_pd(ahi, _mm256_sub_pd(s, v)),
-                        _mm256_add_pd(bhi, v)
-                    );
+        __m256d e = _mm256_sub_pd(_mm256_sub_pd(ahi, _mm256_sub_pd(s, v)), _mm256_add_pd(bhi, v));
 
         __m256d t = _mm256_add_pd(_mm256_sub_pd(alo, blo), e);
 
@@ -281,9 +285,7 @@ SIMD_F128_INLINE void simd_f128_array_sub_soa(
 SIMD_F128_INLINE void simd_f128_array_sub_soa_fast(
     const double* SIMD_F128_RESTRICT a_hi, const double* SIMD_F128_RESTRICT a_lo,
     const double* SIMD_F128_RESTRICT b_hi, const double* SIMD_F128_RESTRICT b_lo,
-    double* SIMD_F128_RESTRICT out_hi, double* SIMD_F128_RESTRICT out_lo,
-    size_t length)
-{
+    double* SIMD_F128_RESTRICT out_hi, double* SIMD_F128_RESTRICT out_lo, size_t length) {
     size_t i = 0;
 #if defined(SIMD_F128_USE_AVX2)
     for (; i + 3 < length; i += 4) {
@@ -294,7 +296,8 @@ SIMD_F128_INLINE void simd_f128_array_sub_soa_fast(
 
         // fast two-diff for subtraction
         __m256d s = _mm256_sub_pd(ahi, bhi);
-        __m256d e = _mm256_sub_pd(_mm256_sub_pd(_mm256_setzero_pd(), bhi), _mm256_sub_pd(s, ahi)); // -bhi - (s - ahi)
+        __m256d e = _mm256_sub_pd(_mm256_sub_pd(_mm256_setzero_pd(), bhi),
+                                  _mm256_sub_pd(s, ahi));  // -bhi - (s - ahi)
 
         __m256d t = _mm256_add_pd(_mm256_sub_pd(alo, blo), e);
 
@@ -343,12 +346,12 @@ SIMD_F128_INLINE void simd_f128_array_sub_soa_fast(
     }
 }
 
-SIMD_F128_INLINE void simd_f128_array_mul_soa(
-    const double* SIMD_F128_RESTRICT a_hi, const double* SIMD_F128_RESTRICT a_lo,
-    const double* SIMD_F128_RESTRICT b_hi, const double* SIMD_F128_RESTRICT b_lo,
-    double* SIMD_F128_RESTRICT out_hi, double* SIMD_F128_RESTRICT out_lo,
-    size_t length)
-{
+SIMD_F128_INLINE void simd_f128_array_mul_soa(const double* SIMD_F128_RESTRICT a_hi,
+                                              const double* SIMD_F128_RESTRICT a_lo,
+                                              const double* SIMD_F128_RESTRICT b_hi,
+                                              const double* SIMD_F128_RESTRICT b_lo,
+                                              double* SIMD_F128_RESTRICT out_hi,
+                                              double* SIMD_F128_RESTRICT out_lo, size_t length) {
     size_t i = 0;
 #if defined(SIMD_F128_USE_AVX2) && (defined(__FMA__) || defined(_MSC_VER))
     for (; i + 3 < length; i += 4) {
@@ -380,7 +383,7 @@ SIMD_F128_INLINE void simd_f128_array_mul_soa(
         float64x2_t blo = vld1q_f64(&b_lo[i]);
         float64x2_t p = vmulq_f64(ahi, bhi);
 #ifdef SIMD_F128_HAS_FMA
-        float64x2_t e = vfmsq_f64(p, ahi, bhi); // note: vfmsq is p - ahi*bhi, so we negate it
+        float64x2_t e = vfmsq_f64(p, ahi, bhi);  // note: vfmsq is p - ahi*bhi, so we negate it
         e = vnegq_f64(e);
 #else
         // use standard vmlal or dekker split for neon if no fma, but m1 has fma.
@@ -412,7 +415,8 @@ SIMD_F128_INLINE void simd_f128_array_mul_soa(
         e = wasm_f64x2_add(e, wasm_f64x2_mul(ahi_hi, bhi_lo));
         e = wasm_f64x2_add(e, wasm_f64x2_mul(ahi_lo, bhi_hi));
         e = wasm_f64x2_add(e, wasm_f64x2_mul(ahi_lo, bhi_lo));
-        v128_t t = wasm_f64x2_add(e, wasm_f64x2_add(wasm_f64x2_mul(ahi, blo), wasm_f64x2_mul(alo, bhi)));
+        v128_t t =
+            wasm_f64x2_add(e, wasm_f64x2_add(wasm_f64x2_mul(ahi, blo), wasm_f64x2_mul(alo, bhi)));
         v128_t final_hi = wasm_f64x2_add(p, t);
         v128_t final_lo = wasm_f64x2_add(wasm_f64x2_sub(p, final_hi), t);
         wasm_v128_store(&out_hi[i], final_hi);
@@ -427,12 +431,12 @@ SIMD_F128_INLINE void simd_f128_array_mul_soa(
     }
 }
 
-SIMD_F128_INLINE void simd_f128_array_div_soa(
-    const double* SIMD_F128_RESTRICT a_hi, const double* SIMD_F128_RESTRICT a_lo,
-    const double* SIMD_F128_RESTRICT b_hi, const double* SIMD_F128_RESTRICT b_lo,
-    double* SIMD_F128_RESTRICT out_hi, double* SIMD_F128_RESTRICT out_lo,
-    size_t length)
-{
+SIMD_F128_INLINE void simd_f128_array_div_soa(const double* SIMD_F128_RESTRICT a_hi,
+                                              const double* SIMD_F128_RESTRICT a_lo,
+                                              const double* SIMD_F128_RESTRICT b_hi,
+                                              const double* SIMD_F128_RESTRICT b_lo,
+                                              double* SIMD_F128_RESTRICT out_hi,
+                                              double* SIMD_F128_RESTRICT out_lo, size_t length) {
     // division is highly branched and complex, utilizing scalar fallback
     for (size_t i = 0; i < length; i++) {
         simd_f128 sa = simd_f128_from_hi_lo(a_hi[i], a_lo[i]);
@@ -443,6 +447,6 @@ SIMD_F128_INLINE void simd_f128_array_div_soa(
 }
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif  // __cplusplus
 
-#endif // SIMD_F128_ARRAY_H
+#endif  // SIMD_F128_ARRAY_H

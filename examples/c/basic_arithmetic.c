@@ -16,7 +16,7 @@ static void run_arithmetic_demo(void) {
     const simd_f128 val_pi = SIMD_F128_PI;
     const simd_f128 val_e = SIMD_F128_E;
 
-    simd_f128 sum  = simd_f128_add(val_pi, val_e);
+    simd_f128 sum = simd_f128_add(val_pi, val_e);
     simd_f128 diff = simd_f128_sub(val_pi, val_e);
     simd_f128 prod = simd_f128_mul(val_pi, val_e);
 

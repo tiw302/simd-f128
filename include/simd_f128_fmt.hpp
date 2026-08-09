@@ -49,4 +49,4 @@ struct fmt::formatter<f128::float128> : fmt::formatter<std::string> {
 };
 #endif
 
-#endif // SIMD_F128_FMT_HPP
+#endif  // SIMD_F128_FMT_HPP

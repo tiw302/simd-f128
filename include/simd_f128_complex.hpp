@@ -10,9 +10,10 @@
 #ifndef SIMD_F128_COMPLEX_HPP
 #define SIMD_F128_COMPLEX_HPP
 
+#include <complex>
+
 #include "simd_f128.hpp"
 #include "simd_f128_complex.h"
-#include <complex>
 
 // ██████  ██████  ██████
 // ██      ██  ██  ██  ██
@@ -24,7 +25,7 @@
 namespace f128 {
 
 class complex128 {
-public:
+   public:
     // raw double-double complex value
     simd_f128_complex data;
 
@@ -54,13 +55,15 @@ public:
     // constructor from raw C struct simd_f128_complex
     SIMD_F128_DEVICE complex128(simd_f128_complex d) : data(d) {}
 
-    // constructor converting from standard library complex (pads lower double precision bits with zero)
+    // constructor converting from standard library complex (pads lower double precision bits with
+    // zero)
     SIMD_F128_DEVICE complex128(const std::complex<double>& c) {
         data.real = simd_f128_from_double(c.real());
         data.imag = simd_f128_from_double(c.imag());
     }
 
-    // conversion operator to standard library complex (truncates double-double precision to double precision)
+    // conversion operator to standard library complex (truncates double-double precision to double
+    // precision)
     SIMD_F128_DEVICE operator std::complex<double>() const {
         double rhi, rlo, ihi, ilo;
         simd_f128_extract(data.real, &rhi, &rlo);
@@ -69,9 +72,13 @@ public:
     }
 
     // retrieve real component
-    SIMD_F128_DEVICE float128 real() const { return float128(data.real); }
+    SIMD_F128_DEVICE float128 real() const {
+        return float128(data.real);
+    }
     // retrieve imaginary component
-    SIMD_F128_DEVICE float128 imag() const { return float128(data.imag); }
+    SIMD_F128_DEVICE float128 imag() const {
+        return float128(data.imag);
+    }
 
     // =========================================================================
     // algebraic operators
@@ -79,15 +86,35 @@ public:
     // maps directly to optimized avx2/wasm c-core routines. all intermediate
     // variables are perfectly bounded to the cpu registers without heap allocation.
 
-    SIMD_F128_DEVICE complex128 operator+(const complex128& b) const { return complex128(simd_f128_complex_add(data, b.data)); }
-    SIMD_F128_DEVICE complex128 operator-(const complex128& b) const { return complex128(simd_f128_complex_sub(data, b.data)); }
-    SIMD_F128_DEVICE complex128 operator*(const complex128& b) const { return complex128(simd_f128_complex_mul(data, b.data)); }
-    SIMD_F128_DEVICE complex128 operator/(const complex128& b) const { return complex128(simd_f128_complex_div(data, b.data)); }
+    SIMD_F128_DEVICE complex128 operator+(const complex128& b) const {
+        return complex128(simd_f128_complex_add(data, b.data));
+    }
+    SIMD_F128_DEVICE complex128 operator-(const complex128& b) const {
+        return complex128(simd_f128_complex_sub(data, b.data));
+    }
+    SIMD_F128_DEVICE complex128 operator*(const complex128& b) const {
+        return complex128(simd_f128_complex_mul(data, b.data));
+    }
+    SIMD_F128_DEVICE complex128 operator/(const complex128& b) const {
+        return complex128(simd_f128_complex_div(data, b.data));
+    }
 
-    SIMD_F128_DEVICE complex128& operator+=(const complex128& b) { data = simd_f128_complex_add(data, b.data); return *this; }
-    SIMD_F128_DEVICE complex128& operator-=(const complex128& b) { data = simd_f128_complex_sub(data, b.data); return *this; }
-    SIMD_F128_DEVICE complex128& operator*=(const complex128& b) { data = simd_f128_complex_mul(data, b.data); return *this; }
-    SIMD_F128_DEVICE complex128& operator/=(const complex128& b) { data = simd_f128_complex_div(data, b.data); return *this; }
+    SIMD_F128_DEVICE complex128& operator+=(const complex128& b) {
+        data = simd_f128_complex_add(data, b.data);
+        return *this;
+    }
+    SIMD_F128_DEVICE complex128& operator-=(const complex128& b) {
+        data = simd_f128_complex_sub(data, b.data);
+        return *this;
+    }
+    SIMD_F128_DEVICE complex128& operator*=(const complex128& b) {
+        data = simd_f128_complex_mul(data, b.data);
+        return *this;
+    }
+    SIMD_F128_DEVICE complex128& operator/=(const complex128& b) {
+        data = simd_f128_complex_div(data, b.data);
+        return *this;
+    }
 
     // format complex number to std::string
     std::string to_string() const {
@@ -167,7 +194,7 @@ inline complex128 tanh(const complex128& z) {
     return sinh(z) / cosh(z);
 }
 
-} // namespace f128
+}  // namespace f128
 
 namespace std {
 
@@ -176,16 +203,34 @@ namespace std {
 // =========================================================================
 // injects overloads into the std namespace so that float128 can be passed
 // directly into templated algorithms and standard containers without modification.
-inline f128::complex128 sin(const f128::complex128& z) { return f128::sin(z); }
-inline f128::complex128 cos(const f128::complex128& z) { return f128::cos(z); }
-inline f128::complex128 tan(const f128::complex128& z) { return f128::tan(z); }
-inline f128::complex128 sinh(const f128::complex128& z) { return f128::sinh(z); }
-inline f128::complex128 cosh(const f128::complex128& z) { return f128::cosh(z); }
-inline f128::complex128 tanh(const f128::complex128& z) { return f128::tanh(z); }
-inline f128::float128 abs(const f128::complex128& a) { return f128::abs(a); }
-inline f128::float128 arg(const f128::complex128& a) { return f128::arg(a); }
-inline f128::complex128 conj(const f128::complex128& a) { return f128::conj(a); }
+inline f128::complex128 sin(const f128::complex128& z) {
+    return f128::sin(z);
+}
+inline f128::complex128 cos(const f128::complex128& z) {
+    return f128::cos(z);
+}
+inline f128::complex128 tan(const f128::complex128& z) {
+    return f128::tan(z);
+}
+inline f128::complex128 sinh(const f128::complex128& z) {
+    return f128::sinh(z);
+}
+inline f128::complex128 cosh(const f128::complex128& z) {
+    return f128::cosh(z);
+}
+inline f128::complex128 tanh(const f128::complex128& z) {
+    return f128::tanh(z);
+}
+inline f128::float128 abs(const f128::complex128& a) {
+    return f128::abs(a);
+}
+inline f128::float128 arg(const f128::complex128& a) {
+    return f128::arg(a);
+}
+inline f128::complex128 conj(const f128::complex128& a) {
+    return f128::conj(a);
+}
 
-} // namespace std
+}  // namespace std
 
-#endif // SIMD_F128_COMPLEX_HPP
+#endif  // SIMD_F128_COMPLEX_HPP

@@ -6,8 +6,8 @@
 #include <stdio.h>
 #define SIMD_F128_IMPLEMENTATION
 #include "../include/simd_f128.h"
-#include "../include/simd_f128_math.h"
 #include "../include/simd_f128_io.h"
+#include "../include/simd_f128_math.h"
 
 void run_chaos_simulation() {
     printf("--- chaotic pendulum (butterfly effect) simulation ---\n\n");

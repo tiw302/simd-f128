@@ -5,9 +5,9 @@
 #include <stdio.h>
 #define SIMD_F128_IMPLEMENTATION
 #include "../include/simd_f128.h"
+#include "../include/simd_f128_io.h"
 #include "../include/simd_f128_matrix.h"
 #include "../include/simd_f128_vector.h"
-#include "../include/simd_f128_io.h"
 
 void print_vec4(const char* name, simd_f128_vec4 v) {
     char buf_x[128], buf_y[128], buf_z[128], buf_w[128];
@@ -22,12 +22,8 @@ int main() {
     printf("--- simd-f128 3D matrix transformation demo ---\n\n");
 
     /* point (x, y, z, w=1.0) */
-    simd_f128_vec4 point = {
-        simd_f128_from_double(1.0),
-        simd_f128_from_double(2.0),
-        simd_f128_from_double(3.0),
-        simd_f128_from_double(1.0)
-    };
+    simd_f128_vec4 point = {simd_f128_from_double(1.0), simd_f128_from_double(2.0),
+                            simd_f128_from_double(3.0), simd_f128_from_double(1.0)};
     print_vec4("original point", point);
 
     /* scaling matrix (scale by 2.0) */

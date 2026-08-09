@@ -14,7 +14,7 @@ static void run_mandelbrot_demo(void) {
 
     /* target deep zoom coordinates where 64-bit precision fails */
     const simd_f128 cx = simd_f128_from_double(-0.7436438870371587);
-    const simd_f128 cy = simd_f128_from_double( 0.1318259042053119);
+    const simd_f128 cy = simd_f128_from_double(0.1318259042053119);
 
     simd_f128 zx = simd_f128_from_double(0.0);
     simd_f128 zy = simd_f128_from_double(0.0);
@@ -48,7 +48,8 @@ static void run_mandelbrot_demo(void) {
     if (iter < max_iter) {
         printf("escaped at iteration %d (point is outside the Mandelbrot set)\n", iter);
     } else {
-        printf("did not escape after %d iterations (point is inside the Mandelbrot set)\n", max_iter);
+        printf("did not escape after %d iterations (point is inside the Mandelbrot set)\n",
+               max_iter);
     }
 
     printf("\nfinal |z| components:\n");

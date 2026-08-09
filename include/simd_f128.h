@@ -39,8 +39,8 @@
 #ifndef SIMD_F128_H
 #define SIMD_F128_H
 
-#include <stdint.h>
 #include <math.h>
+#include <stdint.h>
 
 //  █████  ██████   ██████ ██   ██
 // ██   ██ ██   ██ ██      ██   ██
@@ -51,27 +51,27 @@
 // >>arch detection
 // we check for avx2 first since it's the fastest on x86
 #if defined(__AVX2__)
-    #define SIMD_F128_USE_AVX2
-    #include <immintrin.h>
+#define SIMD_F128_USE_AVX2
+#include <immintrin.h>
 
 // wasm simd128 is great for web apps that need the speed
 #elif defined(__wasm_simd128__)
-    #define SIMD_F128_USE_WASM
-    #include <wasm_simd128.h>
+#define SIMD_F128_USE_WASM
+#include <wasm_simd128.h>
 
 // then sse2 as a fallback for older x86 or when avx2 is disabled
 #elif defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64)
-    #define SIMD_F128_USE_SSE2
-    #include <emmintrin.h>
+#define SIMD_F128_USE_SSE2
+#include <emmintrin.h>
 
 // neon is standard on arm64 (aarch64)
 #elif defined(__aarch64__) || defined(_M_ARM64) || defined(__ARM_ARCH_ISA_A64)
-    #define SIMD_F128_USE_NEON
-    #include <arm_neon.h>
+#define SIMD_F128_USE_NEON
+#include <arm_neon.h>
 
 // everything else goes to the scalar path
 #else
-    #define SIMD_F128_USE_SCALAR
+#define SIMD_F128_USE_SCALAR
 #endif
 
 // msvc doesn't support gcc builtins like __builtin_expect, so we define a fallback macro
@@ -91,16 +91,16 @@
  * doubles in a single variable. this makes the code much cleaner and
  * helps the compiler optimize the data flow. */
 #if defined(SIMD_F128_USE_AVX2) || defined(SIMD_F128_USE_SSE2)
-    typedef __m128d simd_f128;
+typedef __m128d simd_f128;
 #elif defined(SIMD_F128_USE_WASM)
-    typedef v128_t simd_f128;
+typedef v128_t simd_f128;
 #elif defined(SIMD_F128_USE_NEON)
-    typedef float64x2_t simd_f128;
+typedef float64x2_t simd_f128;
 #else
-    typedef struct {
-        double hi;
-        double lo;
-    } simd_f128;
+typedef struct {
+    double hi;
+    double lo;
+} simd_f128;
 #endif
 
 //  █████  ██████  ██
@@ -112,24 +112,24 @@
 // >>api
 #ifdef __cplusplus
 extern "C" {
-#endif // __cplusplus
+#endif  // __cplusplus
 
 // gpu (cuda/hip) support
 #if defined(__CUDACC__) || defined(__HIPCC__)
-    #define SIMD_F128_DEVICE __device__ __host__
+#define SIMD_F128_DEVICE __device__ __host__
 #else
-    #define SIMD_F128_DEVICE
+#define SIMD_F128_DEVICE
 #endif
 
 /* we use always_inline to make sure there's no function call overhead.
  * for double-double arithmetic, the overhead of a function call can
  * be significant compared to the actual math. */
 #if defined(__CUDACC__) || defined(__HIPCC__)
-    #define SIMD_F128_INLINE SIMD_F128_DEVICE inline __attribute__((always_inline))
+#define SIMD_F128_INLINE SIMD_F128_DEVICE inline __attribute__((always_inline))
 #elif defined(_MSC_VER)
-    #define SIMD_F128_INLINE SIMD_F128_DEVICE static __forceinline
+#define SIMD_F128_INLINE SIMD_F128_DEVICE static __forceinline
 #else
-    #define SIMD_F128_INLINE SIMD_F128_DEVICE static inline __attribute__((always_inline))
+#define SIMD_F128_INLINE SIMD_F128_DEVICE static inline __attribute__((always_inline))
 #endif
 
 /* initialization routines:
@@ -155,7 +155,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_rsqrt(simd_f128 x);
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif  // __cplusplus
 
 // extraction
 // moved here to avoid odr issues in the c++ api section
@@ -193,296 +193,296 @@ SIMD_F128_INLINE void simd_f128_extract(simd_f128 x, double* hi, double* lo) {
 //
 // >>math helpers
 
-    // dekker's split method to estimate the roundoff error of a double product.
-    // used as a fallback when hardware fma instruction (fp_fast_fma) is not present.
-    SIMD_F128_INLINE double simd_f128_exact_mul_err(double a, double b, double p) {
+// dekker's split method to estimate the roundoff error of a double product.
+// used as a fallback when hardware fma instruction (fp_fast_fma) is not present.
+SIMD_F128_INLINE double simd_f128_exact_mul_err(double a, double b, double p) {
 #ifdef FP_FAST_FMA
-        // use hardware fma if compiler flags detect fast hardware capability
-        return fma(a, b, -p);
+    // use hardware fma if compiler flags detect fast hardware capability
+    return fma(a, b, -p);
 #else
-        // prevent overflow in split for huge numbers by reciprocal scaling
-        if (__builtin_expect(fabs(a) > 6.7e299 && fabs(b) < 1.0, 0)) {
-            a *= 3.7252902984619140625e-09; // 2^-28
-            b *= 268435456.0;               // 2^28
-        } else if (__builtin_expect(fabs(b) > 6.7e299 && fabs(a) < 1.0, 0)) {
-            b *= 3.7252902984619140625e-09;
-            a *= 268435456.0;
-        }
-
-        // split double value into high and low half-words
-        double c, ahi, alo, bhi, blo;
-
-        c = 134217729.0 * a;
-        ahi = c - (c - a);
-        alo = a - ahi;
-
-        c = 134217729.0 * b;
-        bhi = c - (c - b);
-        blo = b - bhi;
-
-        // compute product error using dekker's formula
-        return ((ahi * bhi - p) + ahi * blo + alo * bhi) + alo * blo;
-#endif
+    // prevent overflow in split for huge numbers by reciprocal scaling
+    if (__builtin_expect(fabs(a) > 6.7e299 && fabs(b) < 1.0, 0)) {
+        a *= 3.7252902984619140625e-09;  // 2^-28
+        b *= 268435456.0;                // 2^28
+    } else if (__builtin_expect(fabs(b) > 6.7e299 && fabs(a) < 1.0, 0)) {
+        b *= 3.7252902984619140625e-09;
+        a *= 268435456.0;
     }
+
+    // split double value into high and low half-words
+    double c, ahi, alo, bhi, blo;
+
+    c = 134217729.0 * a;
+    ahi = c - (c - a);
+    alo = a - ahi;
+
+    c = 134217729.0 * b;
+    bhi = c - (c - b);
+    blo = b - bhi;
+
+    // compute product error using dekker's formula
+    return ((ahi * bhi - p) + ahi * blo + alo * bhi) + alo * blo;
+#endif
+}
 
 #if defined(SIMD_F128_USE_AVX2)
 
-    SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
-        return _mm_set_pd(0.0, d);
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
+    return _mm_set_pd(0.0, d);
+}
 
-    SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
-        return _mm_set_pd(lo, hi);
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
+    return _mm_set_pd(lo, hi);
+}
 
-    SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
-        return _mm_xor_pd(x, _mm_set1_pd(-0.0));
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
+    return _mm_xor_pd(x, _mm_set1_pd(-0.0));
+}
 
-    #define SIMD_F128_PACK(hi, lo) _mm_set_pd((lo), (hi))
+#define SIMD_F128_PACK(hi, lo) _mm_set_pd((lo), (hi))
 
 #elif defined(SIMD_F128_USE_SSE2)
 
-    SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
-        return _mm_set_pd(0.0, d);
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
+    return _mm_set_pd(0.0, d);
+}
 
-    SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
-        return _mm_set_pd(lo, hi);
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
+    return _mm_set_pd(lo, hi);
+}
 
-    SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
-        return _mm_xor_pd(x, _mm_set1_pd(-0.0));
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
+    return _mm_xor_pd(x, _mm_set1_pd(-0.0));
+}
 
-    #define SIMD_F128_PACK(hi, lo) _mm_set_pd((lo), (hi))
+#define SIMD_F128_PACK(hi, lo) _mm_set_pd((lo), (hi))
 
 #elif defined(SIMD_F128_USE_WASM)
 
-    SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
-        return wasm_f64x2_make(d, 0.0);
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
+    return wasm_f64x2_make(d, 0.0);
+}
 
-    SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
-        return wasm_f64x2_make(hi, lo);
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
+    return wasm_f64x2_make(hi, lo);
+}
 
-    SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
-        v128_t neg_mask = wasm_i64x2_const(0x8000000000000000ULL, 0x8000000000000000ULL);
-        return wasm_v128_xor(x, neg_mask);
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
+    v128_t neg_mask = wasm_i64x2_const(0x8000000000000000ULL, 0x8000000000000000ULL);
+    return wasm_v128_xor(x, neg_mask);
+}
 
-    #define SIMD_F128_PACK(hi, lo) wasm_f64x2_make((hi), (lo))
+#define SIMD_F128_PACK(hi, lo) wasm_f64x2_make((hi), (lo))
 
 #elif defined(SIMD_F128_USE_NEON)
 
-    SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
-        float64x2_t r = vdupq_n_f64(0.0);
-        return vsetq_lane_f64(d, r, 0);
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
+    float64x2_t r = vdupq_n_f64(0.0);
+    return vsetq_lane_f64(d, r, 0);
+}
 
-    SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
-        float64x2_t r = vdupq_n_f64(lo);
-        return vsetq_lane_f64(hi, r, 0);
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
+    float64x2_t r = vdupq_n_f64(lo);
+    return vsetq_lane_f64(hi, r, 0);
+}
 
-    SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
-        return vnegq_f64(x);
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
+    return vnegq_f64(x);
+}
 
-    #define SIMD_F128_PACK(hi_val, lo_val) vsetq_lane_f64((hi_val), vdupq_n_f64((lo_val)), 0)
+#define SIMD_F128_PACK(hi_val, lo_val) vsetq_lane_f64((hi_val), vdupq_n_f64((lo_val)), 0)
 
 #else
 
-    SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
-        simd_f128 res = {d, 0.0};
-        return res;
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d) {
+    simd_f128 res = {d, 0.0};
+    return res;
+}
 
-    SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
-        simd_f128 res = {hi, lo};
-        return res;
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo) {
+    simd_f128 res = {hi, lo};
+    return res;
+}
 
-    SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
-        simd_f128 res = {-x.hi, -x.lo};
-        return res;
-    }
+SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
+    simd_f128 res = {-x.hi, -x.lo};
+    return res;
+}
 
-    #define SIMD_F128_PACK(hi_val, lo_val) ((simd_f128){(hi_val), (lo_val)})
+#define SIMD_F128_PACK(hi_val, lo_val) ((simd_f128){(hi_val), (lo_val)})
 
 #endif
 
-    // unified generic architecture-agnostic math implementations using double.
-    // modern compilers will vectorize these back to single-lane simd instructions.
+// unified generic architecture-agnostic math implementations using double.
+// modern compilers will vectorize these back to single-lane simd instructions.
 
-    SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
-        double ahi, alo, bhi, blo;
-        simd_f128_extract(a, &ahi, &alo);
-        simd_f128_extract(b, &bhi, &blo);
+SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
+    double ahi, alo, bhi, blo;
+    simd_f128_extract(a, &ahi, &alo);
+    simd_f128_extract(b, &bhi, &blo);
 
-        double s = ahi + bhi;
-        if (__builtin_expect(isinf(s), 0)) return SIMD_F128_PACK(s, 0.0);
+    double s = ahi + bhi;
+    if (__builtin_expect(isinf(s), 0)) return SIMD_F128_PACK(s, 0.0);
 
-        // knuth's two-sum algorithm to compute sum roundoff error e
-        double v = s - ahi;
-        double e = (ahi - (s - v)) + (bhi - v);
+    // knuth's two-sum algorithm to compute sum roundoff error e
+    double v = s - ahi;
+    double e = (ahi - (s - v)) + (bhi - v);
 
-        // combine low components and sum roundoff error, then normalize
-        double t = alo + blo + e;
-        double final_hi = s + t;
-        double final_lo = t - (final_hi - s);
+    // combine low components and sum roundoff error, then normalize
+    double t = alo + blo + e;
+    double final_hi = s + t;
+    double final_lo = t - (final_hi - s);
 
-        return SIMD_F128_PACK(final_hi, final_lo);
+    return SIMD_F128_PACK(final_hi, final_lo);
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_add_fast(simd_f128 a, simd_f128 b) {
+    double ahi, alo, bhi, blo;
+    simd_f128_extract(a, &ahi, &alo);
+    simd_f128_extract(b, &bhi, &blo);
+
+    double s = ahi + bhi;
+    if (__builtin_expect(isinf(s), 0)) return SIMD_F128_PACK(s, 0.0);
+
+    // fast two-sum algorithm (requires |a| >= |b|)
+    double e = bhi - (s - ahi);
+
+    double t = alo + blo + e;
+    double final_hi = s + t;
+    double final_lo = t - (final_hi - s);
+
+    return SIMD_F128_PACK(final_hi, final_lo);
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
+    double ahi, alo, bhi, blo;
+    simd_f128_extract(a, &ahi, &alo);
+    simd_f128_extract(b, &bhi, &blo);
+
+    double s = ahi - bhi;
+    if (__builtin_expect(isinf(s), 0)) return SIMD_F128_PACK(s, 0.0);
+
+    // two-diff algorithm
+    double v = s - ahi;
+    double e = (ahi - (s - v)) - (bhi + v);
+
+    double t = alo - blo + e;
+    double final_hi = s + t;
+    double final_lo = t - (final_hi - s);
+
+    return SIMD_F128_PACK(final_hi, final_lo);
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_sub_fast(simd_f128 a, simd_f128 b) {
+    double ahi, alo, bhi, blo;
+    simd_f128_extract(a, &ahi, &alo);
+    simd_f128_extract(b, &bhi, &blo);
+
+    double s = ahi - bhi;
+    if (__builtin_expect(isinf(s), 0)) return SIMD_F128_PACK(s, 0.0);
+
+    // fast two-diff algorithm (requires |a| >= |b|)
+    double e = -bhi - (s - ahi);
+
+    double t = alo - blo + e;
+    double final_hi = s + t;
+    double final_lo = t - (final_hi - s);
+
+    return SIMD_F128_PACK(final_hi, final_lo);
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
+    double ahi, alo, bhi, blo;
+    simd_f128_extract(a, &ahi, &alo);
+    simd_f128_extract(b, &bhi, &blo);
+
+    // compute base product, estimate exact error, add cross-terms, and normalize
+    double p = ahi * bhi;
+    if (__builtin_expect(isinf(p), 0)) return SIMD_F128_PACK(p, 0.0);
+
+    double e = simd_f128_exact_mul_err(ahi, bhi, p);
+    e += (ahi * blo + alo * bhi);
+
+    double final_hi = p + e;
+    double final_lo = e - (final_hi - p);
+
+    return SIMD_F128_PACK(final_hi, final_lo);
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_div(simd_f128 a, simd_f128 b) {
+    double ahi, alo, bhi, blo;
+    simd_f128_extract(a, &ahi, &alo);
+    simd_f128_extract(b, &bhi, &blo);
+
+    // check division by zero
+    // check both hi and lo to handle subnormals correctly
+    if (bhi == 0.0 && blo == 0.0) {
+        double inf_val = ahi / bhi;
+        if (ahi == 0.0 && alo == 0.0) inf_val = NAN;
+        return SIMD_F128_PACK(inf_val, 0.0);
     }
 
-    SIMD_F128_INLINE simd_f128 simd_f128_add_fast(simd_f128 a, simd_f128 b) {
-        double ahi, alo, bhi, blo;
-        simd_f128_extract(a, &ahi, &alo);
-        simd_f128_extract(b, &bhi, &blo);
-
-        double s = ahi + bhi;
-        if (__builtin_expect(isinf(s), 0)) return SIMD_F128_PACK(s, 0.0);
-
-        // fast two-sum algorithm (requires |a| >= |b|)
-        double e = bhi - (s - ahi);
-
-        double t = alo + blo + e;
-        double final_hi = s + t;
-        double final_lo = t - (final_hi - s);
-
-        return SIMD_F128_PACK(final_hi, final_lo);
-    }
-
-    SIMD_F128_INLINE simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b) {
-        double ahi, alo, bhi, blo;
-        simd_f128_extract(a, &ahi, &alo);
-        simd_f128_extract(b, &bhi, &blo);
-
-        double s = ahi - bhi;
-        if (__builtin_expect(isinf(s), 0)) return SIMD_F128_PACK(s, 0.0);
-
-        // two-diff algorithm
-        double v = s - ahi;
-        double e = (ahi - (s - v)) - (bhi + v);
-
-        double t = alo - blo + e;
-        double final_hi = s + t;
-        double final_lo = t - (final_hi - s);
-
-        return SIMD_F128_PACK(final_hi, final_lo);
-    }
-
-    SIMD_F128_INLINE simd_f128 simd_f128_sub_fast(simd_f128 a, simd_f128 b) {
-        double ahi, alo, bhi, blo;
-        simd_f128_extract(a, &ahi, &alo);
-        simd_f128_extract(b, &bhi, &blo);
-
-        double s = ahi - bhi;
-        if (__builtin_expect(isinf(s), 0)) return SIMD_F128_PACK(s, 0.0);
-
-        // fast two-diff algorithm (requires |a| >= |b|)
-        double e = -bhi - (s - ahi);
-
-        double t = alo - blo + e;
-        double final_hi = s + t;
-        double final_lo = t - (final_hi - s);
-
-        return SIMD_F128_PACK(final_hi, final_lo);
-    }
-
-    SIMD_F128_INLINE simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b) {
-        double ahi, alo, bhi, blo;
-        simd_f128_extract(a, &ahi, &alo);
-        simd_f128_extract(b, &bhi, &blo);
-
-        // compute base product, estimate exact error, add cross-terms, and normalize
-        double p = ahi * bhi;
-        if (__builtin_expect(isinf(p), 0)) return SIMD_F128_PACK(p, 0.0);
-
-        double e = simd_f128_exact_mul_err(ahi, bhi, p);
-        e += (ahi * blo + alo * bhi);
-
-        double final_hi = p + e;
-        double final_lo = e - (final_hi - p);
-
-        return SIMD_F128_PACK(final_hi, final_lo);
-    }
-
-    SIMD_F128_INLINE simd_f128 simd_f128_div(simd_f128 a, simd_f128 b) {
-        double ahi, alo, bhi, blo;
-        simd_f128_extract(a, &ahi, &alo);
-        simd_f128_extract(b, &bhi, &blo);
-
-        // check division by zero
-        // check both hi and lo to handle subnormals correctly
-        if (bhi == 0.0 && blo == 0.0) {
-            double inf_val = ahi / bhi;
-            if (ahi == 0.0 && alo == 0.0) inf_val = NAN;
-            return SIMD_F128_PACK(inf_val, 0.0);
-        }
-
-        // check division by infinity
-        if (__builtin_expect(isinf(bhi), 0)) {
-            if (isinf(ahi) || isnan(ahi) || isnan(bhi)) {
-                return SIMD_F128_PACK(NAN, 0.0);
-            }
-            double sign = (signbit(ahi) ^ signbit(bhi)) ? -0.0 : 0.0;
-            return SIMD_F128_PACK(sign, 0.0);
-        }
-
-        // quotient estimation and remainder tracking for scalar division
-        double q1 = ahi / bhi;
-        double p1 = q1 * bhi;
-        double p2 = simd_f128_exact_mul_err(q1, bhi, p1) + q1 * blo;
-
-        double s = ahi - p1;
-        double v = s - ahi;
-        double e = (ahi - (s - v)) + (-p1 - v);
-        double t = alo - p2 + e;
-
-        double rh = s + t;
-        double rl = t - (rh - s);
-        double q2 = rh / bhi;
-
-        double final_hi = q1 + q2;
-        double final_lo = q2 - (final_hi - q1) + rl / bhi;
-
-        return SIMD_F128_PACK(final_hi, final_lo);
-    }
-
-    SIMD_F128_INLINE simd_f128 simd_f128_sqrt(simd_f128 x) {
-        double xhi, xlo;
-        simd_f128_extract(x, &xhi, &xlo);
-
-        // check negative bounds
-        if (xhi < 0.0 || (xhi == 0.0 && xlo < 0.0)) {
+    // check division by infinity
+    if (__builtin_expect(isinf(bhi), 0)) {
+        if (isinf(ahi) || isnan(ahi) || isnan(bhi)) {
             return SIMD_F128_PACK(NAN, 0.0);
         }
-        if (xhi == 0.0) return x;
-
-        // initial guess is already correct to 1 ulp
-        double y = 1.0 / sqrt(xhi);
-
-        double z = xhi * y;
-        double zlo = simd_f128_exact_mul_err(xhi, y, z) + xlo * y;
-
-        double est = z * z;
-        double estlo = simd_f128_exact_mul_err(z, z, est) + 2.0 * z * zlo;
-        double err = (xhi - est) - estlo + xlo;
-
-        double final_hi = z + 0.5 * err * y;
-        double final_lo = 0.5 * err * y - (final_hi - z);
-
-        return SIMD_F128_PACK(final_hi, final_lo);
+        double sign = (signbit(ahi) ^ signbit(bhi)) ? -0.0 : 0.0;
+        return SIMD_F128_PACK(sign, 0.0);
     }
 
-    // architecture-agnostic inverse square root.
-    // utilizes the respective hardware-accelerated div and sqrt.
-    SIMD_F128_INLINE simd_f128 simd_f128_rsqrt(simd_f128 x) {
-        simd_f128 one = simd_f128_from_double(1.0);
-        return simd_f128_div(one, simd_f128_sqrt(x));
-    }
+    // quotient estimation and remainder tracking for scalar division
+    double q1 = ahi / bhi;
+    double p1 = q1 * bhi;
+    double p2 = simd_f128_exact_mul_err(q1, bhi, p1) + q1 * blo;
 
-#endif // SIMD_F128_IMPLEMENTATION
-#endif // SIMD_F128_H
+    double s = ahi - p1;
+    double v = s - ahi;
+    double e = (ahi - (s - v)) + (-p1 - v);
+    double t = alo - p2 + e;
+
+    double rh = s + t;
+    double rl = t - (rh - s);
+    double q2 = rh / bhi;
+
+    double final_hi = q1 + q2;
+    double final_lo = q2 - (final_hi - q1) + rl / bhi;
+
+    return SIMD_F128_PACK(final_hi, final_lo);
+}
+
+SIMD_F128_INLINE simd_f128 simd_f128_sqrt(simd_f128 x) {
+    double xhi, xlo;
+    simd_f128_extract(x, &xhi, &xlo);
+
+    // check negative bounds
+    if (xhi < 0.0 || (xhi == 0.0 && xlo < 0.0)) {
+        return SIMD_F128_PACK(NAN, 0.0);
+    }
+    if (xhi == 0.0) return x;
+
+    // initial guess is already correct to 1 ulp
+    double y = 1.0 / sqrt(xhi);
+
+    double z = xhi * y;
+    double zlo = simd_f128_exact_mul_err(xhi, y, z) + xlo * y;
+
+    double est = z * z;
+    double estlo = simd_f128_exact_mul_err(z, z, est) + 2.0 * z * zlo;
+    double err = (xhi - est) - estlo + xlo;
+
+    double final_hi = z + 0.5 * err * y;
+    double final_lo = 0.5 * err * y - (final_hi - z);
+
+    return SIMD_F128_PACK(final_hi, final_lo);
+}
+
+// architecture-agnostic inverse square root.
+// utilizes the respective hardware-accelerated div and sqrt.
+SIMD_F128_INLINE simd_f128 simd_f128_rsqrt(simd_f128 x) {
+    simd_f128 one = simd_f128_from_double(1.0);
+    return simd_f128_div(one, simd_f128_sqrt(x));
+}
+
+#endif  // SIMD_F128_IMPLEMENTATION
+#endif  // SIMD_F128_H

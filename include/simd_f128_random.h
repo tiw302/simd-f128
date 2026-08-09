@@ -11,11 +11,12 @@
 #define SIMD_F128_RANDOM_H
 
 #include <stdint.h>
+
 #include "simd_f128.h"
 
 #ifdef __cplusplus
 extern "C" {
-#endif // __cplusplus
+#endif  // __cplusplus
 
 // ██████   █████  ███    ██ ██████   ██████  ███    ███
 // ██   ██ ██   ██ ████   ██ ██   ██ ██    ██ ████  ████
@@ -78,6 +79,6 @@ SIMD_F128_INLINE simd_f128 simd_f128_prng_uniform(simd_f128_prng* state) {
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif  // __cplusplus
 
-#endif // SIMD_F128_RANDOM_H
+#endif  // SIMD_F128_RANDOM_H

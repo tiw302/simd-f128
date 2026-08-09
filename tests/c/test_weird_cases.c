@@ -7,14 +7,14 @@
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 #define SIMD_F128_IMPLEMENTATION
 #include "../include/simd_f128.h"
-#include "../include/simd_f128_math.h"
 #include "../include/simd_f128_io.h"
+#include "../include/simd_f128_math.h"
 
 int main() {
     printf("=======================================\n");
@@ -42,8 +42,8 @@ int main() {
     simd_f128 int_exp = simd_f128_from_double(3.0);
     simd_f128 frac_exp = simd_f128_from_double(3.5);
 
-    simd_f128 pow1 = simd_f128_pow(neg_base, int_exp); // -2.5^3 = -15.625
-    simd_f128 pow2 = simd_f128_pow(neg_base, frac_exp); // -2.5^3.5 = NaN
+    simd_f128 pow1 = simd_f128_pow(neg_base, int_exp);   // -2.5^3 = -15.625
+    simd_f128 pow2 = simd_f128_pow(neg_base, frac_exp);  // -2.5^3.5 = NaN
 
     simd_f128_to_string(buf, sizeof(buf), pow1);
     printf("pow(-2.5, 3.0)   = %s (expect -15.625)\n", buf);
@@ -56,7 +56,7 @@ int main() {
     simd_f128 neg_one = simd_f128_from_double(-1.0);
 
     simd_f128 pow3 = simd_f128_pow(zero, zero);
-    simd_f128 pow4 = simd_f128_pow(zero, neg_one); // 0^-1 = inf
+    simd_f128 pow4 = simd_f128_pow(zero, neg_one);  // 0^-1 = inf
 
     simd_f128_to_string(buf, sizeof(buf), pow3);
     printf("pow(0.0, 0.0)    = %s (expect 1.0)\n", buf);
@@ -84,8 +84,8 @@ int main() {
     // verifies +/- zero distinctions for angle quadrants.
     printf("\n--- [6] atan2 signs ---\n");
     simd_f128 neg_zero = simd_f128_from_double(-0.0);
-    simd_f128 atan2_1 = simd_f128_atan2(zero, neg_zero); // atan2(0, -0) = PI
-    simd_f128 atan2_2 = simd_f128_atan2(neg_zero, neg_zero); // atan2(-0, -0) = -PI
+    simd_f128 atan2_1 = simd_f128_atan2(zero, neg_zero);      // atan2(0, -0) = PI
+    simd_f128 atan2_2 = simd_f128_atan2(neg_zero, neg_zero);  // atan2(-0, -0) = -PI
 
     simd_f128_to_string(buf, sizeof(buf), atan2_1);
     printf("atan2(0.0, -0.0) = %s\n", buf);

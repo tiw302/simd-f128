@@ -7,19 +7,19 @@
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
 
 #define SIMD_F128_IMPLEMENTATION
 #include "../include/simd_f128.h"
+#include "../include/simd_f128_array.h"
+#include "../include/simd_f128_complex.h"
 #include "../include/simd_f128_consts.h"
 #include "../include/simd_f128_io.h"
-#include "../include/simd_f128_utils.h"
 #include "../include/simd_f128_math.h"
-#include "../include/simd_f128_complex.h"
-#include "../include/simd_f128_array.h"
+#include "../include/simd_f128_utils.h"
 
 static void extract(simd_f128 x, double *hi, double *lo) {
     simd_f128_extract(x, hi, lo);
@@ -50,37 +50,39 @@ static int almost_equal(simd_f128 a, simd_f128 b, int max_ulp) {
     return within_ulp(a, b, max_ulp);
 }
 
-int tests_run    = 0;
+int tests_run = 0;
 int tests_failed = 0;
 
 #define EPSILON 1e-30
 
-#define CHECK(label, cond)                                      \
-    do {                                                        \
-        tests_run++;                                            \
-        if (!(cond)) {                                          \
-            printf("  FAIL: %s\n", label);                      \
-            tests_failed++;                                     \
-        } else {                                                \
-            printf("  PASS: %s\n", label);                      \
-        }                                                       \
+#define CHECK(label, cond)                 \
+    do {                                   \
+        tests_run++;                       \
+        if (!(cond)) {                     \
+            printf("  FAIL: %s\n", label); \
+            tests_failed++;                \
+        } else {                           \
+            printf("  PASS: %s\n", label); \
+        }                                  \
     } while (0)
 
-#define CHECK_CLOSE(label, a, b, ulps)                          \
-    do {                                                        \
-        tests_run++;                                            \
-        if (!almost_equal(a, b, ulps)) {                        \
-            printf("  FAIL: %s\n", label);                      \
-            tests_failed++;                                     \
-        } else {                                                \
-            printf("  PASS: %s\n", label);                      \
-        }                                                       \
+#define CHECK_CLOSE(label, a, b, ulps)     \
+    do {                                   \
+        tests_run++;                       \
+        if (!almost_equal(a, b, ulps)) {   \
+            printf("  FAIL: %s\n", label); \
+            tests_failed++;                \
+        } else {                           \
+            printf("  PASS: %s\n", label); \
+        }                                  \
     } while (0)
 
 int main() {
-    printf("====================================================================================\n");
+    printf(
+        "====================================================================================\n");
     printf("simd-f128 comprehensive test suite\n");
-    printf("====================================================================================\n\n");
+    printf(
+        "====================================================================================\n\n");
 
     double hi, lo;
 
@@ -454,9 +456,11 @@ int main() {
 
     // check specific threshold bounds migrated from test_exp_threshold.c
     simd_f128 exp_val1 = simd_f128_exp(simd_f128_from_double(709.5));
-    CHECK("exp(709.5) does not overflow prematurely", !simd_f128_isinf(exp_val1) && !simd_f128_isnan(exp_val1));
+    CHECK("exp(709.5) does not overflow prematurely",
+          !simd_f128_isinf(exp_val1) && !simd_f128_isnan(exp_val1));
     simd_f128 exp_val2 = simd_f128_exp(simd_f128_from_double(709.1));
-    CHECK("exp(709.1) does not overflow prematurely", !simd_f128_isinf(exp_val2) && !simd_f128_isnan(exp_val2));
+    CHECK("exp(709.1) does not overflow prematurely",
+          !simd_f128_isinf(exp_val2) && !simd_f128_isnan(exp_val2));
 
     CHECK("log(NaN) is NaN", simd_f128_isnan(simd_f128_log(nan_val)));
     CHECK("log(inf) is inf", simd_f128_isinf(simd_f128_log(inf_val)));
@@ -471,7 +475,6 @@ int main() {
     double th_inf_hi, th_inf_lo;
     simd_f128_extract(simd_f128_tanh(inf_val), &th_inf_hi, &th_inf_lo);
     CHECK("tanh(inf) is 1.0", th_inf_hi == 1.0);
-
 
     // [8.4] new edge cases and bug fixes
     printf("\n[8.4] new bug fixes and edge cases\n");
@@ -519,7 +522,6 @@ int main() {
     simd_f128_extract(simd_f128_atan2(neg_zero_f128, neg_zero_f128), &a2_hi, &a2_lo);
     CHECK("atan2(-0.0, -0.0) is -pi", fabs(a2_hi - (-3.141592653589793)) < 1e-12);
 
-
     printf("\n=== SECTION 9: Complex Numbers ===\n\n");
 
     printf("[9.1] complex arithmetic\n");
@@ -539,22 +541,24 @@ int main() {
     extract(c_mul.imag, &hi, &lo);
     CHECK("c_mul.imag == 10.0", hi == 10.0);
 
-    simd_f128 c_abs = simd_f128_complex_abs_sqr(c2); // |3+4i|^2 = 9 + 16 = 25
+    simd_f128 c_abs = simd_f128_complex_abs_sqr(c2);  // |3+4i|^2 = 9 + 16 = 25
     extract(c_abs, &hi, &lo);
     CHECK("|c2|^2 == 25.0", hi == 25.0);
 
     printf("\n=== SECTION 10: Array Operations (SoA) ===\n\n");
-    
-    #define SOA_TEST_LEN 10
+
+#define SOA_TEST_LEN 10
     double a_hi[SOA_TEST_LEN], a_lo[SOA_TEST_LEN];
     double b_hi[SOA_TEST_LEN], b_lo[SOA_TEST_LEN];
     double out_hi[SOA_TEST_LEN], out_lo[SOA_TEST_LEN];
-    
+
     for (int i = 0; i < SOA_TEST_LEN; i++) {
-        a_hi[i] = i * 2.0; a_lo[i] = i * 1e-16;
-        b_hi[i] = i * 1.5; b_lo[i] = i * 1e-16;
+        a_hi[i] = i * 2.0;
+        a_lo[i] = i * 1e-16;
+        b_hi[i] = i * 1.5;
+        b_lo[i] = i * 1e-16;
     }
-    
+
     printf("[10.1] soa array addition\n");
     simd_f128_array_add_soa(a_hi, a_lo, b_hi, b_lo, out_hi, out_lo, SOA_TEST_LEN);
     CHECK("soa add [5] hi", out_hi[5] == (10.0 + 7.5));
@@ -563,7 +567,8 @@ int main() {
     printf("[10.2] soa array multiplication\n");
     simd_f128_array_mul_soa(a_hi, a_lo, b_hi, b_lo, out_hi, out_lo, SOA_TEST_LEN);
     simd_f128 r5 = simd_f128_from_hi_lo(out_hi[5], out_lo[5]);
-    simd_f128 s5 = simd_f128_mul(simd_f128_from_hi_lo(10.0, 5e-16), simd_f128_from_hi_lo(7.5, 5e-16));
+    simd_f128 s5 =
+        simd_f128_mul(simd_f128_from_hi_lo(10.0, 5e-16), simd_f128_from_hi_lo(7.5, 5e-16));
     CHECK_CLOSE("soa mul [5] against scalar", r5, s5, 2);
 
     printf("\n=== SUMMARY ===\n\n");
