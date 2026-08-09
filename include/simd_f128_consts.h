@@ -28,7 +28,7 @@ static const double _simd_f128_ln2_raw[2] = {0.69314718055994529, 2.319046813846
 static const double _simd_f128_ln10_raw[2] = {2.3025850929940459, -2.1707562233822494e-16};
 
 // helper to load raw double arrays into portable simd_f128 registers
-SIMD_F128_INLINE simd_f128 _simd_f128_from_raw(const double *raw) {
+SIMD_F128_INLINE simd_f128 _simd_f128_from_raw(const double* raw) {
     return simd_f128_from_hi_lo(raw[0], raw[1]);
 }
 

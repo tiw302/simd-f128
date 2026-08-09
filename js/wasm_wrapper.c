@@ -8,30 +8,31 @@
  * copyright (c) 2026 jirawat siripuk */
 
 #define SIMD_F128_IMPLEMENTATION
+#include <stdlib.h>
+#include <string.h>
+
 #include "../include/simd_f128.h"
 #include "../include/simd_f128_io.h"
 #include "../include/simd_f128_math.h"
 #include "../include/simd_f128_utils.h"
-#include <stdlib.h>
-#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
-#endif // __cplusplus
+#endif  // __cplusplus
 
 // no more global state. passing pointer from js to avoid race conditions.
-#define WASM_BIN_OP(name, func) \
+#define WASM_BIN_OP(name, func)                                                                   \
     void simd_f128_wasm_##name(double a_hi, double a_lo, double b_hi, double b_lo, double* out) { \
-        if (!out) return; \
+        if (!out) return;                                                                         \
         simd_f128 res = func(simd_f128_from_hi_lo(a_hi, a_lo), simd_f128_from_hi_lo(b_hi, b_lo)); \
-        simd_f128_extract(res, &out[0], &out[1]); \
+        simd_f128_extract(res, &out[0], &out[1]);                                                 \
     }
 
-#define WASM_UN_OP(name, func) \
+#define WASM_UN_OP(name, func)                                          \
     void simd_f128_wasm_##name(double a_hi, double a_lo, double* out) { \
-        if (!out) return; \
-        simd_f128 res = func(simd_f128_from_hi_lo(a_hi, a_lo)); \
-        simd_f128_extract(res, &out[0], &out[1]); \
+        if (!out) return;                                               \
+        simd_f128 res = func(simd_f128_from_hi_lo(a_hi, a_lo));         \
+        simd_f128_extract(res, &out[0], &out[1]);                       \
     }
 
 WASM_BIN_OP(add, simd_f128_add)
@@ -96,15 +97,15 @@ int simd_f128_wasm_cmp(double a_hi, double a_lo, double b_hi, double b_lo) {
     return simd_f128_cmp(simd_f128_from_hi_lo(a_hi, a_lo), simd_f128_from_hi_lo(b_hi, b_lo));
 }
 
-#define WASM_BIN_ARRAY_OP(name, func) \
+#define WASM_BIN_ARRAY_OP(name, func)                                                             \
     void simd_f128_wasm_##name##_arrays(const double* a, const double* b, double* out, int len) { \
-        if (!a || !b || !out || len <= 0) return; \
-        for (int i = 0; i < len; i++) { \
-            simd_f128 sa = simd_f128_from_hi_lo(a[i*2], a[i*2+1]); \
-            simd_f128 sb = simd_f128_from_hi_lo(b[i*2], b[i*2+1]); \
-            simd_f128 sr = func(sa, sb); \
-            simd_f128_extract(sr, &out[i*2], &out[i*2+1]); \
-        } \
+        if (!a || !b || !out || len <= 0) return;                                                 \
+        for (int i = 0; i < len; i++) {                                                           \
+            simd_f128 sa = simd_f128_from_hi_lo(a[i * 2], a[i * 2 + 1]);                          \
+            simd_f128 sb = simd_f128_from_hi_lo(b[i * 2], b[i * 2 + 1]);                          \
+            simd_f128 sr = func(sa, sb);                                                          \
+            simd_f128_extract(sr, &out[i * 2], &out[i * 2 + 1]);                                  \
+        }                                                                                         \
     }
 
 WASM_BIN_ARRAY_OP(add, simd_f128_add)
@@ -114,4 +115,4 @@ WASM_BIN_ARRAY_OP(div, simd_f128_div)
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif  // __cplusplus

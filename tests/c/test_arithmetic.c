@@ -21,7 +21,7 @@
 #include "../../include/simd_f128_math.h"
 #include "../../include/simd_f128_utils.h"
 
-static void extract(simd_f128 x, double *hi, double *lo) {
+static void extract(simd_f128 x, double* hi, double* lo) {
     simd_f128_extract(x, hi, lo);
 }
 

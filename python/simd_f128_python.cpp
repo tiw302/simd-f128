@@ -18,9 +18,9 @@
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
-#include <pybind11/pybind11.h>
-#include <pybind11/operators.h>
 #include <pybind11/numpy.h>
+#include <pybind11/operators.h>
+#include <pybind11/pybind11.h>
 #define SIMD_F128_IMPLEMENTATION
 #include "../include/simd_f128.hpp"
 #include "../include/simd_f128_complex.hpp"
@@ -37,11 +37,13 @@ PYBIND11_MODULE(simd_f128, m) {
         .def(py::init<>())
         .def(py::init<double>())
         // parse from string to avoid pybind11's 64-bit float truncation
-        .def(py::init([](const std::string& s) { return f128::float128(simd_f128_from_string(s.c_str())); }))
+        .def(py::init(
+            [](const std::string& s) { return f128::float128(simd_f128_from_string(s.c_str())); }))
         .def("to_string", &f128::float128::to_string)
         .def("__str__", &f128::float128::to_string)
         // return eval-safe string for __repr__
-        .def("__repr__", [](const f128::float128& self) { return "Float128('" + self.to_string() + "')"; })
+        .def("__repr__",
+             [](const f128::float128& self) { return "Float128('" + self.to_string() + "')"; })
         .def(py::self + py::self)
         .def(py::self - py::self)
         .def(py::self * py::self)
@@ -64,7 +66,8 @@ PYBIND11_MODULE(simd_f128, m) {
     py::class_<f128::complex128>(m, "Complex128")
         .def(py::init<>())
         .def(py::init<double, double>(), py::arg("real"), py::arg("imag") = 0.0)
-        .def(py::init<f128::float128, f128::float128>(), py::arg("real"), py::arg("imag") = f128::float128(0.0))
+        .def(py::init<f128::float128, f128::float128>(), py::arg("real"),
+             py::arg("imag") = f128::float128(0.0))
         .def("real", &f128::complex128::real)
         .def("imag", &f128::complex128::imag)
         .def("to_string", &f128::complex128::to_string)
@@ -133,99 +136,111 @@ PYBIND11_MODULE(simd_f128, m) {
     // numpy vectorization
     // ============================================================================
     // vectorized numpy array operations for (n, 2) shapes
-    m.def("add_arrays", [](py::array_t<double> a, py::array_t<double> b) -> py::array_t<double> {
-        py::buffer_info buf_a = a.request(), buf_b = b.request();
-        if (buf_a.ndim != 2 || buf_a.shape[1] != 2 || buf_b.ndim != 2 || buf_b.shape[1] != 2)
-            throw std::runtime_error("Inputs must have shape (N, 2)");
-        if (buf_a.shape[0] != buf_b.shape[0])
-            throw std::runtime_error("Input shapes must match");
+    m.def(
+        "add_arrays",
+        [](py::array_t<double> a, py::array_t<double> b) -> py::array_t<double> {
+            py::buffer_info buf_a = a.request(), buf_b = b.request();
+            if (buf_a.ndim != 2 || buf_a.shape[1] != 2 || buf_b.ndim != 2 || buf_b.shape[1] != 2)
+                throw std::runtime_error("Inputs must have shape (N, 2)");
+            if (buf_a.shape[0] != buf_b.shape[0])
+                throw std::runtime_error("Input shapes must match");
 
-        size_t n = buf_a.shape[0];
-        py::array_t<double> result({n, (size_t)2});
-        py::buffer_info buf_res = result.request();
+            size_t n = buf_a.shape[0];
+            py::array_t<double> result({n, (size_t)2});
+            py::buffer_info buf_res = result.request();
 
-        double* ptr_a = static_cast<double*>(buf_a.ptr);
-        double* ptr_b = static_cast<double*>(buf_b.ptr);
-        double* ptr_res = static_cast<double*>(buf_res.ptr);
+            double* ptr_a = static_cast<double*>(buf_a.ptr);
+            double* ptr_b = static_cast<double*>(buf_b.ptr);
+            double* ptr_res = static_cast<double*>(buf_res.ptr);
 
-        for (size_t i = 0; i < n; i++) {
-            simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i*2], ptr_a[i*2+1]);
-            simd_f128 sb = simd_f128_from_hi_lo(ptr_b[i*2], ptr_b[i*2+1]);
-            simd_f128 sr = simd_f128_add(sa, sb);
-            simd_f128_extract(sr, &ptr_res[i*2], &ptr_res[i*2+1]);
-        }
-        return result;
-    }, "element-wise addition of (N, 2) arrays");
+            for (size_t i = 0; i < n; i++) {
+                simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i * 2], ptr_a[i * 2 + 1]);
+                simd_f128 sb = simd_f128_from_hi_lo(ptr_b[i * 2], ptr_b[i * 2 + 1]);
+                simd_f128 sr = simd_f128_add(sa, sb);
+                simd_f128_extract(sr, &ptr_res[i * 2], &ptr_res[i * 2 + 1]);
+            }
+            return result;
+        },
+        "element-wise addition of (N, 2) arrays");
 
-    m.def("sub_arrays", [](py::array_t<double> a, py::array_t<double> b) -> py::array_t<double> {
-        py::buffer_info buf_a = a.request(), buf_b = b.request();
-        if (buf_a.ndim != 2 || buf_a.shape[1] != 2 || buf_b.ndim != 2 || buf_b.shape[1] != 2)
-            throw std::runtime_error("Inputs must have shape (N, 2)");
-        if (buf_a.shape[0] != buf_b.shape[0])
-            throw std::runtime_error("Input shapes must match");
+    m.def(
+        "sub_arrays",
+        [](py::array_t<double> a, py::array_t<double> b) -> py::array_t<double> {
+            py::buffer_info buf_a = a.request(), buf_b = b.request();
+            if (buf_a.ndim != 2 || buf_a.shape[1] != 2 || buf_b.ndim != 2 || buf_b.shape[1] != 2)
+                throw std::runtime_error("Inputs must have shape (N, 2)");
+            if (buf_a.shape[0] != buf_b.shape[0])
+                throw std::runtime_error("Input shapes must match");
 
-        size_t n = buf_a.shape[0];
-        py::array_t<double> result({n, (size_t)2});
-        py::buffer_info buf_res = result.request();
+            size_t n = buf_a.shape[0];
+            py::array_t<double> result({n, (size_t)2});
+            py::buffer_info buf_res = result.request();
 
-        double* ptr_a = static_cast<double*>(buf_a.ptr);
-        double* ptr_b = static_cast<double*>(buf_b.ptr);
-        double* ptr_res = static_cast<double*>(buf_res.ptr);
+            double* ptr_a = static_cast<double*>(buf_a.ptr);
+            double* ptr_b = static_cast<double*>(buf_b.ptr);
+            double* ptr_res = static_cast<double*>(buf_res.ptr);
 
-        for (size_t i = 0; i < n; i++) {
-            simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i*2], ptr_a[i*2+1]);
-            simd_f128 sb = simd_f128_from_hi_lo(ptr_b[i*2], ptr_b[i*2+1]);
-            simd_f128 sr = simd_f128_sub(sa, sb);
-            simd_f128_extract(sr, &ptr_res[i*2], &ptr_res[i*2+1]);
-        }
-        return result;
-    }, "element-wise subtraction of (N, 2) arrays");
+            for (size_t i = 0; i < n; i++) {
+                simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i * 2], ptr_a[i * 2 + 1]);
+                simd_f128 sb = simd_f128_from_hi_lo(ptr_b[i * 2], ptr_b[i * 2 + 1]);
+                simd_f128 sr = simd_f128_sub(sa, sb);
+                simd_f128_extract(sr, &ptr_res[i * 2], &ptr_res[i * 2 + 1]);
+            }
+            return result;
+        },
+        "element-wise subtraction of (N, 2) arrays");
 
-    m.def("mul_arrays", [](py::array_t<double> a, py::array_t<double> b) -> py::array_t<double> {
-        py::buffer_info buf_a = a.request(), buf_b = b.request();
-        if (buf_a.ndim != 2 || buf_a.shape[1] != 2 || buf_b.ndim != 2 || buf_b.shape[1] != 2)
-            throw std::runtime_error("Inputs must have shape (N, 2)");
-        if (buf_a.shape[0] != buf_b.shape[0])
-            throw std::runtime_error("Input shapes must match");
+    m.def(
+        "mul_arrays",
+        [](py::array_t<double> a, py::array_t<double> b) -> py::array_t<double> {
+            py::buffer_info buf_a = a.request(), buf_b = b.request();
+            if (buf_a.ndim != 2 || buf_a.shape[1] != 2 || buf_b.ndim != 2 || buf_b.shape[1] != 2)
+                throw std::runtime_error("Inputs must have shape (N, 2)");
+            if (buf_a.shape[0] != buf_b.shape[0])
+                throw std::runtime_error("Input shapes must match");
 
-        size_t n = buf_a.shape[0];
-        py::array_t<double> result({n, (size_t)2});
-        py::buffer_info buf_res = result.request();
+            size_t n = buf_a.shape[0];
+            py::array_t<double> result({n, (size_t)2});
+            py::buffer_info buf_res = result.request();
 
-        double* ptr_a = static_cast<double*>(buf_a.ptr);
-        double* ptr_b = static_cast<double*>(buf_b.ptr);
-        double* ptr_res = static_cast<double*>(buf_res.ptr);
+            double* ptr_a = static_cast<double*>(buf_a.ptr);
+            double* ptr_b = static_cast<double*>(buf_b.ptr);
+            double* ptr_res = static_cast<double*>(buf_res.ptr);
 
-        for (size_t i = 0; i < n; i++) {
-            simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i*2], ptr_a[i*2+1]);
-            simd_f128 sb = simd_f128_from_hi_lo(ptr_b[i*2], ptr_b[i*2+1]);
-            simd_f128 sr = simd_f128_mul(sa, sb);
-            simd_f128_extract(sr, &ptr_res[i*2], &ptr_res[i*2+1]);
-        }
-        return result;
-    }, "element-wise multiplication of (N, 2) arrays");
+            for (size_t i = 0; i < n; i++) {
+                simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i * 2], ptr_a[i * 2 + 1]);
+                simd_f128 sb = simd_f128_from_hi_lo(ptr_b[i * 2], ptr_b[i * 2 + 1]);
+                simd_f128 sr = simd_f128_mul(sa, sb);
+                simd_f128_extract(sr, &ptr_res[i * 2], &ptr_res[i * 2 + 1]);
+            }
+            return result;
+        },
+        "element-wise multiplication of (N, 2) arrays");
 
-    m.def("div_arrays", [](py::array_t<double> a, py::array_t<double> b) -> py::array_t<double> {
-        py::buffer_info buf_a = a.request(), buf_b = b.request();
-        if (buf_a.ndim != 2 || buf_a.shape[1] != 2 || buf_b.ndim != 2 || buf_b.shape[1] != 2)
-            throw std::runtime_error("Inputs must have shape (N, 2)");
-        if (buf_a.shape[0] != buf_b.shape[0])
-            throw std::runtime_error("Input shapes must match");
+    m.def(
+        "div_arrays",
+        [](py::array_t<double> a, py::array_t<double> b) -> py::array_t<double> {
+            py::buffer_info buf_a = a.request(), buf_b = b.request();
+            if (buf_a.ndim != 2 || buf_a.shape[1] != 2 || buf_b.ndim != 2 || buf_b.shape[1] != 2)
+                throw std::runtime_error("Inputs must have shape (N, 2)");
+            if (buf_a.shape[0] != buf_b.shape[0])
+                throw std::runtime_error("Input shapes must match");
 
-        size_t n = buf_a.shape[0];
-        py::array_t<double> result({n, (size_t)2});
-        py::buffer_info buf_res = result.request();
+            size_t n = buf_a.shape[0];
+            py::array_t<double> result({n, (size_t)2});
+            py::buffer_info buf_res = result.request();
 
-        double* ptr_a = static_cast<double*>(buf_a.ptr);
-        double* ptr_b = static_cast<double*>(buf_b.ptr);
-        double* ptr_res = static_cast<double*>(buf_res.ptr);
+            double* ptr_a = static_cast<double*>(buf_a.ptr);
+            double* ptr_b = static_cast<double*>(buf_b.ptr);
+            double* ptr_res = static_cast<double*>(buf_res.ptr);
 
-        for (size_t i = 0; i < n; i++) {
-            simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i*2], ptr_a[i*2+1]);
-            simd_f128 sb = simd_f128_from_hi_lo(ptr_b[i*2], ptr_b[i*2+1]);
-            simd_f128 sr = simd_f128_div(sa, sb);
-            simd_f128_extract(sr, &ptr_res[i*2], &ptr_res[i*2+1]);
-        }
-        return result;
-    }, "element-wise division of (N, 2) arrays");
+            for (size_t i = 0; i < n; i++) {
+                simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i * 2], ptr_a[i * 2 + 1]);
+                simd_f128 sb = simd_f128_from_hi_lo(ptr_b[i * 2], ptr_b[i * 2 + 1]);
+                simd_f128 sr = simd_f128_div(sa, sb);
+                simd_f128_extract(sr, &ptr_res[i * 2], &ptr_res[i * 2 + 1]);
+            }
+            return result;
+        },
+        "element-wise division of (N, 2) arrays");
 }
