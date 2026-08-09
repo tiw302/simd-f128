@@ -1,6 +1,6 @@
-// updated 2026-06-12
-// spdx-license-identifier: mit
-// copyright (c) 2026 jirawat siripuk
+/* bench_compare.c
+ *
+ * manual timing comparison without external benchmark frameworks. */
 
 #define SIMD_F128_IMPLEMENTATION
 #include "../include/simd_f128.h"
@@ -15,7 +15,6 @@
 #ifdef _WIN32
 #include <windows.h>
 static double get_time(void) {
-    // high-resolution performance counter for windows
     LARGE_INTEGER count, freq;
     QueryPerformanceCounter(&count);
     QueryPerformanceFrequency(&freq);
@@ -23,26 +22,25 @@ static double get_time(void) {
 }
 #else
 static double get_time(void) {
-    // monotonic clock for posix systems
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
 }
-#endif
+#endif // _WIN32
 
-// prevent compiler from optimizing away the loop
+/* volatile sinks are used here intentionally to prevent aggressive compiler
+ * dead-code elimination (dce). without this, the compiler would see that the
+ * calculation results are never used and would optimize the entire loop away to zero time. */
 volatile double g_sink_double;
 volatile long double g_sink_ldouble;
 
 #ifdef __SIZEOF_FLOAT128__
 volatile __float128 g_sink_float128;
-#endif
-
-// sink for simd_f128 to ensure operations are not optimized away
+#endif // __SIZEOF_FLOAT128__
 void sink_simd(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
-    g_sink_double = hi + lo; // simple sink
+    g_sink_double = hi + lo;
 }
 
 void bench_double(void) {
@@ -71,7 +69,7 @@ void bench_double(void) {
     double t5 = get_time();
     g_sink_double = a_div;
 
-    printf("| double (64-bit)    | %8.2f | %8.2f | %8.2f |\n", 
+    printf("| double (64-bit)    | %8.2f | %8.2f | %8.2f |\n",
         (t1 - t0) * 1000.0, (t3 - t2) * 1000.0, (t5 - t4) * 1000.0);
 }
 
@@ -101,7 +99,7 @@ void bench_long_double(void) {
     double t5 = get_time();
     g_sink_ldouble = a_div;
 
-    printf("| long double (x87)  | %8.2f | %8.2f | %8.2f |\n", 
+    printf("| long double (x87)  | %8.2f | %8.2f | %8.2f |\n",
         (t1 - t0) * 1000.0, (t3 - t2) * 1000.0, (t5 - t4) * 1000.0);
 }
 
@@ -132,18 +130,18 @@ void bench_float128(void) {
     double t5 = get_time();
     g_sink_float128 = a_div;
 
-    printf("| __float128 (GCC)   | %8.2f | %8.2f | %8.2f |\n", 
+    printf("| __float128 (GCC)   | %8.2f | %8.2f | %8.2f |\n",
         (t1 - t0) * 1000.0, (t3 - t2) * 1000.0, (t5 - t4) * 1000.0);
 }
-#endif
+#endif // __SIZEOF_FLOAT128__
 
 void bench_simd_f128(void) {
     simd_f128 a_add = simd_f128_from_double(1.1);
     simd_f128 b_add = simd_f128_from_double(0.0000001);
-    
+
     simd_f128 a_mul = simd_f128_from_double(1.1);
     simd_f128 b_mul = simd_f128_from_double(1.0000000001);
-    
+
     simd_f128 a_div = simd_f128_from_double(1.1);
     simd_f128 b_div = simd_f128_from_double(1.0000000001);
 
@@ -168,7 +166,7 @@ void bench_simd_f128(void) {
     double t5 = get_time();
     sink_simd(a_div);
 
-    printf("| simd-f128 (SIMD)   | %8.2f | %8.2f | %8.2f |\n", 
+    printf("| simd-f128 (SIMD)   | %8.2f | %8.2f | %8.2f |\n",
         (t1 - t0) * 1000.0, (t3 - t2) * 1000.0, (t5 - t4) * 1000.0);
 }
 
@@ -178,13 +176,12 @@ int main(void) {
     printf("Iterations: %d operations per test (latency mode)\n\n", ITERATIONS);
     printf("| Data Type          | Add (ms) | Mul (ms) | Div (ms) |\n");
     printf("|--------------------|----------|----------|----------|\n");
-    printf("|--------------------|----------|----------|----------|\n");
-    
+
     bench_double();
     bench_long_double();
 #ifdef __SIZEOF_FLOAT128__
     bench_float128();
-#endif
+#endif // __SIZEOF_FLOAT128__
     bench_simd_f128();
 
     printf("\n");
