@@ -163,6 +163,6 @@ htmlcov/
 .cache/
 .clangd/
 
-# gemini
+# ai
 GEMINI.md
 AGENTS.md
