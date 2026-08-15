@@ -10,7 +10,7 @@ jobs:
   scalar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build
@@ -21,7 +21,7 @@ jobs:
   avx2:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSIMD_F128_AVX2=ON
       - name: Build
@@ -32,7 +32,7 @@ jobs:
   sse2:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSIMD_F128_AVX2=OFF
       - name: Build
@@ -43,7 +43,7 @@ jobs:
   riscv64:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install RISC-V toolchain and QEMU
         run: |
           sudo apt-get update -q
@@ -57,7 +57,7 @@ jobs:
   python_bindings:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up Python
         uses: actions/setup-python@v4
         with:

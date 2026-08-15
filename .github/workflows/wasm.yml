@@ -10,7 +10,7 @@ jobs:
   simd128:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Emscripten
         run: |
           git clone --depth 1 https://github.com/emscripten-core/emsdk.git
@@ -31,7 +31,7 @@ jobs:
   scalar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Emscripten
         run: |
           git clone --depth 1 https://github.com/emscripten-core/emsdk.git

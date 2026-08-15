@@ -10,7 +10,7 @@ jobs:
   android-arm64:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install AArch64 toolchain and QEMU
         run: |
           sudo apt-get update -q
@@ -24,7 +24,7 @@ jobs:
   android-armv7:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install ARMv7 toolchain and QEMU
         run: |
           sudo apt-get update -q
