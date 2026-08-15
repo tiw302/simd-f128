@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.3] - 2026-08-15
+
+### Changed
+- Refactored C/C++ comments to conform to project standard style guidelines.
+- Simplified verbose code explanations and removed redundant macro names.
+- Updated `build.bat` and `build.sh` to use `uv` and `venv` for isolated Python test environments.
+- Fixed `setup.py` regex parsing in `scripts/bump_version.py` and handled missing package managers gracefully.
+
+---
+
 ## [1.5.2] - 2026-08-10
 
 ### Changed

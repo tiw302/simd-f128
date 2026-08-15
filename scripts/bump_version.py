@@ -95,8 +95,8 @@ def main() -> None:
         ),
         (
             "setup.py",
-            r"version='\d+\.\d+\.\d+'",
-            f"version='{new_version}'",
+            r'version="\d+\.\d+\.\d+"',
+            f'version="{new_version}"',
         ),
         (
             "rust/Cargo.toml",
@@ -128,6 +128,8 @@ def main() -> None:
             print(f"{TerminalColor.OK}[✓] synchronized Cargo.lock{TerminalColor.RS}")
         except subprocess.CalledProcessError as e:
             print(f"{TerminalColor.WARN}[-] failed to run cargo check: {e}{TerminalColor.RS}")
+        except FileNotFoundError:
+            print(f"{TerminalColor.WARN}[-] cargo not found, skipping lockfile sync{TerminalColor.RS}")
 
     # synchronize npm lockfile if package.json was updated
     js_dir: str = os.path.join(root_dir, "js")
@@ -144,6 +146,8 @@ def main() -> None:
             print(f"{TerminalColor.OK}[✓] synchronized package-lock.json{TerminalColor.RS}")
         except subprocess.CalledProcessError as e:
             print(f"{TerminalColor.WARN}[-] failed to run npm install: {e}{TerminalColor.RS}")
+        except FileNotFoundError:
+            print(f"{TerminalColor.WARN}[-] npm not found, skipping lockfile sync{TerminalColor.RS}")
 
     print(f"\n{TerminalColor.OK}[✓] all tasks completed.{TerminalColor.RS}")
     if not all_success:
