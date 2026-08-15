@@ -204,19 +204,17 @@ While this approach offers massive performance benefits and is perfect for deepl
 
 ## Build and Installation
 
-`simd-f128` can be integrated natively via C/C++ headers, Python, or JavaScript (WebAssembly).
+`simd-f128` can be integrated natively via C/C++ headers, Python, JavaScript (WebAssembly), and Rust.
 
-### Python (PyPI)
+### Language Bindings
 
-```bash
-pip install simd-f128
-```
+Native bindings are available via standard package managers:
 
-### JavaScript / Node.js (NPM)
-
-```bash
-npm install @tiw302/simd-f128
-```
+| Language | Package Manager | Install Command |
+|---|---|---|
+| **Python** | [PyPI](https://pypi.org/project/simd-f128/) | `pip install simd-f128` |
+| **Node.js** | [npm](https://www.npmjs.com/package/@tiw302/simd-f128) | `npm install @tiw302/simd-f128` |
+| **Rust** | [Crates.io](https://crates.io/crates/simd-f128) | `cargo add simd-f128` |
 
 ### C/C++ (Header Only)
 
