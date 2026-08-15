@@ -112,4 +112,4 @@ static const double _simd_f128_cos_coefs_n4[12][2] = {
     {1.6117413151347128e-24, -6.4586920808726188e-41},   // c11
 };
 
-#endif  // SIMD_F128_CONSTS_H
+#endif

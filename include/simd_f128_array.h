@@ -23,7 +23,7 @@
 // >>array processing api
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif
 
 #if defined(__cplusplus) || defined(_MSC_VER)
 #define SIMD_F128_RESTRICT __restrict
@@ -386,7 +386,6 @@ SIMD_F128_INLINE void simd_f128_array_mul_soa(const double* SIMD_F128_RESTRICT a
         float64x2_t e = vfmsq_f64(p, ahi, bhi);  // note: vfmsq is p - ahi*bhi, so we negate it
         e = vnegq_f64(e);
 #else
-        // use standard vmlal or dekker split for neon if no fma, but m1 has fma.
         // we will assume vfmsq_f64 is fine or use vfmaq_f64(vnegq_f64(p), ahi, bhi)
         float64x2_t e = vfmaq_f64(vnegq_f64(p), ahi, bhi);
 #endif
@@ -447,6 +446,6 @@ SIMD_F128_INLINE void simd_f128_array_div_soa(const double* SIMD_F128_RESTRICT a
 }
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif
 
-#endif  // SIMD_F128_ARRAY_H
+#endif

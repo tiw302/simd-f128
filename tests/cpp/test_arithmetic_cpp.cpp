@@ -1,9 +1,8 @@
 /* test_arithmetic_cpp.cpp
  *
  * c++ wrapper unit tests.
- * validates array processing and operator overloading via std::ops.
  *
- * updated 2026-08-09
+ * updated 2026-08-13
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
@@ -19,8 +18,7 @@
 int main() {
     int failed = 0;
 
-    // [TEST CASE] array processing
-    // verifies simd-aligned block operations on arrays.
+    // array processing
     std::cout << "running array processing tests..." << std::endl;
     // use alignas(16) array instead of std::vector to guarantee simd alignment
     // and fix the -Wignored-attributes gcc warning.
@@ -48,8 +46,7 @@ int main() {
         failed++;
     }
 
-    // [TEST CASE] c++ operators
-    // verifies overloaded arithmetic operators and standard library integrations.
+    // c++ operators
     std::cout << "running c++ operators tests..." << std::endl;
     f128::float128 x(1.5);
     f128::float128 y(2.0);

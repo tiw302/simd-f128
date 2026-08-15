@@ -1,9 +1,8 @@
 /* test_ieee754_cpp.cpp
  *
  * ieee-754 conformance tests for c++ wrappers.
- * validates c++ std::ops and object behavior with nans and infinities.
  *
- * updated 2026-08-09
+ * updated 2026-08-13
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
@@ -17,13 +16,13 @@ int test_nan_ops() {
     f128::float128 nan_val = f128::float128(NAN);
     f128::float128 norm = f128::float128(42.0);
 
-    // [TEST CASE] nan propagation in operator+
+    // nan propagation in operator+
     f128::float128 sum = nan_val + norm;
     if (sum.to_string().find("nan") == std::string::npos &&
         sum.to_string().find("NaN") == std::string::npos)
         return 0;
 
-    // [TEST CASE] nan propagation in operator*
+    // nan propagation in operator*
     f128::float128 prod = nan_val * norm;
     if (prod.to_string().find("nan") == std::string::npos &&
         prod.to_string().find("NaN") == std::string::npos)
@@ -37,13 +36,13 @@ int test_infinity_ops() {
     f128::float128 norm = f128::float128(42.0);
     f128::float128 zero = f128::float128(0.0);
 
-    // [TEST CASE] inf + norm = inf
+    // inf + norm = inf
     f128::float128 sum = inf + norm;
     if (sum.to_string().find("inf") == std::string::npos &&
         sum.to_string().find("Inf") == std::string::npos)
         return 0;
 
-    // [TEST CASE] inf * 0 = nan
+    // inf * 0 = nan
     f128::float128 prod = inf * zero;
     if (prod.to_string().find("nan") == std::string::npos &&
         prod.to_string().find("NaN") == std::string::npos)
@@ -56,10 +55,10 @@ int test_comparisons() {
     f128::float128 nan_val = f128::float128(NAN);
     f128::float128 norm = f128::float128(42.0);
 
-    // [TEST CASE] nan != norm
+    // nan != norm
     if (nan_val == norm) return 0;
 
-    // [TEST CASE] nan != nan (IEEE 754 specific requirement)
+    // nan != nan
     if (nan_val == nan_val) return 0;
 
     return 1;

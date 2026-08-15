@@ -1,9 +1,8 @@
 /* test_ieee754.js
  *
  * js bindings ieee-754 conformance tests.
- * validates nan/infinity handling from js level down to wasm c-core.
  *
- * updated 2026-08-09
+ * updated 2026-08-13
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
@@ -17,7 +16,7 @@ console.log("Starting JS IEEE-754 Tests...");
         
         let errors = 0;
 
-        // [TEST CASE] signed zero handling
+        // signed zero handling
         console.log("running signed zero tests...");
         const posZero = new Float128("0.0");
         const negZero = posZero.mul(new Float128("-1.0")); // Generate -0.0 via math
@@ -35,7 +34,7 @@ console.log("Starting JS IEEE-754 Tests...");
             errors++;
         }
 
-        // [TEST CASE] nan propagation
+        // nan propagation
         console.log("running nan propagation tests...");
         const nanVal = new Float128("NaN");
         const norm = new Float128("42.0");
@@ -52,7 +51,7 @@ console.log("Starting JS IEEE-754 Tests...");
             errors++;
         }
 
-        // [TEST CASE] infinity arithmetic
+        // infinity arithmetic
         console.log("running infinity arithmetic tests...");
         const inf = new Float128("Infinity");
         const zero = new Float128("0.0");

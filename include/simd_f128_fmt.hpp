@@ -35,8 +35,6 @@ struct std::formatter<f128::float128> : std::formatter<std::string> {
 };
 #endif
 #endif
-
-// support for the popular {fmt} library (if included before this header)
 #ifdef FMT_FORMAT_H_
 template <>
 struct fmt::formatter<f128::float128> : fmt::formatter<std::string> {
@@ -49,4 +47,4 @@ struct fmt::formatter<f128::float128> : fmt::formatter<std::string> {
 };
 #endif
 
-#endif  // SIMD_F128_FMT_HPP
+#endif

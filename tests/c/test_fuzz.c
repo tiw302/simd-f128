@@ -1,9 +1,8 @@
 /* test_fuzz.c
  *
  * fuzz testing against __float128 reference.
- * validates precision limits with randomized inputs.
  *
- * updated 2026-08-09
+ * updated 2026-08-13
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
@@ -49,8 +48,7 @@ int main() {
         __float128 qa = (__float128)a_hi + (__float128)a_lo;
         __float128 qb = (__float128)b_hi + (__float128)b_lo;
 
-        // [TEST CASE] add
-        // verifies addition against __float128 reference implementation.
+        // fuzz add
         simd_f128 s_add = simd_f128_add(sa, sb);
         __float128 q_add = qa + qb;
 

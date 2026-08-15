@@ -1,9 +1,8 @@
 /* test_matrix.c
  *
  * unit tests for simd_f128_matrix module.
- * validates 4x4 matrix arithmetic, identity generation, and transformations.
  *
- * updated 2026-08-09
+ * updated 2026-08-13
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
@@ -35,8 +34,7 @@ static int almost_equal(simd_f128 a, simd_f128 b, int max_ulp) {
     return within_ulp(a, b, max_ulp);
 }
 
-// [TEST CASE] matrix identity
-// verifies that identity matrix is correctly generated.
+// matrix identity
 int test_matrix_identity() {
     simd_f128_mat4 ident = simd_f128_mat4_identity();
 
@@ -52,8 +50,7 @@ int test_matrix_identity() {
     return 1;
 }
 
-// [TEST CASE] matrix vector multiply
-// verifies multiplication of a 4x4 matrix with a 4D vector.
+// matrix vector multiply
 int test_matrix_vector_mul() {
     simd_f128_mat4 ident = simd_f128_mat4_identity();
 
@@ -83,8 +80,7 @@ int test_matrix_vector_mul() {
     return 1;
 }
 
-// [TEST CASE] matrix matrix multiply
-// verifies multiplication of two 4x4 matrices.
+// matrix matrix multiply
 int test_matrix_matrix_mul() {
     simd_f128_mat4 ident = simd_f128_mat4_identity();
 

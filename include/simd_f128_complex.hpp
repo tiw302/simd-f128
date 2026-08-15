@@ -3,7 +3,7 @@
  * c++ wrapper integrating simd_f128 with std::complex.
  * enables seamless usage of std::complex<f128::float128>.
  *
- * updated 2026-08-09
+ * updated 2026-08-13
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
@@ -34,7 +34,6 @@ class complex128 {
     // =========================================================================
     // provides zero-cost initialization and seamless type coercion between
     // strictly typed c++11 domains, the c-core, and standard library complex types.
-
     SIMD_F128_DEVICE complex128() {
         data.real = simd_f128_from_double(0.0);
         data.imag = simd_f128_from_double(0.0);
@@ -85,7 +84,6 @@ class complex128 {
     // =========================================================================
     // maps directly to optimized avx2/wasm c-core routines. all intermediate
     // variables are perfectly bounded to the cpu registers without heap allocation.
-
     SIMD_F128_DEVICE complex128 operator+(const complex128& b) const {
         return complex128(simd_f128_complex_add(data, b.data));
     }
@@ -133,10 +131,9 @@ inline std::ostream& operator<<(std::ostream& os, const complex128& val) {
 // =========================================================================
 // complex transcendental & geometric functions
 // =========================================================================
-/* executes high-precision 128-bit operations on the complex plane.
- * functions like sin(z) perfectly utilize their mathematical identities
- * (e.g., sin(x)*cosh(y) + i*cos(x)*sinh(y)) leveraging the c-core. */
-
+// executes high-precision 128-bit operations on the complex plane.
+// functions like sin(z) perfectly utilize their mathematical identities
+// (e.g., sin(x)*cosh(y) + i*cos(x)*sinh(y)) leveraging the c-core.
 inline float128 abs_sqr(const complex128& a) {
     return float128(simd_f128_complex_abs_sqr(a.data));
 }
@@ -233,4 +230,4 @@ inline f128::complex128 conj(const f128::complex128& a) {
 
 }  // namespace std
 
-#endif  // SIMD_F128_COMPLEX_HPP
+#endif

@@ -18,7 +18,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif
 
 // no more global state. passing pointer from js to avoid race conditions.
 #define WASM_BIN_OP(name, func)                                                                   \
@@ -115,4 +115,4 @@ WASM_BIN_ARRAY_OP(div, simd_f128_div)
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif

@@ -12,7 +12,7 @@ Promise.all([
 
 const inputA = document.getElementById('inputA');
 const warnBox = document.getElementById('validationWarning');
-const opSelect = document.getElementById('operator');
+const opSelect = document.getEleไmentById('operator');
 const inputB = document.getElementById('inputB');
 
 function checkValidation() {

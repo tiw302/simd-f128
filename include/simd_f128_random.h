@@ -3,7 +3,7 @@
  * high-entropy random number generation for 128-bit floating point operations.
  * implements xoshiro256++ to produce perfect 106-bit uniform distributions.
  *
- * updated 2026-08-09
+ * updated 2026-08-13
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
@@ -16,7 +16,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif
 
 // ██████   █████  ███    ██ ██████   ██████  ███    ███
 // ██   ██ ██   ██ ████   ██ ██   ██ ██    ██ ████  ████
@@ -63,7 +63,7 @@ SIMD_F128_INLINE void simd_f128_prng_seed(simd_f128_prng* state, uint64_t seed) 
     state->s[3] = _simd_f128_splitmix64(&seed);
 }
 
-// generate uniform [0, 1) double-double with 106 bits of true entropy
+// generate uniform [0, 1) with 106-bit entropy
 SIMD_F128_INLINE simd_f128 simd_f128_prng_uniform(simd_f128_prng* state) {
     uint64_t r1 = simd_f128_prng_next(state);
     uint64_t r2 = simd_f128_prng_next(state);
@@ -79,6 +79,6 @@ SIMD_F128_INLINE simd_f128 simd_f128_prng_uniform(simd_f128_prng* state) {
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif
 
-#endif  // SIMD_F128_RANDOM_H
+#endif

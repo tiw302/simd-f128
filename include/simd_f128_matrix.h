@@ -15,7 +15,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif
 
 // ███    ███  █████  ████████ ██████  ██ ██   ██
 // ████  ████ ██   ██    ██    ██   ██ ██  ██ ██
@@ -116,6 +116,6 @@ SIMD_F128_INLINE simd_f128_mat3 simd_f128_mat3_mul(simd_f128_mat3 a, simd_f128_m
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif
 
-#endif  // SIMD_F128_MATRIX_H
+#endif

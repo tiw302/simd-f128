@@ -59,7 +59,7 @@ static void BM_Float128_Mul(benchmark::State& state) {
     }
 }
 BENCHMARK(BM_Float128_Mul);
-#endif  // __SIZEOF_FLOAT128__
+#endif
 
 // ███████  ██  █████   █████
 // ██      ███ ██   ██ ██   ██
@@ -153,7 +153,7 @@ static void BM_SimdF128x4_Sqrt(benchmark::State& state) {
     state.SetItemsProcessed(state.iterations() * 4);
 }
 BENCHMARK(BM_SimdF128x4_Sqrt);
-#endif  // SIMD_F128_USE_AVX2
+#endif
 
 //  █████  ██████  ██████   █████  ██    ██
 // ██   ██ ██   ██ ██   ██ ██   ██  ██  ██

@@ -465,4 +465,4 @@ inline bool isinf(f128::float128 x) {
 
 }  // namespace std
 
-#endif  // SIMD_F128_HPP
+#endif

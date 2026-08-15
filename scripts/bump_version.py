@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
-"""
-bump_version.py -- global versioning synchronization script.
-project url: https://github.com/tiw302/simd-f128
+# bump_version.py
+#
+# global versioning synchronization script.
+# safely executes targeted regex replacements across cmake, npm, python, cargo.
+#
+# updated 2026-08-10
+# spdx-license-identifier: mit
+# copyright (c) 2026 jirawat siripuk
 
-this script ensures structural consistency across all package managers
-(cmake, npm, pyproject.toml, cargo). it safely executes targeted regex
-replacements to guarantee atomic version increments across the entire
-cross-language ecosystem.
-"""
 import sys
 import os
 import re
 import subprocess
 
-
 # cross-platform ansi color support
 if os.name == "nt":
     os.system("color")
-
 
 class TerminalColor:
     """ANSI color codes for terminal output."""
@@ -58,7 +56,6 @@ def bump_file(filepath: str, pattern: str, replacement: str) -> bool:
 
     print(f"{TerminalColor.WARN}[-] skipped {os.path.basename(filepath)} (no match or already set){TerminalColor.RS}")
     return False
-
 
 def main() -> None:
     """Main execution function for bumping versions."""
@@ -151,7 +148,6 @@ def main() -> None:
     print(f"\n{TerminalColor.OK}[✓] all tasks completed.{TerminalColor.RS}")
     if not all_success:
         print(f"{TerminalColor.WARN}[!] some files were not updated. check warnings above.{TerminalColor.RS}")
-
 
 if __name__ == "__main__":
     main()

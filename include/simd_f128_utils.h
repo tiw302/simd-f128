@@ -3,7 +3,7 @@
  * utility functions and comparison operators for 128-bit double-double values.
  * provides equality, relational checks, and bitwise manipulation helpers.
  *
- * updated 2026-08-09
+ * updated 2026-08-13
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
@@ -21,9 +21,9 @@
 // >>comparison api
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif
 
-// compare two double-double numbers, returning -1 if a < b, 1 if a > b, and 0 if a == b
+// return -1 if a<b, 1 if a>b, 0 if a==b
 SIMD_F128_INLINE int simd_f128_cmp(simd_f128 a, simd_f128 b);
 
 // check if two numbers are equal
@@ -58,7 +58,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_max(simd_f128 a, simd_f128 b);
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif
 
 // ██ ███    ███ ██████  ██      ███████ ███    ███ ███████ ███    ██ ████████  █████  ████████ ██
 // ██████  ███    ██ ██ ████  ████ ██   ██ ██      ██      ████  ████ ██      ████   ██    ██    ██
@@ -73,13 +73,13 @@ SIMD_F128_INLINE int simd_f128_cmp(simd_f128 a, simd_f128 b) {
     simd_f128_extract(a, &ahi, &alo);
     simd_f128_extract(b, &bhi, &blo);
 
-    // check for nan explicitly, since standard double comparison with nan is false.
-    // we return a distinct value (-2) to signal unordered if someone relies on cmp directly.
+    // check for nan explicitly.
+    // return -2 for unordered.
     if (isnan(ahi) || isnan(bhi) || isnan(alo) || isnan(blo)) return -2;
 
     // double-double comparison logic:
-    // compare the hi components first. if they are different, we can immediately return.
-    // if the hi components are equal, we compare the lo components (residual error).
+    // compare hi components first.
+    // if hi equal, compare lo (residual error).
     if (ahi < bhi) return -1;
     if (ahi > bhi) return 1;
     if (alo < blo) return -1;
@@ -137,10 +137,10 @@ SIMD_F128_INLINE simd_f128 simd_f128_abs(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
 
-    // absolute value logic:
-    // negate both components if hi is negative.
-    // if hi is positive, keep signs.
-    // if hi is zero (could be -0.0), force positive zero and absolute value of lo.
+    // absolute value:
+    // negate both if hi < 0.
+    // keep signs if hi > 0.
+    // if hi == 0, force +0.0 and abs(lo).
     if (hi > 0.0) return x;
     if (hi < 0.0) return simd_f128_neg(x);
     return simd_f128_from_hi_lo(0.0, fabs(lo));
@@ -166,4 +166,4 @@ SIMD_F128_INLINE simd_f128 simd_f128_max(simd_f128 a, simd_f128 b) {
     return (simd_f128_cmp(a, b) >= 0) ? a : b;
 }
 
-#endif  // SIMD_F128_UTILS_H
+#endif

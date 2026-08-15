@@ -82,11 +82,24 @@ check_environment() {
 
 build_tests() {
     check_environment || return 1
+    
+    echo "=> Setting up Python environment..."
+    if command -v uv > /dev/null 2>&1; then
+        uv venv .venv > /dev/null 2>&1 || true
+        uv pip install pytest > /dev/null 2>&1 || true
+        uv pip install -e . > /dev/null 2>&1 || true
+    else
+        python3 -m venv .venv > /dev/null 2>&1 || true
+        ./.venv/bin/pip install pytest > /dev/null 2>&1 || true
+        ./.venv/bin/pip install -e . > /dev/null 2>&1 || true
+    fi
+    export PATH="$PWD/.venv/bin:$PATH"
+
     echo "=> Building Tests..."
     cmake -S . -B build_tests -DCMAKE_BUILD_TYPE=Release
     cmake --build build_tests -j $JOBS
     echo "=> Running Tests..."
-    cd build_tests && ctest --output-on-failure
+    (cd build_tests && ctest --output-on-failure)
 }
 
 build_bench() {
@@ -118,7 +131,7 @@ build_asan() {
     cmake -S . -B build_asan -DCMAKE_BUILD_TYPE=Debug -DSIMD_F128_ENABLE_SANITY=ON
     cmake --build build_asan -j $JOBS
     echo "=> Running ASAN Tests..."
-    cd build_asan && ctest --output-on-failure
+    (cd build_asan && ctest --output-on-failure)
 }
 
 build_wasm() {
@@ -130,9 +143,9 @@ build_wasm() {
     emcmake cmake -S . -B build_wasm -DCMAKE_BUILD_TYPE=Release -DSIMD_F128_WASM=ON
     cmake --build build_wasm -j $JOBS
 
-    if command -v node &> /dev/null; then
+    if command -v node > /dev/null 2>&1; then
         echo "=> Running WASM Tests via Node..."
-        cd build_wasm && ctest --output-on-failure
+        (cd build_wasm && ctest --output-on-failure)
     fi
 }
 

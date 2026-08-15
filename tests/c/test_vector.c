@@ -1,9 +1,8 @@
 /* test_vector.c
  *
  * unit tests for simd_f128_vector module.
- * validates 4-lane simd_f128x4 arithmetic operations.
  *
- * updated 2026-08-09
+ * updated 2026-08-13
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
@@ -47,8 +46,7 @@ static simd_f128 extract_lane(simd_f128x4 v, int lane) {
 #endif
 }
 
-// [TEST CASE] simd_f128x4 initialization
-// verifies lane population.
+// simd_f128x4 initialization
 int test_vector_init() {
     simd_f128x4 v = simd_f128x4_from_doubles(1.0, 2.0, 3.0, 4.0);
 
@@ -59,8 +57,7 @@ int test_vector_init() {
     return 1;
 }
 
-// [TEST CASE] simd_f128x4 addition
-// verifies parallel addition.
+// simd_f128x4 addition
 int test_vector_add() {
     simd_f128x4 a = simd_f128x4_from_doubles(1.0, 2.0, 3.0, 4.0);
     simd_f128x4 b = simd_f128x4_from_doubles(5.0, 6.0, 7.0, 8.0);
@@ -74,8 +71,7 @@ int test_vector_add() {
     return 1;
 }
 
-// [TEST CASE] simd_f128x4 multiplication
-// verifies parallel multiplication.
+// simd_f128x4 multiplication
 int test_vector_mul() {
     simd_f128x4 a = simd_f128x4_from_doubles(1.0, 2.0, 3.0, 4.0);
     simd_f128x4 b = simd_f128x4_from_doubles(5.0, 6.0, 7.0, 8.0);

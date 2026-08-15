@@ -23,7 +23,7 @@
 // >>complex numbers api
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif
 
 typedef struct {
     simd_f128 real;
@@ -103,6 +103,6 @@ SIMD_F128_INLINE simd_f128_complex simd_f128_complex_conj(simd_f128_complex a) {
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif
 
-#endif  // SIMD_F128_COMPLEX_H
+#endif

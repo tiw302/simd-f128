@@ -26,7 +26,7 @@
  * - wasm:     webassembly with simd128
  * - scalar:   fallback for everything else (risc-v, ppc, etc.)
  *
- * updated 2026-08-09
+ * updated 2026-08-13
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
@@ -34,7 +34,7 @@
  *    ( -.- )  <-- "precision: 31 digits. developer sanity: 0 digits."
  *   ==  Y  ==
  *    (  .  )
- *    (  .  )*/
+ *    (  .  ) */
 
 #ifndef SIMD_F128_H
 #define SIMD_F128_H
@@ -73,23 +73,16 @@
 #else
 #define SIMD_F128_USE_SCALAR
 #endif
-
-// msvc doesn't support gcc builtins like __builtin_expect, so we define a fallback macro
 #if defined(_MSC_VER) && !defined(__clang__) && !defined(__builtin_expect)
 #define __builtin_expect(x, y) (x)
 #endif
-
-// ████████ ██    ██ ██████  ███████ ███████
 //    ██     ██  ██  ██   ██ ██      ██
 //    ██      ████   ██████  █████   ███████
 //    ██       ██    ██      ██           ██
 //    ██       ██    ██      ███████ ███████
 //
 // >>types
-/* simd_f128 - conceptually (hi + lo)
- * we use 128-bit simd registers where possible to store both hi and lo
- * doubles in a single variable. this makes the code much cleaner and
- * helps the compiler optimize the data flow. */
+/* conceptually (hi + lo) */
 #if defined(SIMD_F128_USE_AVX2) || defined(SIMD_F128_USE_SSE2)
 typedef __m128d simd_f128;
 #elif defined(SIMD_F128_USE_WASM)
@@ -102,8 +95,6 @@ typedef struct {
     double lo;
 } simd_f128;
 #endif
-
-//  █████  ██████  ██
 // ██   ██ ██   ██ ██
 // ███████ ██████  ██
 // ██   ██ ██      ██
@@ -112,7 +103,7 @@ typedef struct {
 // >>api
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif
 
 // gpu (cuda/hip) support
 #if defined(__CUDACC__) || defined(__HIPCC__)
@@ -121,9 +112,7 @@ extern "C" {
 #define SIMD_F128_DEVICE
 #endif
 
-/* we use always_inline to make sure there's no function call overhead.
- * for double-double arithmetic, the overhead of a function call can
- * be significant compared to the actual math. */
+/* always_inline avoids function call overhead. */
 #if defined(__CUDACC__) || defined(__HIPCC__)
 #define SIMD_F128_INLINE SIMD_F128_DEVICE inline __attribute__((always_inline))
 #elif defined(_MSC_VER)
@@ -133,9 +122,8 @@ extern "C" {
 #endif
 
 /* initialization routines:
- * from_double creates a 128-bit number from a standard 64-bit double by
- * placing it in the high component and zeroing the low component.
- * from_hi_lo allows precise manual construction of a double-double. */
+ * from_double: create 128-bit number from 64-bit double.
+ * from_hi_lo: construct double-double from hi and lo. */
 SIMD_F128_INLINE simd_f128 simd_f128_from_double(double d);
 SIMD_F128_INLINE simd_f128 simd_f128_from_hi_lo(double hi, double lo);
 
@@ -155,7 +143,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_rsqrt(simd_f128 x);
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif
 
 // extraction
 // moved here to avoid odr issues in the c++ api section
@@ -200,7 +188,6 @@ SIMD_F128_INLINE double simd_f128_exact_mul_err(double a, double b, double p) {
     // use hardware fma if compiler flags detect fast hardware capability
     return fma(a, b, -p);
 #else
-    // prevent overflow in split for huge numbers by reciprocal scaling
     if (__builtin_expect(fabs(a) > 6.7e299 && fabs(b) < 1.0, 0)) {
         a *= 3.7252902984619140625e-09;  // 2^-28
         b *= 268435456.0;                // 2^28
@@ -312,8 +299,6 @@ SIMD_F128_INLINE simd_f128 simd_f128_neg(simd_f128 x) {
 #define SIMD_F128_PACK(hi_val, lo_val) ((simd_f128){(hi_val), (lo_val)})
 
 #endif
-
-// unified generic architecture-agnostic math implementations using double.
 // modern compilers will vectorize these back to single-lane simd instructions.
 
 SIMD_F128_INLINE simd_f128 simd_f128_add(simd_f128 a, simd_f128 b) {
@@ -484,5 +469,5 @@ SIMD_F128_INLINE simd_f128 simd_f128_rsqrt(simd_f128 x) {
     return simd_f128_div(one, simd_f128_sqrt(x));
 }
 
-#endif  // SIMD_F128_IMPLEMENTATION
-#endif  // SIMD_F128_H
+#endif
+#endif

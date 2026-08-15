@@ -96,6 +96,20 @@ if %MISSING_CRITICAL% neq 0 (
 
 :build_tests
 call :check_environment || exit /b 1
+
+echo =^> Setting up Python environment...
+where uv >nul 2>nul
+if %errorlevel% equ 0 (
+    uv venv .venv >nul 2>&1
+    uv pip install pytest >nul 2>&1
+    uv pip install -e . >nul 2>&1
+) else (
+    python -m venv .venv >nul 2>&1
+    .venv\Scripts\pip install pytest >nul 2>&1
+    .venv\Scripts\pip install -e . >nul 2>&1
+)
+set PATH=%CD%\.venv\Scripts;%PATH%
+
 echo =^> Building Tests...
 cmake -S . -B build_tests -DCMAKE_BUILD_TYPE=Release
 cmake --build build_tests --config Release --parallel

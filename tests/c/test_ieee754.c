@@ -1,9 +1,8 @@
 /* test_ieee754.c
  *
  * ieee-754 conformance and edge-case unit tests.
- * validates signed zero, nan payloads, infinity arithmetic, and catastrophic cancellation.
  *
- * updated 2026-08-09
+ * updated 2026-08-13
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
@@ -17,8 +16,7 @@
 #include "../../include/simd_f128_math.h"
 #include "../../include/simd_f128_utils.h"
 
-// [TEST CASE] signed zero
-// verifies +0.0 and -0.0 distinguishability and interactions.
+// signed zero
 int test_signed_zero() {
     simd_f128 pos_zero = simd_f128_from_double(0.0);
     simd_f128 neg_zero = simd_f128_from_double(-0.0);
@@ -43,8 +41,7 @@ int test_signed_zero() {
     return 1;
 }
 
-// [TEST CASE] nan propagation
-// verifies that nan taints subsequent operations.
+// nan propagation
 int test_nan_propagation() {
     simd_f128 nan_val = simd_f128_from_double(NAN);
     simd_f128 norm = simd_f128_from_double(42.0);
@@ -65,8 +62,7 @@ int test_nan_propagation() {
     return 1;
 }
 
-// [TEST CASE] infinity arithmetic
-// verifies behavior of infinities under various operations.
+// infinity arithmetic
 int test_infinity_arithmetic() {
     simd_f128 inf = simd_f128_from_double(INFINITY);
     simd_f128 norm = simd_f128_from_double(42.0);
@@ -93,8 +89,7 @@ int test_infinity_arithmetic() {
     return 1;
 }
 
-// [TEST CASE] catastrophic cancellation
-// verifies precision retention near the limits of double-double mantissa (106 bits).
+// catastrophic cancellation
 int test_catastrophic_cancellation() {
     // 2^106 = 8.112963841460668e31
     // (A + B) - A

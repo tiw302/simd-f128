@@ -27,7 +27,7 @@
 // >>string parsing api
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif
 
 /* print function (stdout):
  * formats and prints the 128-bit number directly to standard output
@@ -1009,5 +1009,5 @@ simd_f128 simd_f128_from_bytes(const uint8_t* in) {
     return simd_f128_from_hi_lo(hi, lo);
 }
 
-#endif  // SIMD_F128_IMPLEMENTATION
-#endif  // SIMD_F128_IO_H
+#endif
+#endif

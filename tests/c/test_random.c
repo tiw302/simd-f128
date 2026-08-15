@@ -1,9 +1,8 @@
 /* test_random.c
  *
  * unit tests for simd_f128_random module.
- * validates random number generation and state propagation.
  *
- * updated 2026-08-09
+ * updated 2026-08-13
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
@@ -16,8 +15,7 @@
 #include "../../include/simd_f128_random.h"
 #include "../../include/simd_f128_utils.h"
 
-// [TEST CASE] random initialization
-// verifies state is populated properly.
+// random initialization
 int test_random_init() {
     simd_f128_prng state;
     simd_f128_prng_seed(&state, 123456789ULL);
@@ -29,8 +27,7 @@ int test_random_init() {
     return 1;
 }
 
-// [TEST CASE] random simd_f128 uniform generation
-// verifies random 128-bit float generation properties.
+// random simd_f128 uniform generation
 int test_random_simd_f128() {
     simd_f128_prng state;
     simd_f128_prng_seed(&state, 42ULL);

@@ -3,7 +3,7 @@
  * vectorized api for processing 4 double-double values simultaneously.
  * utilizes avx2 intrinsics (simd_f128x4) for maximum parallel throughput.
  *
- * updated 2026-08-09
+ * updated 2026-08-13
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
@@ -22,23 +22,19 @@
 // >>vectorized api (simd_f128x4 for avx2)
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif
 
 #if defined(SIMD_F128_USE_AVX2)
 
 /* simd_f128x4 processes four double-doubles simultaneously.
- * this is the pinnacle of parallel performance on x86_64.
- *
- * warning: pure vectorized operations here may propagate nan and inf
- * differently than the scalar or standard inline functions, since
- * branches are omitted in favor of blend masks for performance. */
+ * warning: pure vectorized operations may propagate nan and inf differently. */
 typedef struct {
     __m256d hi;
     __m256d lo;
 } simd_f128x4;
 
-// initialize a vectorized simd_f128x4 struct from four individual doubles
-// hi registers are loaded with the values, lo registers are initialized to zero
+// initialize simd_f128x4 from four doubles
+// load hi, zero lo
 SIMD_F128_INLINE simd_f128x4 simd_f128x4_from_doubles(double d0, double d1, double d2, double d3) {
     simd_f128x4 res;
     res.hi = _mm256_setr_pd(d0, d1, d2, d3);
@@ -46,7 +42,7 @@ SIMD_F128_INLINE simd_f128x4 simd_f128x4_from_doubles(double d0, double d1, doub
     return res;
 }
 
-// perform parallel addition of four double-double values using knuth's two-sum
+// parallel addition via knuth's two-sum
 SIMD_F128_INLINE simd_f128x4 simd_f128x4_add(simd_f128x4 a, simd_f128x4 b) {
     __m256d s = _mm256_add_pd(a.hi, b.hi);
     __m256d diff = _mm256_sub_pd(s, s);
@@ -58,21 +54,20 @@ SIMD_F128_INLINE simd_f128x4 simd_f128x4_add(simd_f128x4 a, simd_f128x4 b) {
     simd_f128x4 res;
     res.hi = _mm256_add_pd(s, t);
     res.lo = _mm256_sub_pd(t, _mm256_sub_pd(res.hi, s));
-    // if s is infinite or nan, set lo component to zero to prevent invalid values
+    // if s is inf/nan, set lo to zero
     res.lo = _mm256_blendv_pd(res.lo, _mm256_setzero_pd(), inf_mask);
     return res;
 }
 
-// perform parallel multiplication of four double-double values
+// parallel multiplication
 SIMD_F128_INLINE simd_f128x4 simd_f128x4_mul(simd_f128x4 a, simd_f128x4 b) {
     __m256d hi_prod = _mm256_mul_pd(a.hi, b.hi);
 
     // exact multiplication error estimation:
-    // uses hardware fma if supported, otherwise falls back to a vector split method
+    // uses hardware fma or falls back to split method
 #if defined(__FMA__)
     __m256d err = _mm256_fmsub_pd(a.hi, b.hi, hi_prod);
 #else
-    // vector split using dekker's constant (2^27 + 1)
     __m256d c = _mm256_set1_pd(134217729.0);
     __m256d up = _mm256_mul_pd(a.hi, c);
     __m256d vp = _mm256_mul_pd(b.hi, c);
@@ -86,8 +81,6 @@ SIMD_F128_INLINE simd_f128x4 simd_f128x4_mul(simd_f128x4 a, simd_f128x4 b) {
             _mm256_mul_pd(u2, v1)),
         _mm256_mul_pd(u2, v2));
 #endif
-
-    // accumulate cross-terms and the exact multiplication roundoff error
     __m256d lo_prod =
         _mm256_add_pd(_mm256_add_pd(_mm256_mul_pd(a.hi, b.lo), _mm256_mul_pd(a.lo, b.hi)), err);
 
@@ -118,12 +111,12 @@ SIMD_F128_INLINE simd_f128x4 simd_f128x4_mul2(simd_f128x4 a) {
     return res;
 }
 
-// square all four double-double elements in parallel (a * a)
+// parallel square (a * a)
 SIMD_F128_INLINE simd_f128x4 simd_f128x4_sqr(simd_f128x4 a) {
     return simd_f128x4_mul(a, a);
 }
 
-// compute absolute values of all four double-double elements in parallel
+// parallel absolute value
 SIMD_F128_INLINE simd_f128x4 simd_f128x4_abs(simd_f128x4 a) {
     __m256d zero = _mm256_setzero_pd();
     __m256d sign_hi = _mm256_and_pd(a.hi, _mm256_set1_pd(-0.0));
@@ -139,7 +132,7 @@ SIMD_F128_INLINE simd_f128x4 simd_f128x4_abs(simd_f128x4 a) {
     return res;
 }
 
-// perform parallel division of four double-double elements lane-by-lane
+// parallel division
 SIMD_F128_INLINE simd_f128x4 simd_f128x4_div(simd_f128x4 a, simd_f128x4 b) {
     double ahi[4], alo[4], bhi[4], blo[4];
     _mm256_storeu_pd(ahi, a.hi);
@@ -161,7 +154,7 @@ SIMD_F128_INLINE simd_f128x4 simd_f128x4_div(simd_f128x4 a, simd_f128x4 b) {
     return res;
 }
 
-// perform parallel square root of four double-double elements lane-by-lane
+// parallel square root
 SIMD_F128_INLINE simd_f128x4 simd_f128x4_sqrt(simd_f128x4 a) {
     double ahi[4], alo[4];
     _mm256_storeu_pd(ahi, a.hi);
@@ -180,9 +173,9 @@ SIMD_F128_INLINE simd_f128x4 simd_f128x4_sqrt(simd_f128x4 a) {
     return res;
 }
 
-#else  // !defined(SIMD_F128_USE_AVX2)
+#else
 
-// fallback implementation of simd_f128x4 for non-avx2 platforms
+// fallback simd_f128x4 for non-avx2
 typedef struct {
     simd_f128 val[4];
 } simd_f128x4;
@@ -268,10 +261,10 @@ SIMD_F128_INLINE simd_f128x4 simd_f128x4_sqrt(simd_f128x4 a) {
     return res;
 }
 
-#endif  // SIMD_F128_USE_AVX2
+#endif
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif
 
-#endif  // SIMD_F128_VECTOR_H
+#endif

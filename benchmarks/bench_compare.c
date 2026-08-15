@@ -26,7 +26,7 @@ static double get_time(void) {
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
 }
-#endif  // _WIN32
+#endif
 
 /* volatile sinks are used here intentionally to prevent aggressive compiler
  * dead-code elimination (dce). without this, the compiler would see that the
@@ -36,7 +36,7 @@ volatile long double g_sink_ldouble;
 
 #ifdef __SIZEOF_FLOAT128__
 volatile __float128 g_sink_float128;
-#endif  // __SIZEOF_FLOAT128__
+#endif
 void sink_simd(simd_f128 x) {
     double hi, lo;
     simd_f128_extract(x, &hi, &lo);
@@ -133,7 +133,7 @@ void bench_float128(void) {
     printf("| __float128 (GCC)   | %8.2f | %8.2f | %8.2f |\n", (t1 - t0) * 1000.0,
            (t3 - t2) * 1000.0, (t5 - t4) * 1000.0);
 }
-#endif  // __SIZEOF_FLOAT128__
+#endif
 
 void bench_simd_f128(void) {
     simd_f128 a_add = simd_f128_from_double(1.1);
@@ -181,7 +181,7 @@ int main(void) {
     bench_long_double();
 #ifdef __SIZEOF_FLOAT128__
     bench_float128();
-#endif  // __SIZEOF_FLOAT128__
+#endif
     bench_simd_f128();
 
     printf("\n");

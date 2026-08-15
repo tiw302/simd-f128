@@ -1,9 +1,8 @@
 /* test_js.js
  *
  * javascript webassembly bindings tests.
- * validates math correctness over the emscripten ffi boundary.
  *
- * updated 2026-08-09
+ * updated 2026-08-13
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
@@ -19,14 +18,12 @@ console.log("Starting JS Wrapper Tests...");
 
         let errors = 0;
 
-        // [TEST CASE] float128 creation
-        // verifies class instantiation from strings.
+        // float128 creation
         console.log("running float128 creation tests...");
         const a = new Float128("1.5");
         const b = new Float128("2.5");
 
-        // [TEST CASE] addition
-        // verifies float128 addition.
+        // addition
         console.log("running float128 addition tests...");
         const c = a.add(b);
         if (!c.toString().startsWith("4.0")) {
@@ -34,8 +31,7 @@ console.log("Starting JS Wrapper Tests...");
             errors++;
         }
 
-        // [TEST CASE] multiplication
-        // verifies float128 multiplication.
+        // multiplication
         console.log("running float128 multiplication tests...");
         const d = a.mul(b);
         if (!d.toString().startsWith("3.75")) {
@@ -43,8 +39,7 @@ console.log("Starting JS Wrapper Tests...");
             errors++;
         }
 
-        // [TEST CASE] subtraction
-        // verifies float128 subtraction.
+        // subtraction
         console.log("running float128 subtraction tests...");
         const e = b.sub(a);
         if (!e.toString().startsWith("1.0")) {
@@ -52,8 +47,7 @@ console.log("Starting JS Wrapper Tests...");
             errors++;
         }
 
-        // [TEST CASE] division
-        // verifies float128 division.
+        // division
         console.log("running float128 division tests...");
         const f = b.div(a); // 2.5 / 1.5 = 1.6666666666666666...
         const expectedDivStr = "1.6666666666666666666666666666";
@@ -62,8 +56,7 @@ console.log("Starting JS Wrapper Tests...");
             errors++;
         }
 
-        // [TEST CASE] precision limits
-        // verifies precision holds for non-terminating decimals.
+        // precision limits
         console.log("running precision tests...");
         const one = new Float128("1.0");
         const three = new Float128("3.0");
@@ -75,8 +68,7 @@ console.log("Starting JS Wrapper Tests...");
             errors++;
         }
 
-        // [TEST CASE] advanced math
-        // verifies power, absolute, rounding, and fmod functions.
+        // advanced math
         console.log("running advanced math tests...");
         const two = new Float128("2.0");
         const threeF128 = new Float128("3.0");
