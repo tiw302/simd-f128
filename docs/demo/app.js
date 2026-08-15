@@ -6,13 +6,12 @@ Promise.all([
     ModuleScalar().then(m => scalarModule = m)
 ]).then(() => {
     document.getElementById('resultSimdBox').innerText = "Ready. Press Calculate or Benchmark.";
-    document.getElementById('resultScalarBox').innerText = "Ready. Press Calculate or Benchmark.";
     document.getElementById('jsResultBox').innerText = "Ready. Press Calculate or Benchmark.";
 });
 
 const inputA = document.getElementById('inputA');
 const warnBox = document.getElementById('validationWarning');
-const opSelect = document.getEleไmentById('operator');
+const opSelect = document.getElementById('operator');
 const inputB = document.getElementById('inputB');
 
 function checkValidation() {
