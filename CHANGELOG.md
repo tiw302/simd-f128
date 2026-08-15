@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.4] - 2026-08-15
+
+### Fixed
+- Made Python and JS test integration in CMake optional using `find_program`, preventing test failures on CI environments lacking `pytest` or `node`.
+
+---
+
 ## [1.5.3] - 2026-08-15
 
 ### Changed
