@@ -208,21 +208,25 @@ function doCalculation(isBenchmark) {
         // js 64-bit
         const t0_js = performance.now();
         let jsRes = 0;
+        let vA = numA;
         for (let i = 0; i < iterations; i++) {
-            if (op === 'add') jsRes = numA + numB;
-            else if (op === 'sub') jsRes = numA - numB;
-            else if (op === 'mul') jsRes = numA * numB;
-            else if (op === 'div') jsRes = numA / numB;
-            else if (op === 'exp') jsRes = Math.exp(numA);
-            else if (op === 'log') jsRes = Math.log(numA);
-            else if (op === 'sin') jsRes = Math.sin(numA);
-            else if (op === 'cos') jsRes = Math.cos(numA);
-            else if (op === 'sqrt') jsRes = Math.sqrt(numA);
-            else if (op === 'pow') jsRes = Math.pow(numA, numB);
-            else if (op === 'atan') jsRes = Math.atan(numA);
-            else if (op === 'atan2') jsRes = Math.atan2(numA, numB);
-            else if (op === 'asin') jsRes = Math.asin(numA);
-            else if (op === 'acos') jsRes = Math.acos(numA);
+            if (op === 'add') jsRes = vA + numB;
+            else if (op === 'sub') jsRes = vA - numB;
+            else if (op === 'mul') jsRes = vA * numB;
+            else if (op === 'div') jsRes = vA / numB;
+            else if (op === 'exp') jsRes = Math.exp(vA);
+            else if (op === 'log') jsRes = Math.log(vA);
+            else if (op === 'sin') jsRes = Math.sin(vA);
+            else if (op === 'cos') jsRes = Math.cos(vA);
+            else if (op === 'sqrt') jsRes = Math.sqrt(vA);
+            else if (op === 'pow') jsRes = Math.pow(vA, numB);
+            else if (op === 'atan') jsRes = Math.atan(vA);
+            else if (op === 'atan2') jsRes = Math.atan2(vA, numB);
+            else if (op === 'asin') jsRes = Math.asin(vA);
+            else if (op === 'acos') jsRes = Math.acos(vA);
+
+            // force data dependency to prevent loop hoisting
+            vA = numA + (jsRes * 0);
         }
         const t1_js = performance.now();
         const jsTimeStr = (t1_js - t0_js).toFixed(1);
