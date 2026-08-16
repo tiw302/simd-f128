@@ -158,6 +158,7 @@ target/
 .coverage
 htmlcov/
 .nox/
+uv.lock
 
 # c++ tools
 .cache/
