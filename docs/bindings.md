@@ -13,15 +13,18 @@ pip install simd-f128
 
 **Usage:**
 ```python
-import simd_f128
+import simd_f128 as f128
+import numpy as np
 
-# Basic operations
-a = simd_f128.DoubleDouble(1.0)
-b = simd_f128.DoubleDouble("1e-17")
+# basic scalar operations
+a = f128.DoubleDouble(1.0)
+b = f128.DoubleDouble("1e-17")
 res = a + b
 
-print(f"Result: {res}")
-print(f"High: {res.hi}, Low: {res.lo}")
+# numpy vectorization via ufuncs
+arr = np.linspace(0, 10, 1000000)
+# runs at full c++ simd speed without python loop overhead
+sin_arr = f128.sin(arr)
 ```
 
 ## Node.js
@@ -63,10 +66,12 @@ cargo add simd-f128
 use simd_f128::SimdF128;
 
 fn main() {
-    let a = SimdF128::new(1.0, 0.0);
+    // automatic conversion from f64
+    let a = SimdF128::from(1.0);
     let b = SimdF128::from_str("1e-17").unwrap();
 
+    // operator overloading via std::ops
     let res = a + b;
-    println!("Result: {}", res);
+    println!("result: {}", res);
 }
 ```

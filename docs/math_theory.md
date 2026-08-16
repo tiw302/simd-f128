@@ -21,7 +21,7 @@ No memory allocation is required. The entire number lives in two registers.
 - Numerical range is identical to IEEE 754 `double` (~1.8 × 10^308). The library extends mantissa precision only; exponent range is unchanged.
 - `NaN` and `Infinity` propagate through standard `double` rules.
 - `sin` and `cos` use simplified range reduction. For large arguments (|x| ≫ 2π), apply Payne-Hanek reduction externally before calling.
-- `pow` does not support negative bases; use `simd_f128_mul` + `simd_f128_exp` for integer powers of negative numbers.
+- `pow` supports negative bases only when the exponent is exactly an integer. For fractional exponents with a negative base, it returns `NaN`.
 - On ARMv7, FMA requires VFPv4 hardware (Cortex-A7, A15, A17, A53+) and the `-mfpu=neon-vfpv4` flag.
 
 ## Transcendental & Trigonometric Functions

@@ -14,7 +14,7 @@ The continuous integration pipeline actively defends against undefined behavior 
 
 - **AddressSanitizer (ASan)**: Validates against buffer over-reads during string conversion routines (`simd_f128_from_string` / `simd_f128_to_string`).
 - **UndefinedBehaviorSanitizer (UBSan)**: Ensures bitwise operations and SIMD intrinsics do not trigger non-portable architectural states.
-- **Fuzzing**: libFuzzer (`tests/c/fuzzer.c`) bombards the numeric parsers with malformed, out-of-bounds, and maligned byte arrays to verify early-termination and non-crashing behavior.
+- **Fuzzing**: libFuzzer (`tests/c/test_fuzz.c`) bombards the numeric parsers with malformed, out-of-bounds, and maligned byte arrays to verify early-termination and non-crashing behavior.
 
 ## Vulnerability Reporting
 

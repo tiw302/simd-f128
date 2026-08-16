@@ -2,6 +2,10 @@
 
 simd-f128 is designed to out-perform software-emulated `__float128` routines by utilizing Double-Double arithmetic packed into hardware vector registers. 
 
+## Accuracy and ULP Testing
+
+Beyond speed, the library maintains strict correctness verified against the GNU MPFR library (Multiple Precision Floating-Point Reliable). Integration tests (`test_mpfr_accuracy.cpp`) assert that the unit in the last place (ULP) drift remains within acceptable boundaries (~4-16 ULP) for all transcendental functions (`sin`, `cos`, `exp`, `log`, `sqrt`) across edge cases and subnormals.
+
 ## Benchmark Methodology
 
 All C/C++ benchmarks execute via Google Benchmark. Latency measurements test isolated operations through 10,000,000 iterations.

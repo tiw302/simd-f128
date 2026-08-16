@@ -10,7 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Planned support for additional complex transcendental functions.
+- Rust bindings now implement idiomatic `std::ops` (Add, Sub, Mul, Div) and `From<f64>`.
+- Python bindings now expose vectorized math functions (`sin`, `cos`, `exp`, `log`) to Numpy via ufuncs.
+- Added comprehensive GNU MPFR integration tests (`tests/cpp/test_mpfr_accuracy.cpp`) to validate ULP boundaries.
+
+### Fixed
+- Fixed precision loss in `simd_f128_sqrt` that artificially capped accuracy to 53-bits by omitting the residual term.
+- `simd_f128_sqrt` now correctly propagates `Infinity` and `NaN` edge cases strictly per IEEE-754.
 
 ---
 
