@@ -444,7 +444,7 @@ SIMD_F128_INLINE simd_f128 simd_f128_sqrt(simd_f128 x) {
     if (xhi < 0.0 || (xhi == 0.0 && xlo < 0.0)) {
         return SIMD_F128_PACK(NAN, 0.0);
     }
-    if (xhi == 0.0) return x;
+    if (isnan(xhi) || isinf(xhi) || xhi == 0.0) return x;
 
     // initial guess is already correct to 1 ulp
     double y = 1.0 / sqrt(xhi);
@@ -456,8 +456,9 @@ SIMD_F128_INLINE simd_f128 simd_f128_sqrt(simd_f128 x) {
     double estlo = simd_f128_exact_mul_err(z, z, est) + 2.0 * z * zlo;
     double err = (xhi - est) - estlo + xlo;
 
-    double final_hi = z + 0.5 * err * y;
-    double final_lo = 0.5 * err * y - (final_hi - z);
+    double dy = 0.5 * err * y;
+    double final_hi = z + (zlo + dy);
+    double final_lo = (zlo + dy) - (final_hi - z);
 
     return SIMD_F128_PACK(final_hi, final_lo);
 }
