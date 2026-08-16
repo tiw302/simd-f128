@@ -63,3 +63,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Core 128-bit floating point arithmetic operations (add, sub, mul, div, sqrt, rsqrt).
 - Multi-arch auto-detection engine (AVX2, SSE2, NEON, WASM SIMD128, Scalar fallback).
 - Initial C11 header-only library distribution (`simd_f128.h`).
+
+[Unreleased]: https://github.com/tiw302/simd-f128/compare/v1.5.4...HEAD
+[1.5.4]: https://github.com/tiw302/simd-f128/compare/v1.5.3...v1.5.4
+[1.5.3]: https://github.com/tiw302/simd-f128/compare/v1.5.2...v1.5.3
+[1.5.2]: https://github.com/tiw302/simd-f128/compare/v1.5.0...v1.5.2
+[1.5.0]: https://github.com/tiw302/simd-f128/compare/v1.0.0...v1.5.0
+[1.0.0]: https://github.com/tiw302/simd-f128/releases/tag/v1.0.0

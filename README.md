@@ -53,18 +53,17 @@
   - [Who is this for?](#who-is-this-for)
   - [Why simd-f128?](#why-simd-f128)
     - [Performance Benchmarks](#performance-benchmarks)
+      - [Advanced Math Functions (Nanosecond Latency)](#advanced-math-functions-nanosecond-latency)
   - [Design Philosophy](#design-philosophy)
     - [Limitations \& Technical Notes](#limitations--technical-notes)
   - [Requirements](#requirements)
   - [Verified Toolchains](#verified-toolchains)
   - [Build and Installation](#build-and-installation)
-    - [Python (PyPI)](#python-pypi)
-    - [JavaScript / Node.js (NPM)](#javascript--nodejs-npm)
+    - [Language Bindings](#language-bindings)
     - [C/C++ (Header Only)](#cc-header-only)
     - [CMake](#cmake)
   - [Library Components](#library-components)
-    - [Quick include pattern](#quick-include-pattern)
-  - [API Reference](#api-reference)
+  - [Documentation](#documentation)
     - [simd\_f128.h](#simd_f128h)
     - [simd\_f128\_consts.h](#simd_f128_constsh)
     - [simd\_f128\_io.h](#simd_f128_ioh)
@@ -84,13 +83,12 @@
     - [JavaScript (`examples/js/`)](#javascript-examplesjs)
     - [Rust (`examples/rust/`)](#rust-examplesrust)
   - [Platform Support \& CI Status](#platform-support--ci-status)
-  - [Language Bindings](#language-bindings)
+  - [Language Bindings](#language-bindings-1)
     - [Python](#python)
     - [JavaScript / WebAssembly](#javascript--webassembly)
     - [Rust](#rust)
   - [Project Structure](#project-structure)
   - [Used By](#used-by)
-  - [Development Methodology \& AI Assistance](#development-methodology--ai-assistance)
   - [Author's Note](#authors-note)
   - [Contributing](#contributing)
   - [License](#license)
@@ -152,7 +150,13 @@ Below is a benchmark comparison of basic arithmetic operations running on **10,0
 | `__float128` (GCC) | 152.31 | 189.81 | 276.00 | 0.04x |
 | **simd-f128 (SIMD)** | **73.60** | **56.15** | **159.70** | **0.14x (3.38x faster than GCC)** |
 
+![simd-f128 Benchmark Comparison](https://raw.githubusercontent.com/tiw302/simd-f128/master/assets/benchmarks/benchmark.png)
+
 As shown, `simd-f128` is **1.7x to 3.3x faster** than GCC's software-emulated `__float128`, making it the highest-performance choice for 128-bit precision.
+
+#### Advanced Math Functions (Nanosecond Latency)
+
+![simd-f128 Math Functions Latency](https://raw.githubusercontent.com/tiw302/simd-f128/master/assets/benchmarks/math_latency.png)
 
 ---
 
@@ -248,8 +252,25 @@ sudo cmake --install build
 Then in your project's `CMakeLists.txt`:
 
 ```cmake
-find_package(simd_fp REQUIRED)
-target_link_libraries(my_app PRIVATE simd_fp::simd_fp)
+find_package(simd_f128 REQUIRED)
+target_link_libraries(my_app PRIVATE simd_f128::simd_f128)
+```
+
+**FetchContent (Alternative)**
+
+If you prefer not to install the library system-wide, you can pull it directly into your build:
+
+```cmake
+include(FetchContent)
+
+FetchContent_Declare(
+    simd_f128
+    GIT_REPOSITORY https://github.com/tiw302/simd-f128.git
+    GIT_TAG        v1.5.4
+)
+FetchContent_MakeAvailable(simd_f128)
+
+target_link_libraries(my_app PRIVATE simd_f128::simd_f128)
 ```
 
 **Local Build Options**
@@ -303,22 +324,6 @@ All headers are `static inline` / header-only. A quick summary of what each head
 | `simd_f128_eigen.hpp` | Eigen `NumTraits` so `float128` works in `Eigen::Matrix` |
 
 **→ Full per-header documentation with code examples: [docs/components.md](docs/components.md)**
-
-### Quick include pattern
-
-In **one** translation unit only:
-
-```c
-#define SIMD_F128_IMPLEMENTATION
-#include <simd_f128.h>
-#include <simd_f128_io.h>    // optional: print / string conversion
-#include <simd_f128_math.h>  // optional: exp, log, sin, cos, ...
-```
-
-All other files include without the macro. For C++ projects, use `simd_f128.hpp` — it pulls in everything automatically.
-
----
-
 
 ## Documentation
 
@@ -741,21 +746,7 @@ A fully memory-safe Rust wrapper (via `cc` and `bindgen`), exposing the C functi
 
 | Project | Description |
 |---|---|
-| [mandelbrot-c](https://github.com/tiw302/mandelbrot-c) | Deep-zoom Mandelbrot renderer in C, using simd-f128 for 128-bit precision coordinates |
-
----
-
-## Development Methodology & AI Assistance
-
-Building a high-performance, header-only Double-Double (128-bit) floating-point library from scratch involves handling incredibly complex edge cases—from vectorized SIMD alignment to IEEE 754 catastrophic cancellation and precision loss bounds.
-
-To achieve this level of stability and performance within a short timeframe, this project was architected and rigorously verified in collaboration with **Advanced Agentic AI**. AI was specifically utilized to:
-
-- Stress-test the arithmetic core and transcendental functions (such as `sin`, `exp`, `log`, `pow`) against extreme floating-point edge cases (including subnormals, underflow/overflow thresholds, and NaN propagation).
-- Assist in optimizing cross-platform SIMD intrinsics (AVX2, NEON, WASM-SIMD128) and ensuring strict adherence to zero-heap-allocation constraints.
-- Automate the generation of robust cross-platform CI/CD pipelines and verification suites (covering C, C++, Rust, Python, and WebAssembly).
-
-However, **human agency remains at the core of this project**. Every single line of code generated or suggested was manually inspected, audited, and strictly verified. The core architecture, mathematical algorithms, and memory constraints were meticulously human-planned. This hybrid approach—combining human architectural vision with AI-driven debugging and verification—allowed us to push the boundaries of performance and reliability in a modern C library without compromising mathematical rigor or code ownership.
+| [mandelbrot-c](https://github.com/tiw302/mandelbrot-c) | Deep-zoom Mandelbrot renderer in C, using simd-f128 for 128-bit precision coordinates.<br><br><div align="center"><img src="https://raw.githubusercontent.com/tiw302/mandelbrot-c/master/assets/images/Mandelbrot-Screenshot.png" width="180">&nbsp;<img src="https://raw.githubusercontent.com/tiw302/mandelbrot-c/master/assets/images/julia-Screenshot.png" width="180">&nbsp;<img src="https://raw.githubusercontent.com/tiw302/mandelbrot-c/master/assets/images/Mandelbrot-Screenshot2.png" width="180">&nbsp;<img src="https://raw.githubusercontent.com/tiw302/mandelbrot-c/master/assets/images/julia-Screenshot2.png" width="180"></div> |
 
 ---
 

@@ -14,5 +14,8 @@ nav:
   - Home: index.md
   - Components Guide: components.md
   - API Reference: api_reference.md
+  - Language Bindings: bindings.md
+  - Benchmarks: benchmarks.md
   - Math Theory: math_theory.md
+  - Security & Memory: security.md
   - Live Demo: demo/index.html
