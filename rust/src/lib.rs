@@ -439,6 +439,12 @@ impl From<f64> for Float128 {
     }
 }
 
+impl From<Float128> for f64 {
+    fn from(val: Float128) -> f64 {
+        val.extract().0
+    }
+}
+
 macro_rules! impl_f64_arithmetic {
     ($trait:ident, $method:ident) => {
         impl $trait<f64> for Float128 {
