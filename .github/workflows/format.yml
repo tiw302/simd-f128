@@ -25,6 +25,7 @@ jobs:
             -type f \( -name '*.c' -o -name '*.h' -o -name '*.cpp' -o -name '*.hpp' \) \
             | xargs clang-format -i
       - name: Auto-commit formatted code
+        if: github.event_name == 'pull_request'
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "style: auto-format with clang-format"
