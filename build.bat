@@ -20,6 +20,7 @@ echo   tests      Build and run unit tests (Default)
 echo   bench      Build and run benchmarks
 echo   examples   Build example applications
 echo   asan       Build and run tests with AddressSanitizer
+echo   wasm       Build and run tests using WebAssembly (Emscripten)
 echo   check      Check system dependencies
 echo   clean      Remove all build directories
 echo   all        Build tests, benchmarks, and examples
@@ -31,6 +32,7 @@ if /i "%TARGET%"=="tests" goto build_tests
 if /i "%TARGET%"=="bench" goto build_bench
 if /i "%TARGET%"=="examples" goto build_examples
 if /i "%TARGET%"=="asan" goto build_asan
+if /i "%TARGET%"=="wasm" goto build_wasm
 if /i "%TARGET%"=="check" goto check_environment
 if /i "%TARGET%"=="clean" goto build_clean
 if /i "%TARGET%"=="all" goto build_all
@@ -151,6 +153,24 @@ cd build_asan && ctest -C Debug --output-on-failure
 cd ..
 exit /b %errorlevel%
 
+:build_wasm
+where emcmake >nul 2>nul
+if %errorlevel% neq 0 (
+    echo ERROR: emscripten is required. Please install and activate emsdk.
+    exit /b 1
+)
+echo =^> Building WebAssembly...
+call emcmake cmake -S . -B build_wasm -DCMAKE_BUILD_TYPE=Release -DSIMD_F128_WASM=ON
+cmake --build build_wasm --config Release --parallel
+
+where node >nul 2>nul
+if %errorlevel% equ 0 (
+    echo =^> Running WASM Tests via Node...
+    cd build_wasm && ctest -C Release --output-on-failure
+    cd ..
+)
+exit /b %errorlevel%
+
 :build_clean
 echo =^> Cleaning build directories...
 if exist build_tests rmdir /s /q build_tests
@@ -176,19 +196,21 @@ echo   1) Run Tests (Default)
 echo   2) Run Benchmarks
 echo   3) Build Examples
 echo   4) Run Tests with AddressSanitizer (ASAN)
-echo   5) Clean Build Directories
-echo   6) Check Environment
+echo   5) Build WebAssembly (WASM)
+echo   6) Clean Build Directories
+echo   7) Check Environment
 echo   q) Quit
 echo =========================================================================
-set /p CHOICE="Select an option [1-6,q]: "
+set /p CHOICE="Select an option [1-7,q]: "
 
 if "%CHOICE%"=="" goto build_tests
 if "%CHOICE%"=="1" goto build_tests
 if "%CHOICE%"=="2" goto build_bench
 if "%CHOICE%"=="3" goto build_examples
 if "%CHOICE%"=="4" goto build_asan
-if "%CHOICE%"=="5" goto build_clean
-if "%CHOICE%"=="6" goto check_environment
+if "%CHOICE%"=="5" goto build_wasm
+if "%CHOICE%"=="6" goto build_clean
+if "%CHOICE%"=="7" goto check_environment
 if /i "%CHOICE%"=="q" exit /b 0
 
 echo Invalid option.
