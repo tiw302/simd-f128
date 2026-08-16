@@ -243,4 +243,96 @@ PYBIND11_MODULE(simd_f128, m) {
             return result;
         },
         "element-wise division of (N, 2) arrays");
+
+    m.def(
+        "sin_arrays",
+        [](py::array_t<double> a) -> py::array_t<double> {
+            py::buffer_info buf_a = a.request();
+            if (buf_a.ndim != 2 || buf_a.shape[1] != 2)
+                throw std::runtime_error("Input must have shape (N, 2)");
+
+            size_t n = buf_a.shape[0];
+            py::array_t<double> result({n, (size_t)2});
+            py::buffer_info buf_res = result.request();
+
+            double* ptr_a = static_cast<double*>(buf_a.ptr);
+            double* ptr_res = static_cast<double*>(buf_res.ptr);
+
+            for (size_t i = 0; i < n; i++) {
+                simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i * 2], ptr_a[i * 2 + 1]);
+                simd_f128 sr = simd_f128_sin(sa);
+                simd_f128_extract(sr, &ptr_res[i * 2], &ptr_res[i * 2 + 1]);
+            }
+            return result;
+        },
+        "element-wise sin of (N, 2) arrays");
+
+    m.def(
+        "cos_arrays",
+        [](py::array_t<double> a) -> py::array_t<double> {
+            py::buffer_info buf_a = a.request();
+            if (buf_a.ndim != 2 || buf_a.shape[1] != 2)
+                throw std::runtime_error("Input must have shape (N, 2)");
+
+            size_t n = buf_a.shape[0];
+            py::array_t<double> result({n, (size_t)2});
+            py::buffer_info buf_res = result.request();
+
+            double* ptr_a = static_cast<double*>(buf_a.ptr);
+            double* ptr_res = static_cast<double*>(buf_res.ptr);
+
+            for (size_t i = 0; i < n; i++) {
+                simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i * 2], ptr_a[i * 2 + 1]);
+                simd_f128 sr = simd_f128_cos(sa);
+                simd_f128_extract(sr, &ptr_res[i * 2], &ptr_res[i * 2 + 1]);
+            }
+            return result;
+        },
+        "element-wise cos of (N, 2) arrays");
+
+    m.def(
+        "exp_arrays",
+        [](py::array_t<double> a) -> py::array_t<double> {
+            py::buffer_info buf_a = a.request();
+            if (buf_a.ndim != 2 || buf_a.shape[1] != 2)
+                throw std::runtime_error("Input must have shape (N, 2)");
+
+            size_t n = buf_a.shape[0];
+            py::array_t<double> result({n, (size_t)2});
+            py::buffer_info buf_res = result.request();
+
+            double* ptr_a = static_cast<double*>(buf_a.ptr);
+            double* ptr_res = static_cast<double*>(buf_res.ptr);
+
+            for (size_t i = 0; i < n; i++) {
+                simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i * 2], ptr_a[i * 2 + 1]);
+                simd_f128 sr = simd_f128_exp(sa);
+                simd_f128_extract(sr, &ptr_res[i * 2], &ptr_res[i * 2 + 1]);
+            }
+            return result;
+        },
+        "element-wise exp of (N, 2) arrays");
+
+    m.def(
+        "log_arrays",
+        [](py::array_t<double> a) -> py::array_t<double> {
+            py::buffer_info buf_a = a.request();
+            if (buf_a.ndim != 2 || buf_a.shape[1] != 2)
+                throw std::runtime_error("Input must have shape (N, 2)");
+
+            size_t n = buf_a.shape[0];
+            py::array_t<double> result({n, (size_t)2});
+            py::buffer_info buf_res = result.request();
+
+            double* ptr_a = static_cast<double*>(buf_a.ptr);
+            double* ptr_res = static_cast<double*>(buf_res.ptr);
+
+            for (size_t i = 0; i < n; i++) {
+                simd_f128 sa = simd_f128_from_hi_lo(ptr_a[i * 2], ptr_a[i * 2 + 1]);
+                simd_f128 sr = simd_f128_log(sa);
+                simd_f128_extract(sr, &ptr_res[i * 2], &ptr_res[i * 2 + 1]);
+            }
+            return result;
+        },
+        "element-wise log of (N, 2) arrays");
 }
