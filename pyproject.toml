@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "simd-f128"
-version = "1.5.4"
+version = "1.6.0"
 description = "High-performance cross-platform 128-bit arithmetic for SIMD applications."
 authors = [{name = "jirawat siripuk"}]
 readme = "README.md"
