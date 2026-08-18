@@ -1,0 +1,1651 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="High-performance 128-bit Double-Double arithmetic for SIMD applications">
+      
+      
+      
+      
+        <link rel="prev" href="../components/">
+      
+      
+        <link rel="next" href="../bindings/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>API Reference - simd-f128</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#api-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="simd-f128" class="md-header__button md-logo" aria-label="simd-f128" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            simd-f128
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              API Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/tiw302/simd-f128" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../components/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Components Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  API Reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../bindings/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Language Bindings
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../benchmarks/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Benchmarks
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../math_theory/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Math Theory
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../security/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Security & Memory
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../demo/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Live Demo
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="simd-f128" class="md-nav__button md-logo" aria-label="simd-f128" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    simd-f128
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/tiw302/simd-f128" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Components Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128h-core" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128.h (Core)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_constsh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_consts.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_ioh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_io.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_mathh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_math.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_utilsh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_utils.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_complexh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_complex.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_vectorh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_vector.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_arrayh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_array.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_matrixh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_matrix.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_randomh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_random.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128hpp-c-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128.hpp (C++ only)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_complexhpp-c-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_complex.hpp (C++ only)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_eigenhpp-c-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_eigen.hpp (C++ only)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bindings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Language Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math_theory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Math Theory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security & Memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128h-core" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128.h (Core)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_constsh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_consts.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_ioh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_io.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_mathh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_math.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_utilsh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_utils.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_complexh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_complex.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_vectorh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_vector.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_arrayh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_array.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_matrixh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_matrix.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_randomh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_random.h
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128hpp-c-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128.hpp (C++ only)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_complexhpp-c-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_complex.hpp (C++ only)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd_f128_eigenhpp-c-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simd_f128_eigen.hpp (C++ only)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="api-reference">API Reference</h1>
+<h3 id="simd_f128h-core">simd_f128.h (Core)</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Signature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simd_f128_from_double</code></td>
+<td><code>simd_f128 simd_f128_from_double(double d)</code></td>
+<td>Promote a <code>double</code> to 128-bit. <code>lo</code> is initialised to <code>0.0</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_extract</code></td>
+<td><code>void simd_f128_extract(simd_f128 x, double* hi, double* lo)</code></td>
+<td>Extract the <code>hi</code> and <code>lo</code> components into separate doubles.</td>
+</tr>
+<tr>
+<td><code>simd_f128_add</code></td>
+<td><code>simd_f128 simd_f128_add(simd_f128 a, simd_f128 b)</code></td>
+<td>Double-Double addition via Knuth's TwoSum.</td>
+</tr>
+<tr>
+<td><code>simd_f128_sub</code></td>
+<td><code>simd_f128 simd_f128_sub(simd_f128 a, simd_f128 b)</code></td>
+<td>Double-Double subtraction (negates <code>b</code>, then adds).</td>
+</tr>
+<tr>
+<td><code>simd_f128_mul</code></td>
+<td><code>simd_f128 simd_f128_mul(simd_f128 a, simd_f128 b)</code></td>
+<td>Double-Double multiplication via Dekker's TwoProd + FMA.</td>
+</tr>
+<tr>
+<td><code>simd_f128_div</code></td>
+<td><code>simd_f128 simd_f128_div(simd_f128 a, simd_f128 b)</code></td>
+<td>Double-Double division via Newton-Raphson reciprocal refinement.</td>
+</tr>
+<tr>
+<td><code>simd_f128_sqrt</code></td>
+<td><code>simd_f128 simd_f128_sqrt(simd_f128 x)</code></td>
+<td>Square root via inverse-sqrt Newton-Raphson + residual correction.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="simd_f128_constsh">simd_f128_consts.h</h3>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Value (first 32 digits)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SIMD_F128_PI</code></td>
+<td>3.14159265358979323846264338327950...</td>
+</tr>
+<tr>
+<td><code>SIMD_F128_E</code></td>
+<td>2.71828182845904523536028747135266...</td>
+</tr>
+<tr>
+<td><code>SIMD_F128_SQRT2</code></td>
+<td>1.41421356237309504880168872420969...</td>
+</tr>
+<tr>
+<td><code>SIMD_F128_LN2</code></td>
+<td>0.69314718055994530941723212145817...</td>
+</tr>
+</tbody>
+</table>
+<h3 id="simd_f128_ioh">simd_f128_io.h</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Signature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simd_f128_print</code></td>
+<td><code>void simd_f128_print(simd_f128 x)</code></td>
+<td>Print the value to <code>stdout</code> followed by a newline.</td>
+</tr>
+<tr>
+<td><code>simd_f128_to_string</code></td>
+<td><code>void simd_f128_to_string(char* buf, size_t buf_size, simd_f128 x)</code></td>
+<td>Write up to 32 decimal digits into <code>buf</code>. <code>buf</code> must be at least 64 bytes. Handles <code>nan</code>, <code>inf</code>, and negative values.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="simd_f128_mathh">simd_f128_math.h</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Signature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simd_f128_exp</code></td>
+<td><code>simd_f128 simd_f128_exp(simd_f128 x)</code></td>
+<td><code>e^x</code>. Returns <code>+Inf</code> for <code>x &gt; 709.78</code>, <code>0</code> for <code>x &lt; -745</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_log</code></td>
+<td><code>simd_f128 simd_f128_log(simd_f128 x)</code></td>
+<td>Natural log. Returns <code>NaN</code> for <code>x ≤ 0</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_log2</code></td>
+<td><code>simd_f128 simd_f128_log2(simd_f128 x)</code></td>
+<td>Base-2 log.</td>
+</tr>
+<tr>
+<td><code>simd_f128_log10</code></td>
+<td><code>simd_f128 simd_f128_log10(simd_f128 x)</code></td>
+<td>Base-10 log.</td>
+</tr>
+<tr>
+<td><code>simd_f128_pow</code></td>
+<td><code>simd_f128 simd_f128_pow(simd_f128 base, simd_f128 exp)</code></td>
+<td><code>base^exp</code>. Handles base zero, infinity, and NaN per IEEE-754.</td>
+</tr>
+<tr>
+<td><code>simd_f128_cbrt</code></td>
+<td><code>simd_f128 simd_f128_cbrt(simd_f128 x)</code></td>
+<td>Cube root.</td>
+</tr>
+<tr>
+<td><code>simd_f128_sin</code></td>
+<td><code>simd_f128 simd_f128_sin(simd_f128 x)</code></td>
+<td>Sine (radians).</td>
+</tr>
+<tr>
+<td><code>simd_f128_cos</code></td>
+<td><code>simd_f128 simd_f128_cos(simd_f128 x)</code></td>
+<td>Cosine (radians).</td>
+</tr>
+<tr>
+<td><code>simd_f128_tan</code></td>
+<td><code>simd_f128 simd_f128_tan(simd_f128 x)</code></td>
+<td>Tangent (radians).</td>
+</tr>
+<tr>
+<td><code>simd_f128_sincos</code></td>
+<td><code>void simd_f128_sincos(simd_f128 x, simd_f128* s, simd_f128* c)</code></td>
+<td>Computes sine and cosine in a single pass.</td>
+</tr>
+<tr>
+<td><code>simd_f128_atan</code></td>
+<td><code>simd_f128 simd_f128_atan(simd_f128 x)</code></td>
+<td>Arctangent.</td>
+</tr>
+<tr>
+<td><code>simd_f128_atan2</code></td>
+<td><code>simd_f128 simd_f128_atan2(simd_f128 y, simd_f128 x)</code></td>
+<td><code>atan(y/x)</code> with quadrant correction.</td>
+</tr>
+<tr>
+<td><code>simd_f128_asin</code></td>
+<td><code>simd_f128 simd_f128_asin(simd_f128 x)</code></td>
+<td>Arcsine. Domain: <code>[-1, 1]</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_acos</code></td>
+<td><code>simd_f128 simd_f128_acos(simd_f128 x)</code></td>
+<td>Arccosine. Domain: <code>[-1, 1]</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_sinh</code></td>
+<td><code>simd_f128 simd_f128_sinh(simd_f128 x)</code></td>
+<td>Hyperbolic sine. Taylor series near zero, exponential form for large inputs.</td>
+</tr>
+<tr>
+<td><code>simd_f128_cosh</code></td>
+<td><code>simd_f128 simd_f128_cosh(simd_f128 x)</code></td>
+<td>Hyperbolic cosine.</td>
+</tr>
+<tr>
+<td><code>simd_f128_tanh</code></td>
+<td><code>simd_f128 simd_f128_tanh(simd_f128 x)</code></td>
+<td>Hyperbolic tangent.</td>
+</tr>
+<tr>
+<td><code>simd_f128_floor</code></td>
+<td><code>simd_f128 simd_f128_floor(simd_f128 x)</code></td>
+<td>Floor.</td>
+</tr>
+<tr>
+<td><code>simd_f128_ceil</code></td>
+<td><code>simd_f128 simd_f128_ceil(simd_f128 x)</code></td>
+<td>Ceiling.</td>
+</tr>
+<tr>
+<td><code>simd_f128_trunc</code></td>
+<td><code>simd_f128 simd_f128_trunc(simd_f128 x)</code></td>
+<td>Truncate toward zero.</td>
+</tr>
+<tr>
+<td><code>simd_f128_round</code></td>
+<td><code>simd_f128 simd_f128_round(simd_f128 x)</code></td>
+<td>Round half-away from zero.</td>
+</tr>
+<tr>
+<td><code>simd_f128_fmod</code></td>
+<td><code>simd_f128 simd_f128_fmod(simd_f128 a, simd_f128 b)</code></td>
+<td>Floating-point remainder.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="simd_f128_utilsh">simd_f128_utils.h</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Signature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simd_f128_cmp</code></td>
+<td><code>int simd_f128_cmp(simd_f128 a, simd_f128 b)</code></td>
+<td>Returns <code>-1</code> if <code>a &lt; b</code>, <code>1</code> if <code>a &gt; b</code>, <code>0</code> if equal.</td>
+</tr>
+<tr>
+<td><code>simd_f128_eq</code></td>
+<td><code>int simd_f128_eq(simd_f128 a, simd_f128 b)</code></td>
+<td><code>1</code> if <code>a == b</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_gt</code></td>
+<td><code>int simd_f128_gt(simd_f128 a, simd_f128 b)</code></td>
+<td><code>1</code> if <code>a &gt; b</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_lt</code></td>
+<td><code>int simd_f128_lt(simd_f128 a, simd_f128 b)</code></td>
+<td><code>1</code> if <code>a &lt; b</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_ge</code></td>
+<td><code>int simd_f128_ge(simd_f128 a, simd_f128 b)</code></td>
+<td><code>1</code> if <code>a &gt;= b</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_le</code></td>
+<td><code>int simd_f128_le(simd_f128 a, simd_f128 b)</code></td>
+<td><code>1</code> if <code>a &lt;= b</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_abs</code></td>
+<td><code>simd_f128 simd_f128_abs(simd_f128 x)</code></td>
+<td>Absolute value. Correctly handles <code>-0.0</code> in the <code>lo</code> component.</td>
+</tr>
+<tr>
+<td><code>simd_f128_min</code></td>
+<td><code>simd_f128 simd_f128_min(simd_f128 a, simd_f128 b)</code></td>
+<td>Returns the lesser of <code>a</code> and <code>b</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_max</code></td>
+<td><code>simd_f128 simd_f128_max(simd_f128 a, simd_f128 b)</code></td>
+<td>Returns the greater of <code>a</code> and <code>b</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="simd_f128_complexh">simd_f128_complex.h</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Signature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simd_f128_complex_add</code></td>
+<td><code>simd_f128_complex simd_f128_complex_add(a, b)</code></td>
+<td>Complex addition.</td>
+</tr>
+<tr>
+<td><code>simd_f128_complex_sub</code></td>
+<td><code>simd_f128_complex simd_f128_complex_sub(a, b)</code></td>
+<td>Complex subtraction.</td>
+</tr>
+<tr>
+<td><code>simd_f128_complex_mul</code></td>
+<td><code>simd_f128_complex simd_f128_complex_mul(a, b)</code></td>
+<td>Complex multiplication.</td>
+</tr>
+<tr>
+<td><code>simd_f128_complex_div</code></td>
+<td><code>simd_f128_complex simd_f128_complex_div(a, b)</code></td>
+<td>Complex division.</td>
+</tr>
+<tr>
+<td><code>simd_f128_complex_abs_sqr</code></td>
+<td><code>simd_f128 simd_f128_complex_abs_sqr(a)</code></td>
+<td>Absolute square magnitude (<code>real^2 + imag^2</code>).</td>
+</tr>
+<tr>
+<td><code>simd_f128_complex_abs</code></td>
+<td><code>simd_f128 simd_f128_complex_abs(a)</code></td>
+<td>Magnitude (absolute value).</td>
+</tr>
+<tr>
+<td><code>simd_f128_complex_arg</code></td>
+<td><code>simd_f128 simd_f128_complex_arg(a)</code></td>
+<td>Phase angle (argument).</td>
+</tr>
+<tr>
+<td><code>simd_f128_complex_conj</code></td>
+<td><code>simd_f128_complex simd_f128_complex_conj(a)</code></td>
+<td>Complex conjugate.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="simd_f128_vectorh">simd_f128_vector.h</h3>
+<p><em>Vectorized 4-lane operations (<code>simd_f128x4</code>) using pure AVX2 (fallback provided).</em></p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Signature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simd_f128x4_from_doubles</code></td>
+<td><code>simd_f128x4 simd_f128x4_from_doubles(d0, d1, d2, d3)</code></td>
+<td>Initialize parallel vector.</td>
+</tr>
+<tr>
+<td><code>simd_f128x4_add</code></td>
+<td><code>simd_f128x4 simd_f128x4_add(a, b)</code></td>
+<td>Parallel addition.</td>
+</tr>
+<tr>
+<td><code>simd_f128x4_sub</code></td>
+<td><code>simd_f128x4 simd_f128x4_sub(a, b)</code></td>
+<td>Parallel subtraction.</td>
+</tr>
+<tr>
+<td><code>simd_f128x4_mul</code></td>
+<td><code>simd_f128x4 simd_f128x4_mul(a, b)</code></td>
+<td>Parallel multiplication.</td>
+</tr>
+<tr>
+<td><code>simd_f128x4_div</code></td>
+<td><code>simd_f128x4 simd_f128x4_div(a, b)</code></td>
+<td>Parallel division.</td>
+</tr>
+<tr>
+<td><code>simd_f128x4_sqrt</code></td>
+<td><code>simd_f128x4 simd_f128x4_sqrt(a)</code></td>
+<td>Parallel square root.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="simd_f128_arrayh">simd_f128_array.h</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Signature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simd_f128_array_add</code></td>
+<td><code>void simd_f128_array_add(a, b, out, len)</code></td>
+<td>Batch add two arrays.</td>
+</tr>
+<tr>
+<td><code>simd_f128_array_sub</code></td>
+<td><code>void simd_f128_array_sub(a, b, out, len)</code></td>
+<td>Batch subtract two arrays.</td>
+</tr>
+<tr>
+<td><code>simd_f128_array_mul</code></td>
+<td><code>void simd_f128_array_mul(a, b, out, len)</code></td>
+<td>Batch multiply two arrays.</td>
+</tr>
+<tr>
+<td><code>simd_f128_array_div</code></td>
+<td><code>void simd_f128_array_div(a, b, out, len)</code></td>
+<td>Batch divide two arrays.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="simd_f128_matrixh">simd_f128_matrix.h</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simd_f128_mat2</code></td>
+<td>2×2 matrix of <code>simd_f128</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_mat3</code></td>
+<td>3×3 matrix of <code>simd_f128</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_mat4</code></td>
+<td>4×4 matrix of <code>simd_f128</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_vec2</code></td>
+<td>2-component vector (<code>x</code>, <code>y</code>).</td>
+</tr>
+<tr>
+<td><code>simd_f128_vec3</code></td>
+<td>3-component vector (<code>x</code>, <code>y</code>, <code>z</code>).</td>
+</tr>
+<tr>
+<td><code>simd_f128_vec4</code></td>
+<td>4-component vector (<code>x</code>, <code>y</code>, <code>z</code>, <code>w</code>).</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Signature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simd_f128_mat4_identity</code></td>
+<td><code>simd_f128_mat4 simd_f128_mat4_identity(void)</code></td>
+<td>Returns the 4×4 identity matrix.</td>
+</tr>
+<tr>
+<td><code>simd_f128_mat4_mul</code></td>
+<td><code>simd_f128_mat4 simd_f128_mat4_mul(a, b)</code></td>
+<td>4×4 matrix multiplication.</td>
+</tr>
+<tr>
+<td><code>simd_f128_mat4_mul_vec4</code></td>
+<td><code>simd_f128_vec4 simd_f128_mat4_mul_vec4(a, v)</code></td>
+<td>4×4 matrix × vec4.</td>
+</tr>
+<tr>
+<td><code>simd_f128_mat3_identity</code></td>
+<td><code>simd_f128_mat3 simd_f128_mat3_identity(void)</code></td>
+<td>Returns the 3×3 identity matrix.</td>
+</tr>
+<tr>
+<td><code>simd_f128_mat3_mul</code></td>
+<td><code>simd_f128_mat3 simd_f128_mat3_mul(a, b)</code></td>
+<td>3×3 matrix multiplication.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="simd_f128_randomh">simd_f128_random.h</h3>
+<p>High-quality PRNG (xoshiro256**) producing uniform <code>simd_f128</code> values in <code>[0, 1)</code>. No <code>malloc</code> — state is caller-managed.</p>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simd_f128_prng</code></td>
+<td>Opaque PRNG state struct (four <code>uint64_t</code> values).</td>
+</tr>
+<tr>
+<td><code>simd_f128_prng_seed(state, seed)</code></td>
+<td>Seed the generator from a <code>uint64_t</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_prng_next(state)</code></td>
+<td>Advance state, return raw <code>uint64_t</code>.</td>
+</tr>
+<tr>
+<td><code>simd_f128_prng_uniform(state)</code></td>
+<td>Return a <code>simd_f128</code> uniform random in <code>[0, 1)</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="simd_f128hpp-c-only">simd_f128.hpp (C++ only)</h3>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Kind</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>f128::float128</code></td>
+<td>Class</td>
+<td>C++ wrapper around <code>simd_f128</code>.</td>
+</tr>
+<tr>
+<td><code>f128::float128(double)</code></td>
+<td>Constructor</td>
+<td>Construct from a <code>double</code>.</td>
+</tr>
+<tr>
+<td><code>f128::float128(simd_f128)</code></td>
+<td>Constructor</td>
+<td>Construct from a raw <code>simd_f128</code>.</td>
+</tr>
+<tr>
+<td><code>float128::extract(hi, lo)</code></td>
+<td>Method</td>
+<td>Extract <code>hi</code> and <code>lo</code> components.</td>
+</tr>
+<tr>
+<td><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code></td>
+<td>Operators</td>
+<td>Arithmetic operators.</td>
+</tr>
+<tr>
+<td><code>+=</code>, <code>-=</code>, <code>*=</code>, <code>/=</code></td>
+<td>Operators</td>
+<td>Compound assignment operators.</td>
+</tr>
+<tr>
+<td><code>==</code>, <code>!=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code></td>
+<td>Operators</td>
+<td>Comparison operators.</td>
+</tr>
+<tr>
+<td><code>operator-()</code></td>
+<td>Unary</td>
+<td>Negation.</td>
+</tr>
+<tr>
+<td><code>float128::to_string()</code></td>
+<td>Method</td>
+<td>Returns <code>std::string</code> with 32-digit representation.</td>
+</tr>
+<tr>
+<td><code>operator&lt;&lt;</code></td>
+<td>Stream</td>
+<td><code>std::ostream</code> integration.</td>
+</tr>
+<tr>
+<td><code>f128::exp</code>, <code>f128::log</code>, <code>f128::pow</code></td>
+<td>Free functions</td>
+<td>Transcendental math.</td>
+</tr>
+<tr>
+<td><code>f128::sin</code>, <code>f128::cos</code>, <code>f128::sqrt</code>, <code>f128::abs</code></td>
+<td>Free functions</td>
+<td>Trigonometric and utility math.</td>
+</tr>
+<tr>
+<td><code>f128::pi</code>, <code>f128::e</code>, <code>f128::sqrt2</code>, <code>f128::ln2</code></td>
+<td>Constants</td>
+<td>High-precision constants as <code>float128</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="simd_f128_complexhpp-c-only">simd_f128_complex.hpp (C++ only)</h3>
+<p>Provides standard interoperability for complex numbers.</p>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>std::complex&lt;f128::float128&gt;</code></td>
+<td>Fully supported via standard <code>std::complex</code> template.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="simd_f128_eigenhpp-c-only">simd_f128_eigen.hpp (C++ only)</h3>
+<p>Provides matrix traits for the <strong>Eigen</strong> linear algebra library.</p>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Eigen::NumTraits&lt;f128::float128&gt;</code></td>
+<td>Allows <code>float128</code> to be used directly in <code>Eigen::Matrix</code>.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
