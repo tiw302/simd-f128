@@ -7,11 +7,12 @@
  * spdx-license-identifier: mit
  * copyright (c) 2026 jirawat siripuk */
 
-#include <iostream>
-#include <iomanip>
-#include <cmath>
-#include <vector>
 #include <mpfr.h>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <vector>
 
 #define SIMD_F128_IMPLEMENTATION
 #include "../../include/simd_f128.hpp"
@@ -32,17 +33,17 @@ double calculate_ulp(float128 approx, mpfr_t exact) {
     if (std::isinf(hi) && mpfr_inf_p(exact)) {
         if ((hi > 0) == (mpfr_sgn(exact) > 0)) return 0.0;
     }
-    if (std::isnan(hi) || std::isinf(hi)) return INFINITY; // unexpected edge case
+    if (std::isnan(hi) || std::isinf(hi)) return INFINITY;  // unexpected edge case
 
     // convert float128 to mpfr
     mpfr_t approx_mp;
-    mpfr_init2(approx_mp, 113); // 113 bits for quad precision roughly
+    mpfr_init2(approx_mp, 113);  // 113 bits for quad precision roughly
     mpfr_set_d(approx_mp, hi, MPFR_RNDN);
-    
+
     mpfr_t lo_mp;
     mpfr_init2(lo_mp, 113);
     mpfr_set_d(lo_mp, lo, MPFR_RNDN);
-    
+
     mpfr_add(approx_mp, approx_mp, lo_mp, MPFR_RNDN);
 
     // calculate diff = |approx - exact|
@@ -58,8 +59,10 @@ double calculate_ulp(float128 approx, mpfr_t exact) {
 
     double ulp_error = 0.0;
     if (mpfr_zero_p(ulp_mp)) {
-        if (mpfr_zero_p(diff)) ulp_error = 0.0;
-        else ulp_error = INFINITY;
+        if (mpfr_zero_p(diff))
+            ulp_error = 0.0;
+        else
+            ulp_error = INFINITY;
     } else {
         mpfr_div(diff, diff, ulp_mp, MPFR_RNDN);
         ulp_error = mpfr_get_d(diff, MPFR_RNDN);
@@ -69,7 +72,9 @@ double calculate_ulp(float128 approx, mpfr_t exact) {
     return ulp_error;
 }
 
-void test_function(const char* name, float128 (*func)(float128), int (*mpfr_func)(mpfr_ptr, mpfr_srcptr, mpfr_rnd_t), const std::vector<double>& test_points) {
+void test_function(const char* name, float128 (*func)(float128),
+                   int (*mpfr_func)(mpfr_ptr, mpfr_srcptr, mpfr_rnd_t),
+                   const std::vector<double>& test_points) {
     std::cout << "testing " << name << " against mpfr...\n";
     double max_err = 0.0;
     int failures = 0;
@@ -111,18 +116,28 @@ void test_function(const char* name, float128 (*func)(float128), int (*mpfr_func
 
 int main() {
     std::cout << "running mpfr accuracy tests...\n";
-    
+
     // test points: normal, near zero, large, edge cases
-    std::vector<double> points = {
-        0.0, 1e-10, 0.5, 1.0, 2.0, 10.0, 100.0, 
-        -1e-10, -0.5, -1.0, -2.0, -10.0, -100.0,
-        std::numeric_limits<double>::infinity(),
-        -std::numeric_limits<double>::infinity(),
-        std::numeric_limits<double>::quiet_NaN()
-    };
-    
+    std::vector<double> points = {0.0,
+                                  1e-10,
+                                  0.5,
+                                  1.0,
+                                  2.0,
+                                  10.0,
+                                  100.0,
+                                  -1e-10,
+                                  -0.5,
+                                  -1.0,
+                                  -2.0,
+                                  -10.0,
+                                  -100.0,
+                                  std::numeric_limits<double>::infinity(),
+                                  -std::numeric_limits<double>::infinity(),
+                                  std::numeric_limits<double>::quiet_NaN()};
+
     std::vector<double> pos_points;
-    for (double x : points) if (x >= 0.0 || std::isnan(x)) pos_points.push_back(x);
+    for (double x : points)
+        if (x >= 0.0 || std::isnan(x)) pos_points.push_back(x);
 
     test_function("sin", sin, mpfr_sin, points);
     test_function("cos", cos, mpfr_cos, points);
@@ -131,7 +146,8 @@ int main() {
 
     // remove 0 from log test points to avoid expected pole error spam unless handled
     std::vector<double> log_points;
-    for (double x : pos_points) if (x != 0.0) log_points.push_back(x);
+    for (double x : pos_points)
+        if (x != 0.0) log_points.push_back(x);
     test_function("log", log, mpfr_log, log_points);
 
     std::cout << "all mpfr tests passed.\n";
